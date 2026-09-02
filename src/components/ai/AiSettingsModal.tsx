@@ -223,14 +223,20 @@ export const AiSettingsModal: React.FC<AiSettingsModalProps> = ({
               <div>
                 <div className="text-xs font-medium text-neutral-300 flex items-center gap-2">
                   <span>Estado Actual:</span>
-                  <span className={`font-semibold ${usageStatus.activeKeySource === 'none' ? 'text-amber-300' : 'text-emerald-300'}`}>
-                    {usageStatus.activeKeySource === 'none' ? 'Sin clave configurada' : 'Consultas Ilimitadas'}
+                  <span className={`font-semibold ${usageStatus.isUnlimited ? 'text-emerald-300' : 'text-amber-300'}`}>
+                    {usageStatus.activeKeySource === 'none'
+                      ? 'Sin clave configurada'
+                      : usageStatus.activeKeySource === 'app'
+                        ? 'Clave incluida con la app'
+                        : 'Consultas Ilimitadas'}
                   </span>
                 </div>
                 <div className="text-[11px] text-neutral-400 mt-0.5">
                   {usageStatus.activeKeySource === 'none'
                     ? 'Se responderá con el motor simbólico local. Añade tu clave de API abajo para conversar con un modelo de IA.'
-                    : 'Conectado mediante tu clave de API personal o motor local sin restricciones de cuota.'}
+                    : usageStatus.activeKeySource === 'app'
+                      ? `Puedes chatear ya mismo: te quedan ${usageStatus.remainingCourtesy} de ${usageStatus.maxDaily} consultas incluidas hoy. Añade tu clave abajo para uso ilimitado.`
+                      : 'Conectado mediante tu clave de API personal o motor local sin restricciones de cuota.'}
                 </div>
               </div>
             </div>

@@ -448,13 +448,19 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               <h3 className="font-serif text-base font-bold text-[#F2EFE6] flex items-center gap-2">
                 <span>Motor de Inteligencia Artificial</span>
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-400/10 text-amber-300 border border-amber-400/20 font-sans">
-                  {aiUsage.activeKeySource === 'none' ? 'Sin clave' : 'Ilimitado'}
+                  {aiUsage.activeKeySource === 'none'
+                    ? 'Sin clave'
+                    : aiUsage.activeKeySource === 'app'
+                      ? 'Incluido con la app'
+                      : 'Ilimitado'}
                 </span>
               </h3>
               <p className="text-xs text-[#9DA79F]">
                 {aiUsage.activeKeySource === 'none'
                   ? 'Sin clave propia: responde el motor simbólico local, sin conexión externa.'
-                  : 'Configurado con tu propia clave o modo local. Sin límites diarios.'}
+                  : aiUsage.activeKeySource === 'app'
+                    ? `Usando la clave incluida con la app (${aiUsage.remainingCourtesy} de ${aiUsage.maxDaily} consultas restantes hoy).`
+                    : 'Configurado con tu propia clave o modo local. Sin límites diarios.'}
               </p>
             </div>
           </div>

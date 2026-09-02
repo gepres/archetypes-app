@@ -220,6 +220,11 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
                 {aiUsageState.activeKeySource === 'none' && (
                   <span className="text-[10px] text-amber-400 ml-1">(sin clave)</span>
                 )}
+                {aiUsageState.activeKeySource === 'app' && (
+                  <span className="text-[10px] text-neutral-400 ml-1">
+                    ({aiUsageState.remainingCourtesy}/{aiUsageState.maxDaily})
+                  </span>
+                )}
                 <Settings className="w-3 h-3 text-neutral-400 ml-0.5" />
               </button>
             </div>
@@ -469,7 +474,11 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
         >
           <span>{activeModelName}</span>
           <span className="text-[10px] text-neutral-400 font-normal">
-            ({aiUsageState.activeKeySource === 'none' ? 'Sin clave · local' : 'Ilimitado'})
+            ({aiUsageState.activeKeySource === 'none'
+              ? 'Sin clave · local'
+              : aiUsageState.activeKeySource === 'app'
+                ? `Incluido ${aiUsageState.remainingCourtesy}/${aiUsageState.maxDaily}`
+                : 'Ilimitado'})
           </span>
         </button>
       </div>

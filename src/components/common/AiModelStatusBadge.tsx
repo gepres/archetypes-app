@@ -68,6 +68,11 @@ export const AiModelStatusBadge: React.FC<AiModelStatusBadgeProps> = ({
             <Zap className="w-3 h-3 text-amber-400" />
             Sin clave · motor local
           </span>
+        ) : usage.activeKeySource === 'app' ? (
+          <span className="inline-flex items-center gap-1 text-[10px] text-amber-300 font-medium bg-amber-950/40 px-1.5 py-0.5 rounded-md border border-amber-500/30">
+            <Zap className="w-3 h-3 text-amber-400" />
+            Incluido: {usage.remainingCourtesy}/{usage.maxDaily} hoy
+          </span>
         ) : (
           <span className="inline-flex items-center gap-1 text-[10px] text-[#86EFAC] font-medium bg-[#162620] px-1.5 py-0.5 rounded-md border border-[#315C45]">
             <Infinity className="w-3 h-3" /> {usage.activeKeySource === 'local' ? 'Motor Local' : 'Clave Propia'}
@@ -94,6 +99,10 @@ export const AiModelStatusBadge: React.FC<AiModelStatusBadgeProps> = ({
                 <span className="text-[10px] font-semibold text-amber-300 bg-amber-950/50 px-2 py-0.5 rounded-full border border-amber-500/30">
                   Sin clave
                 </span>
+              ) : usage.activeKeySource === 'app' ? (
+                <span className="text-[10px] font-semibold text-amber-300 bg-amber-950/50 px-2 py-0.5 rounded-full border border-amber-500/30">
+                  Incluido con la app
+                </span>
               ) : (
                 <span className="text-[10px] font-semibold text-[#86EFAC] bg-[#162620] px-2 py-0.5 rounded-full border border-[#315C45]">
                   Ilimitado
@@ -103,9 +112,11 @@ export const AiModelStatusBadge: React.FC<AiModelStatusBadgeProps> = ({
             <p className="text-[11px] text-[#9DA79F] mt-0.5">
               {usage.activeKeySource === 'none'
                 ? 'Sin clave propia responde el motor simbólico local, sin conexión. Añade tu clave para conversar con un modelo de IA.'
-                : usage.activeKeySource === 'local'
-                  ? 'Motor simbólico local: responde sin conexión ni consumo de tokens.'
-                  : 'Conectado con tu API Key personal. Consultas ilimitadas.'}
+                : usage.activeKeySource === 'app'
+                  ? `Te quedan ${usage.remainingCourtesy} de ${usage.maxDaily} consultas incluidas hoy. Añade tu propia clave para uso ilimitado.`
+                  : usage.activeKeySource === 'local'
+                    ? 'Motor simbólico local: responde sin conexión ni consumo de tokens.'
+                    : 'Conectado con tu API Key personal. Consultas ilimitadas.'}
             </p>
           </div>
         </div>
@@ -141,6 +152,10 @@ export const AiModelStatusBadge: React.FC<AiModelStatusBadgeProps> = ({
             {usage.activeKeySource === 'none' ? (
               <span className="text-amber-400 font-medium">
                 Sin clave · motor local
+              </span>
+            ) : usage.activeKeySource === 'app' ? (
+              <span className="text-amber-400 font-medium">
+                Incluido ({usage.remainingCourtesy}/{usage.maxDaily})
               </span>
             ) : (
               <span className="text-[#86EFAC] font-medium flex items-center gap-0.5">

@@ -1,8 +1,14 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import { defineConfig, type Plugin } from 'vite';
+import { defineConfig, loadEnv, type Plugin } from 'vite';
 import { handleGeminiChat } from './src/server/geminiHandler';
+
+// Los .env.example vienen con marcadores tipo "MY_GEMINI_API_KEY": no son claves.
+function realKey(value?: string): string {
+  const v = (value || '').trim();
+  return !v || v.startsWith('MY_') ? '' : v;
+}
 
 function geminiApiPlugin(): Plugin {
   return {
@@ -34,9 +40,19 @@ function geminiApiPlugin(): Plugin {
   };
 }
 
-export default defineConfig(() => {
+export default defineConfig(({ mode }) => {
+  // Se lee el .env sin prefijo para no tener que renombrar las variables ya existentes.
+  // ATENCION: lo que se inyecte aqui viaja dentro del bundle y es publico para
+  // cualquiera que abra el sitio. Solo claves con limite de gasto.
+  const env = loadEnv(mode, process.cwd(), '');
+
   return {
     plugins: [react(), tailwindcss(), geminiApiPlugin()],
+    define: {
+      'import.meta.env.VITE_OPENROUTER_API_KEY': JSON.stringify(realKey(env.OPENROUTER_API_KEY)),
+      'import.meta.env.VITE_GEMINI_API_KEY': JSON.stringify(realKey(env.GEMINI_API_KEY)),
+      'import.meta.env.VITE_OPENAI_API_KEY': JSON.stringify(realKey(env.OPENAI_API_KEY)),
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
