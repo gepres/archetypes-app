@@ -1,19 +1,23 @@
 import React, { useState } from 'react';
-import { GitMerge, Shuffle } from 'lucide-react';
+import { GitMerge, Shuffle, ChevronRight, SlidersHorizontal } from 'lucide-react';
 import { ARCHETYPES, ARCHETYPES_LIST } from '../../data/archetypesData';
 import { ARCHETYPE_VISUALS } from '../../data/archetypeImages';
 import { ArchetypeId } from '../../types';
 import { ArchetypeIllustratedArtwork } from './ArchetypeIllustratedArtwork';
+import { ArchetypePickerModal } from './ArchetypePickerModal';
 
 interface SynergiesExplorerViewProps {
   onSelectArchetype: (id: ArchetypeId) => void;
 }
+
+type ActivePickerSlot = 'first' | 'second' | null;
 
 export const SynergiesExplorerView: React.FC<SynergiesExplorerViewProps> = ({
   onSelectArchetype,
 }) => {
   const [firstId, setFirstId] = useState<ArchetypeId>('rey');
   const [secondId, setSecondId] = useState<ArchetypeId>('guerrero');
+  const [pickerSlot, setPickerSlot] = useState<ActivePickerSlot>(null);
 
   const arch1 = ARCHETYPES[firstId];
   const arch2 = ARCHETYPES[secondId];
@@ -27,6 +31,15 @@ export const SynergiesExplorerView: React.FC<SynergiesExplorerViewProps> = ({
     }
     setFirstId(list[i1]);
     setSecondId(list[i2]);
+  };
+
+  const handleSelectFromPicker = (id: ArchetypeId | 'none') => {
+    if (id === 'none') return;
+    if (pickerSlot === 'first') {
+      setFirstId(id);
+    } else if (pickerSlot === 'second') {
+      setSecondId(id);
+    }
   };
 
   // Find explicit synergy definition if present
@@ -59,55 +72,92 @@ export const SynergiesExplorerView: React.FC<SynergiesExplorerViewProps> = ({
       </div>
 
       {/* Selectors Bar */}
-      <div className="p-6 rounded-2xl bg-[#121A17] border border-[#23332D] space-y-6 shadow-xl">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          {/* First Archetype Selector */}
-          <div className="w-full sm:w-1/2 space-y-2">
-            <label className="text-xs uppercase font-bold tracking-wider text-[#9DA79F] block">
+      <div className="p-6 rounded-3xl bg-[#121A17] border border-[#23332D] space-y-6 shadow-xl">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+          {/* First Archetype Trigger Card */}
+          <div className="flex-1 space-y-1.5">
+            <span className="text-xs uppercase font-bold tracking-wider text-[#D6A84F] block">
               Primer Arquetipo
-            </label>
-            <select
-              value={firstId}
-              onChange={e => setFirstId(e.target.value as ArchetypeId)}
-              className="w-full p-3 rounded-xl bg-[#16201D] border border-[#1E2A25] text-sm text-[#F2EFE6] font-medium focus:outline-none focus:border-[#315C45]"
-            >
-              {ARCHETYPES_LIST.map(a => (
-                <option key={a.id} value={a.id} disabled={a.id === secondId}>
-                  {a.emoji} {a.name} ({a.dimension})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Randomizer button */}
-          <div className="flex sm:flex-col items-center justify-center pt-2">
+            </span>
             <button
-              onClick={handleRandomize}
-              className="p-3 rounded-xl bg-[#1E2A25] hover:bg-[#23332D] text-[#D6A84F] transition-all hover:rotate-180"
-              title="Combinación aleatoria"
+              onClick={() => setPickerSlot('first')}
+              className="w-full text-left p-3.5 rounded-2xl bg-[#16201D] hover:bg-[#1A2623] border border-[#1E2A25] hover:border-[#D6A84F] transition-all flex items-center justify-between gap-3 group active:scale-98 shadow"
             >
-              <Shuffle className="w-4 h-4" />
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-12 h-14 rounded-xl overflow-hidden border border-[#D6A84F]/70 bg-[#0B1110] shrink-0 shadow">
+                  <ArchetypeIllustratedArtwork archetypeId={arch1.id} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                </div>
+                <div className="min-w-0 space-y-0.5">
+                  <div className="text-sm font-serif font-bold text-[#F2EFE6] truncate flex items-center gap-1.5">
+                    <span>{arch1.emoji}</span>
+                    <span>{arch1.name}</span>
+                  </div>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#1A2521] text-[#D6A84F] font-semibold border border-[#315C45]/50 inline-block">
+                    {arch1.dimension}
+                  </span>
+                </div>
+              </div>
+
+              <div className="px-2.5 py-1.5 rounded-xl bg-[#1A2521] group-hover:bg-[#315C45] text-xs font-semibold text-[#D6A84F] group-hover:text-[#F2EFE6] border border-[#315C45] transition-colors shrink-0 flex items-center gap-1">
+                <span>Cambiar</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </div>
             </button>
           </div>
 
-          {/* Second Archetype Selector */}
-          <div className="w-full sm:w-1/2 space-y-2">
-            <label className="text-xs uppercase font-bold tracking-wider text-[#9DA79F] block">
-              Segundo Arquetipo
-            </label>
-            <select
-              value={secondId}
-              onChange={e => setSecondId(e.target.value as ArchetypeId)}
-              className="w-full p-3 rounded-xl bg-[#16201D] border border-[#1E2A25] text-sm text-[#F2EFE6] font-medium focus:outline-none focus:border-[#315C45]"
+          {/* Randomizer button */}
+          <div className="flex items-center justify-center pt-5 sm:pt-4">
+            <button
+              onClick={handleRandomize}
+              className="p-3.5 rounded-2xl bg-[#1E2A25] hover:bg-[#2A3B34] text-[#D6A84F] hover:text-[#FFE898] border border-[#315C45] transition-all hover:rotate-180 active:scale-95 shadow-md"
+              title="Combinación aleatoria"
             >
-              {ARCHETYPES_LIST.map(a => (
-                <option key={a.id} value={a.id} disabled={a.id === firstId}>
-                  {a.emoji} {a.name} ({a.dimension})
-                </option>
-              ))}
-            </select>
+              <Shuffle className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Second Archetype Trigger Card */}
+          <div className="flex-1 space-y-1.5">
+            <span className="text-xs uppercase font-bold tracking-wider text-[#D6A84F] block">
+              Segundo Arquetipo
+            </span>
+            <button
+              onClick={() => setPickerSlot('second')}
+              className="w-full text-left p-3.5 rounded-2xl bg-[#16201D] hover:bg-[#1A2623] border border-[#1E2A25] hover:border-[#D6A84F] transition-all flex items-center justify-between gap-3 group active:scale-98 shadow"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-12 h-14 rounded-xl overflow-hidden border border-[#D6A84F]/70 bg-[#0B1110] shrink-0 shadow">
+                  <ArchetypeIllustratedArtwork archetypeId={arch2.id} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                </div>
+                <div className="min-w-0 space-y-0.5">
+                  <div className="text-sm font-serif font-bold text-[#F2EFE6] truncate flex items-center gap-1.5">
+                    <span>{arch2.emoji}</span>
+                    <span>{arch2.name}</span>
+                  </div>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#1A2521] text-[#D6A84F] font-semibold border border-[#315C45]/50 inline-block">
+                    {arch2.dimension}
+                  </span>
+                </div>
+              </div>
+
+              <div className="px-2.5 py-1.5 rounded-xl bg-[#1A2521] group-hover:bg-[#315C45] text-xs font-semibold text-[#D6A84F] group-hover:text-[#F2EFE6] border border-[#315C45] transition-colors shrink-0 flex items-center gap-1">
+                <span>Cambiar</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </div>
+            </button>
           </div>
         </div>
+
+        {/* Picker Modal for Synergies */}
+        <ArchetypePickerModal
+          isOpen={pickerSlot !== null}
+          onClose={() => setPickerSlot(null)}
+          onSelect={handleSelectFromPicker}
+          currentSelectedId={pickerSlot === 'first' ? firstId : secondId}
+          disabledIds={pickerSlot === 'first' ? [secondId] : [firstId]}
+          title={pickerSlot === 'first' ? 'Seleccionar Primer Arquetipo' : 'Seleccionar Segundo Arquetipo'}
+          subtitle="Explora la galería arquetípica para calibrar la sinergia y alianza."
+        />
 
         {/* Combined Synthesis Card */}
         <div className="p-6 rounded-2xl bg-gradient-to-b from-[#16201D] to-[#121A17] border border-[#315C45] space-y-4 shadow-xl">

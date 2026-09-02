@@ -10,11 +10,18 @@ import {
   BookOpen,
   Bot,
   CheckCircle2,
+  ChevronRight,
+  Plus,
+  RotateCcw,
+  SlidersHorizontal,
+  X,
 } from 'lucide-react';
 import { ARCHETYPES, ARCHETYPES_LIST } from '../../data/archetypesData';
 import { ARCHETYPE_VISUALS } from '../../data/archetypeImages';
 import { ArchetypeId, LifeDomainKey } from '../../types';
 import { ArchetypePortraitCard } from './ArchetypePortraitCard';
+import { ArchetypeIllustratedArtwork } from './ArchetypeIllustratedArtwork';
+import { ArchetypePickerModal } from './ArchetypePickerModal';
 
 interface ArchetypeComparisonViewProps {
   onGoToAiWithPrompt: (prompt: string, personaId: string) => void;
@@ -29,6 +36,8 @@ const DOMAIN_LABELS: Record<LifeDomainKey, string> = {
   paternidad: 'Paternidad & Mentoría',
 };
 
+type ActivePickerSlot = 'first' | 'second' | 'third' | null;
+
 export const ArchetypeComparisonView: React.FC<ArchetypeComparisonViewProps> = ({
   onGoToAiWithPrompt,
   onGoToDetail,
@@ -37,12 +46,31 @@ export const ArchetypeComparisonView: React.FC<ArchetypeComparisonViewProps> = (
   const [selectedSecond, setSelectedSecond] = useState<ArchetypeId>('guerrero');
   const [selectedThird, setSelectedThird] = useState<ArchetypeId | 'none'>('mago');
   const [activeDomain, setActiveDomain] = useState<LifeDomainKey>('liderazgo');
+  const [pickerSlot, setPickerSlot] = useState<ActivePickerSlot>(null);
 
   const arch1 = ARCHETYPES[selectedFirst];
   const arch2 = ARCHETYPES[selectedSecond];
   const arch3 = selectedThird !== 'none' ? ARCHETYPES[selectedThird] : null;
 
   const compareList = arch3 ? [arch1, arch2, arch3] : [arch1, arch2];
+
+  const handleOpenPicker = (slot: ActivePickerSlot) => {
+    setPickerSlot(slot);
+  };
+
+  const handleClosePicker = () => {
+    setPickerSlot(null);
+  };
+
+  const handleSelectFromPicker = (id: ArchetypeId | 'none') => {
+    if (pickerSlot === 'first' && id !== 'none') {
+      setSelectedFirst(id);
+    } else if (pickerSlot === 'second' && id !== 'none') {
+      setSelectedSecond(id);
+    } else if (pickerSlot === 'third') {
+      setSelectedThird(id);
+    }
+  };
 
   return (
     <div className="space-y-8 animate-fadeIn max-w-6xl mx-auto">
@@ -62,62 +90,161 @@ export const ArchetypeComparisonView: React.FC<ArchetypeComparisonViewProps> = (
         </div>
       </div>
 
-      {/* Selectors Bar */}
-      <div className="bg-[#121A17] border border-[#23332D] rounded-2xl p-4 sm:p-6 space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {/* Selector 1 */}
-          <div>
-            <label className="block text-xs font-bold text-[#D6A84F] uppercase tracking-wider mb-2">
+      {/* Visual Slot Selectors Bar */}
+      <div className="bg-[#121A17] border border-[#23332D] rounded-3xl p-4 sm:p-6 space-y-5 shadow-xl">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <SlidersHorizontal className="w-4 h-4 text-[#D6A84F]" />
+            <h2 className="text-sm font-bold text-[#F2EFE6] uppercase tracking-wider">
+              Arquetipos en Contraste
+            </h2>
+          </div>
+          <span className="text-xs text-[#9DA79F] hidden sm:inline">
+            Toca una tarjeta para abrir la galería y cambiar de arquetipo
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+          {/* Slot 1 Trigger */}
+          <div className="space-y-1.5">
+            <span className="block text-[11px] font-bold text-[#D6A84F] uppercase tracking-wider">
               Primer Arquetipo
-            </label>
-            <select
-              value={selectedFirst}
-              onChange={e => setSelectedFirst(e.target.value as ArchetypeId)}
-              className="w-full bg-[#0E1513] border border-[#23332D] text-[#F2EFE6] text-sm rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-[#D6A84F]"
+            </span>
+            <button
+              onClick={() => handleOpenPicker('first')}
+              className="w-full text-left p-3.5 rounded-2xl bg-gradient-to-br from-[#16221E] to-[#0E1513] border border-[#2A4436] hover:border-[#D6A84F] transition-all shadow-md flex items-center justify-between gap-3 group active:scale-98"
             >
-              {ARCHETYPES_LIST.map(a => (
-                <option key={`first-${a.id}`} value={a.id}>
-                  {a.emoji} {a.name} ({a.dimension})
-                </option>
-              ))}
-            </select>
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-12 h-14 rounded-xl overflow-hidden border border-[#D6A84F]/70 bg-[#0B1110] shrink-0 shadow">
+                  <ArchetypeIllustratedArtwork
+                    archetypeId={selectedFirst}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                  />
+                </div>
+                <div className="min-w-0 space-y-0.5">
+                  <div className="text-sm font-serif font-bold text-[#F2EFE6] truncate flex items-center gap-1.5">
+                    <span>{arch1.emoji}</span>
+                    <span>{arch1.name}</span>
+                  </div>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#1A2521] text-[#D6A84F] font-semibold border border-[#315C45]/50 inline-block">
+                    {arch1.dimension}
+                  </span>
+                  <p className="text-[11px] text-[#9DA79F] truncate">
+                    {ARCHETYPE_VISUALS[arch1.id]?.characterTitle || arch1.symbol}
+                  </p>
+                </div>
+              </div>
+
+              <div className="px-2.5 py-1.5 rounded-xl bg-[#1A2521] group-hover:bg-[#315C45] text-xs font-semibold text-[#D6A84F] group-hover:text-[#F2EFE6] border border-[#315C45] transition-colors shrink-0 flex items-center gap-1">
+                <span>Cambiar</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </div>
+            </button>
           </div>
 
-          {/* Selector 2 */}
-          <div>
-            <label className="block text-xs font-bold text-[#D6A84F] uppercase tracking-wider mb-2">
+          {/* Slot 2 Trigger */}
+          <div className="space-y-1.5">
+            <span className="block text-[11px] font-bold text-[#D6A84F] uppercase tracking-wider">
               Segundo Arquetipo
-            </label>
-            <select
-              value={selectedSecond}
-              onChange={e => setSelectedSecond(e.target.value as ArchetypeId)}
-              className="w-full bg-[#0E1513] border border-[#23332D] text-[#F2EFE6] text-sm rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-[#D6A84F]"
+            </span>
+            <button
+              onClick={() => handleOpenPicker('second')}
+              className="w-full text-left p-3.5 rounded-2xl bg-gradient-to-br from-[#16221E] to-[#0E1513] border border-[#2A4436] hover:border-[#D6A84F] transition-all shadow-md flex items-center justify-between gap-3 group active:scale-98"
             >
-              {ARCHETYPES_LIST.map(a => (
-                <option key={`second-${a.id}`} value={a.id}>
-                  {a.emoji} {a.name} ({a.dimension})
-                </option>
-              ))}
-            </select>
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-12 h-14 rounded-xl overflow-hidden border border-[#D6A84F]/70 bg-[#0B1110] shrink-0 shadow">
+                  <ArchetypeIllustratedArtwork
+                    archetypeId={selectedSecond}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                  />
+                </div>
+                <div className="min-w-0 space-y-0.5">
+                  <div className="text-sm font-serif font-bold text-[#F2EFE6] truncate flex items-center gap-1.5">
+                    <span>{arch2.emoji}</span>
+                    <span>{arch2.name}</span>
+                  </div>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#1A2521] text-[#D6A84F] font-semibold border border-[#315C45]/50 inline-block">
+                    {arch2.dimension}
+                  </span>
+                  <p className="text-[11px] text-[#9DA79F] truncate">
+                    {ARCHETYPE_VISUALS[arch2.id]?.characterTitle || arch2.symbol}
+                  </p>
+                </div>
+              </div>
+
+              <div className="px-2.5 py-1.5 rounded-xl bg-[#1A2521] group-hover:bg-[#315C45] text-xs font-semibold text-[#D6A84F] group-hover:text-[#F2EFE6] border border-[#315C45] transition-colors shrink-0 flex items-center gap-1">
+                <span>Cambiar</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </div>
+            </button>
           </div>
 
-          {/* Selector 3 (Optional) */}
-          <div>
-            <label className="block text-xs font-bold text-[#D6A84F] uppercase tracking-wider mb-2">
-              Tercer Arquetipo (Tríada)
-            </label>
-            <select
-              value={selectedThird}
-              onChange={e => setSelectedThird(e.target.value as ArchetypeId | 'none')}
-              className="w-full bg-[#0E1513] border border-[#23332D] text-[#F2EFE6] text-sm rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-[#D6A84F]"
-            >
-              <option value="none">-- Sin tercer arquetipo --</option>
-              {ARCHETYPES_LIST.map(a => (
-                <option key={`third-${a.id}`} value={a.id}>
-                  {a.emoji} {a.name} ({a.dimension})
-                </option>
-              ))}
-            </select>
+          {/* Slot 3 Trigger (Tríada o Ninguno) */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="block text-[11px] font-bold text-[#D6A84F] uppercase tracking-wider">
+                Tercer Arquetipo (Tríada)
+              </span>
+              {arch3 && (
+                <button
+                  onClick={() => setSelectedThird('none')}
+                  className="text-[10px] text-[#F87171] hover:text-[#FECACA] flex items-center gap-1 font-semibold"
+                >
+                  <X className="w-3 h-3" />
+                  <span>Quitar</span>
+                </button>
+              )}
+            </div>
+
+            {arch3 ? (
+              <button
+                onClick={() => handleOpenPicker('third')}
+                className="w-full text-left p-3.5 rounded-2xl bg-gradient-to-br from-[#16221E] to-[#0E1513] border border-[#2A4436] hover:border-[#D6A84F] transition-all shadow-md flex items-center justify-between gap-3 group active:scale-98"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-12 h-14 rounded-xl overflow-hidden border border-[#D6A84F]/70 bg-[#0B1110] shrink-0 shadow">
+                    <ArchetypeIllustratedArtwork
+                      archetypeId={arch3.id}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                    />
+                  </div>
+                  <div className="min-w-0 space-y-0.5">
+                    <div className="text-sm font-serif font-bold text-[#F2EFE6] truncate flex items-center gap-1.5">
+                      <span>{arch3.emoji}</span>
+                      <span>{arch3.name}</span>
+                    </div>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#1A2521] text-[#D6A84F] font-semibold border border-[#315C45]/50 inline-block">
+                      {arch3.dimension}
+                    </span>
+                    <p className="text-[11px] text-[#9DA79F] truncate">
+                      {ARCHETYPE_VISUALS[arch3.id]?.characterTitle || arch3.symbol}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="px-2.5 py-1.5 rounded-xl bg-[#1A2521] group-hover:bg-[#315C45] text-xs font-semibold text-[#D6A84F] group-hover:text-[#F2EFE6] border border-[#315C45] transition-colors shrink-0 flex items-center gap-1">
+                  <span>Cambiar</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </div>
+              </button>
+            ) : (
+              <button
+                onClick={() => handleOpenPicker('third')}
+                className="w-full h-[76px] p-3.5 rounded-2xl border-2 border-dashed border-[#23332D] hover:border-[#D6A84F] bg-[#0E1513]/60 hover:bg-[#121A17] text-[#9DA79F] hover:text-[#F2EFE6] transition-all flex items-center justify-center gap-2 group active:scale-98"
+              >
+                <div className="w-8 h-8 rounded-full bg-[#16221E] border border-[#315C45] group-hover:border-[#D6A84F] flex items-center justify-center text-[#D6A84F] shrink-0">
+                  <Plus className="w-4 h-4" />
+                </div>
+                <div className="text-left">
+                  <span className="text-xs font-semibold block text-[#F2EFE6]">
+                    Añadir Tercer Arquetipo
+                  </span>
+                  <span className="text-[10px] text-[#9DA79F] block">
+                    Formar una Tríada Dinámica
+                  </span>
+                </div>
+              </button>
+            )}
           </div>
         </div>
 
@@ -131,10 +258,10 @@ export const ArchetypeComparisonView: React.FC<ArchetypeComparisonViewProps> = (
               <button
                 key={domainKey}
                 onClick={() => setActiveDomain(domainKey)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
+                className={`px-3.5 py-2 rounded-xl text-xs font-medium transition-all ${
                   activeDomain === domainKey
-                    ? 'bg-[#315C45] text-[#F2EFE6] shadow-sm font-semibold border border-[#437A5C]'
-                    : 'bg-[#0E1513] text-[#9DA79F] hover:text-[#F2EFE6] border border-[#23332D]'
+                    ? 'bg-[#315C45] text-[#F2EFE6] shadow-md font-bold border border-[#437A5C]'
+                    : 'bg-[#0E1513] text-[#9DA79F] hover:text-[#F2EFE6] border border-[#23332D] hover:border-[#315C45]'
                 }`}
               >
                 {DOMAIN_LABELS[domainKey]}
@@ -143,6 +270,33 @@ export const ArchetypeComparisonView: React.FC<ArchetypeComparisonViewProps> = (
           </div>
         </div>
       </div>
+
+      {/* Archetype Picker Modal Component */}
+      <ArchetypePickerModal
+        isOpen={pickerSlot !== null}
+        onClose={handleClosePicker}
+        onSelect={handleSelectFromPicker}
+        currentSelectedId={
+          pickerSlot === 'first'
+            ? selectedFirst
+            : pickerSlot === 'second'
+            ? selectedSecond
+            : selectedThird
+        }
+        title={
+          pickerSlot === 'first'
+            ? 'Seleccionar Primer Arquetipo'
+            : pickerSlot === 'second'
+            ? 'Seleccionar Segundo Arquetipo'
+            : 'Seleccionar Tercer Arquetipo (Tríada)'
+        }
+        subtitle={
+          pickerSlot === 'third'
+            ? 'Elige un tercer arquetipo para simular una tríada o desactívalo para contrastar en pareja.'
+            : 'Selecciona una energía de la galería arquetípica para la comparación.'
+        }
+        allowNone={pickerSlot === 'third'}
+      />
 
       {/* Side-by-Side Comparison Grid */}
       <div className={`grid grid-cols-1 ${compareList.length === 3 ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-5`}>

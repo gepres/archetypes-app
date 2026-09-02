@@ -16,10 +16,20 @@ import {
   Users,
   LogOut,
   Flame,
+  Cpu,
+  Settings,
+  Zap,
+  Infinity,
+  Cloud,
+  RefreshCw,
+  Check,
 } from 'lucide-react';
 import { StorageService } from '../../services/storageService';
+import { FirebaseService } from '../../services/firebaseService';
+import { AIProviderService } from '../../services/aiProviderService';
 import { AccountRecord, AssessmentResult, UserProfile } from '../../types';
 import { NavTab } from '../layout/Sidebar';
+import { AiSettingsModal } from '../ai/AiSettingsModal';
 
 interface ProfileViewProps {
   userProfile: UserProfile;
@@ -47,9 +57,12 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   const [avatarEmoji, setAvatarEmoji] = useState(userProfile.avatarEmoji || '👑');
   const [bio, setBio] = useState(userProfile.bio || '');
   const [savedSuccess, setSavedSuccess] = useState(false);
-  const [savedAccounts, setSavedAccounts] = useState<AccountRecord[]>(() =>
-    StorageService.getSavedAccounts()
-  );
+  const [isAiSettingsOpen, setIsAiSettingsOpen] = useState(false);
+  const [aiUsage, setAiUsage] = useState(() => AIProviderService.getUsageStatus());
+  const [syncLoading, setSyncLoading] = useState(false);
+  const [syncResultMsg, setSyncResultMsg] = useState<string | null>(null);
+  const [testCloudLoading, setTestCloudLoading] = useState(false);
+  const [testCloudMsg, setTestCloudMsg] = useState<{ success: boolean; message: string } | null>(null);
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,6 +77,52 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
     onUpdateProfile(updated);
     setSavedSuccess(true);
     setTimeout(() => setSavedSuccess(false), 2000);
+  };
+
+  const handleManualCloudSync = async () => {
+    setSyncLoading(true);
+    setSyncResultMsg(null);
+    try {
+      StorageService.syncActiveAccountData();
+      const profile = StorageService.getUserProfile();
+      if (profile.id) {
+        const ok = await FirebaseService.syncFullDataToCloud(profile.id, {
+          currentResult: StorageService.getCurrentResult(),
+          history: StorageService.getAssessmentHistory(),
+          journalEntries: StorageService.getJournalEntries(),
+          challenges: StorageService.getChallenges(),
+          chatMessages: StorageService.getChatMessages(),
+        });
+        if (ok) {
+          setSyncResultMsg('¡Sincronización en la Nube de Firebase completada con éxito!');
+        } else {
+          setSyncResultMsg('Datos guardados localmente. Sincronización en la nube pendiente.');
+        }
+      } else {
+        setSyncResultMsg('Modo invitado: Datos resguardados en este navegador.');
+      }
+    } catch (e: any) {
+      setSyncResultMsg(`Error al sincronizar: ${e?.message || 'Error desconocido'}`);
+    } finally {
+      setSyncLoading(false);
+      setTimeout(() => setSyncResultMsg(null), 4000);
+    }
+  };
+
+  const handleTestCloudConnection = async () => {
+    setTestCloudLoading(true);
+    setTestCloudMsg(null);
+    try {
+      const res = await FirebaseService.testFirestoreConnection();
+      setTestCloudMsg(res);
+    } catch (err: any) {
+      setTestCloudMsg({
+        success: false,
+        message: err?.message || 'Error al conectar con Firestore.',
+      });
+    } finally {
+      setTestCloudLoading(false);
+    }
   };
 
   const handleExportData = () => {
@@ -157,6 +216,74 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           <LogIn className="w-4 h-4" />
           <span>{userProfile.isGuest ? 'Iniciar Sesión / Registrar' : 'Cambiar de Cuenta'}</span>
         </button>
+      </div>
+
+      {/* Firebase Cloud Sync Card */}
+      <div className="p-6 sm:p-7 rounded-3xl bg-gradient-to-br from-[#121A17] to-[#182420] border border-[#23332D] space-y-4 shadow-xl">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-[#D6A84F]/10 border border-[#D6A84F]/30 flex items-center justify-center text-[#D6A84F] shrink-0 shadow-inner">
+              <Cloud className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="font-serif text-base font-bold text-[#F2EFE6]">
+                  Sincronización en la Nube (Firebase Firestore)
+                </h3>
+                <span className="text-[10px] bg-emerald-950/80 text-emerald-300 border border-emerald-700/50 px-2 py-0.5 rounded-full font-bold">
+                  En Línea
+                </span>
+              </div>
+              <p className="text-xs text-[#9DA79F] mt-0.5">
+                Tus evaluaciones, diarios, retos y mensajes se sincronizan automáticamente con tu cuenta en Firebase.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2.5 shrink-0">
+            <button
+              onClick={handleManualCloudSync}
+              disabled={syncLoading}
+              className="px-3.5 py-2 bg-[#315C45] hover:bg-[#3D7055] disabled:opacity-50 text-[#F2EFE6] rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md active:scale-95"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${syncLoading ? 'animate-spin' : ''}`} />
+              <span>{syncLoading ? 'Sincronizando...' : 'Sincronizar a la Nube'}</span>
+            </button>
+
+            <button
+              onClick={handleTestCloudConnection}
+              disabled={testCloudLoading}
+              className="px-3.5 py-2 bg-[#1A2521] hover:bg-[#23332D] text-[#D6A84F] border border-[#315C45] rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all"
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>{testCloudLoading ? 'Probando...' : 'Probar Firestore'}</span>
+            </button>
+          </div>
+        </div>
+
+        {syncResultMsg && (
+          <div className="p-3 bg-emerald-950/40 border border-emerald-800/60 rounded-xl text-xs text-emerald-200 flex items-center gap-2 animate-fadeIn">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>{syncResultMsg}</span>
+          </div>
+        )}
+
+        {testCloudMsg && (
+          <div
+            className={`p-3 rounded-xl border text-xs flex items-center gap-2 animate-fadeIn ${
+              testCloudMsg.success
+                ? 'bg-emerald-950/40 border-emerald-800/60 text-emerald-200'
+                : 'bg-red-950/40 border-red-800/60 text-red-200'
+            }`}
+          >
+            {testCloudMsg.success ? (
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            ) : (
+              <Info className="w-4 h-4 text-red-400 shrink-0" />
+            )}
+            <span>{testCloudMsg.message}</span>
+          </div>
+        )}
       </div>
 
       {/* Profile Form */}
@@ -310,6 +437,39 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
         )}
       </div>
 
+      {/* AI Provider & Engine Settings Card */}
+      <div className="p-6 sm:p-7 rounded-3xl bg-[#121A17] border border-[#23332D] space-y-4 shadow-xl">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
+              <Cpu className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-serif text-base font-bold text-[#F2EFE6] flex items-center gap-2">
+                <span>Motor de Inteligencia Artificial</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-400/10 text-amber-300 border border-amber-400/20 font-sans">
+                  {aiUsage.activeKeySource === 'none' ? 'Sin clave' : 'Ilimitado'}
+                </span>
+              </h3>
+              <p className="text-xs text-[#9DA79F]">
+                {aiUsage.activeKeySource === 'none'
+                  ? 'Sin clave propia: responde el motor simbólico local, sin conexión externa.'
+                  : 'Configurado con tu propia clave o modo local. Sin límites diarios.'}
+              </p>
+            </div>
+          </div>
+
+          <button
+            id="profile-open-ai-settings-btn"
+            onClick={() => setIsAiSettingsOpen(true)}
+            className="px-4 py-2.5 bg-[#1A2521] hover:bg-[#23332D] text-[#D6A84F] border border-[#315C45] rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-sm active:scale-95 shrink-0"
+          >
+            <Settings className="w-4 h-4" />
+            <span>Configurar Proveedores & API Keys</span>
+          </button>
+        </div>
+      </div>
+
       {/* Backup and Data Export/Import */}
       <div className="p-6 rounded-3xl bg-[#121A17] border border-[#23332D] space-y-4 shadow-xl">
         <h3 className="font-serif text-base font-bold text-[#F2EFE6] flex items-center gap-2">
@@ -349,6 +509,18 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           </button>
         </div>
       </div>
+
+      {/* AI Settings Modal */}
+      <AiSettingsModal
+        isOpen={isAiSettingsOpen}
+        onClose={() => {
+          setIsAiSettingsOpen(false);
+          setAiUsage(AIProviderService.getUsageStatus());
+        }}
+        onSettingsSaved={() => {
+          setAiUsage(AIProviderService.getUsageStatus());
+        }}
+      />
     </div>
   );
 };

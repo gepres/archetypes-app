@@ -10,6 +10,7 @@ import {
   JournalEntry,
   UserProfile,
 } from '../types';
+import { FirebaseService } from './firebaseService';
 
 const STORAGE_KEYS = {
   CURRENT_USER_ID: 'archetypes_active_user_id',
@@ -373,18 +374,37 @@ export const StorageService = {
       const profile = this.getUserProfile();
       if (!profile || profile.isGuest || !profile.email) return;
 
+      const currentRes = this.getCurrentResult();
+      const history = this.getAssessmentHistory();
+      const journal = this.getJournalEntries();
+      const challenges = this.getChallenges();
+      const chat = this.getChatMessages();
+
       const accounts = this.getSavedAccounts();
       const index = accounts.findIndex(a => a.id === profile.id || a.email.toLowerCase() === profile.email.toLowerCase());
       if (index >= 0) {
         accounts[index].data = {
-          currentResult: this.getCurrentResult(),
-          history: this.getAssessmentHistory(),
-          journalEntries: this.getJournalEntries(),
-          challenges: this.getChallenges(),
-          chatMessages: this.getChatMessages(),
+          currentResult: currentRes,
+          history: history,
+          journalEntries: journal,
+          challenges: challenges,
+          chatMessages: chat,
         };
         accounts[index].lastActive = new Date().toISOString();
         this.saveAccountsVault(accounts);
+      }
+
+      // Also sync to Firebase Firestore if online
+      if (profile.id) {
+        FirebaseService.syncFullDataToCloud(profile.id, {
+          currentResult: currentRes,
+          history: history,
+          journalEntries: journal,
+          challenges: challenges,
+          chatMessages: chat,
+        }).catch(err => {
+          console.warn('Background Firestore sync caught:', err);
+        });
       }
     } catch (e) {
       console.error("Error syncing active account:", e);

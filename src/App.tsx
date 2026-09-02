@@ -22,6 +22,7 @@ import { AiReflectionView } from './components/ai/AiReflectionView';
 import { ProfileView } from './components/profile/ProfileView';
 import { AuthModal } from './components/auth/AuthModal';
 import { DailyOracleModal } from './components/archetypes/DailyOracleModal';
+import { AiSettingsModal } from './components/ai/AiSettingsModal';
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState<NavTab>('landing');
@@ -33,6 +34,7 @@ export default function App() {
   // Modals state
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isDailyOracleOpen, setIsDailyOracleOpen] = useState(false);
+  const [isAiSettingsOpen, setIsAiSettingsOpen] = useState(false);
 
   // Persistent States
   const [currentResult, setCurrentResult] = useState<AssessmentResult | null>(() =>
@@ -138,6 +140,7 @@ export default function App() {
         onStartTest={handleStartTest}
         onOpenDailyOracle={() => setIsDailyOracleOpen(true)}
         onOpenAuthModal={() => setIsAuthModalOpen(true)}
+        onOpenAiSettings={() => setIsAiSettingsOpen(true)}
         userProfile={userProfile}
       />
 
@@ -154,6 +157,7 @@ export default function App() {
           onStartTest={handleStartTest}
           onOpenDailyOracle={() => setIsDailyOracleOpen(true)}
           onOpenAuthModal={() => setIsAuthModalOpen(true)}
+          onOpenAiSettings={() => setIsAiSettingsOpen(true)}
           userProfile={userProfile}
         />
 
@@ -195,6 +199,7 @@ export default function App() {
               onSelectArchetype={handleSelectArchetype}
               onStartTest={handleStartTest}
               onToggleChallenge={handleToggleChallenge}
+              onOpenAiSettings={() => setIsAiSettingsOpen(true)}
             />
           )}
 
@@ -268,11 +273,17 @@ export default function App() {
           }}
           onOpenDailyOracle={() => setIsDailyOracleOpen(true)}
           onOpenAuthModal={() => setIsAuthModalOpen(true)}
+          onOpenAiSettings={() => setIsAiSettingsOpen(true)}
           onStartTest={handleStartTest}
         />
       </div>
 
       {/* Global Modals */}
+      <AiSettingsModal
+        isOpen={isAiSettingsOpen}
+        onClose={() => setIsAiSettingsOpen(false)}
+      />
+
       <AuthModal
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}

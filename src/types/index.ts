@@ -199,3 +199,29 @@ export interface DailyOracleCard {
   eveningInquiry: string;
 }
 
+export type AIProviderId = 'openrouter' | 'gemini' | 'openai' | 'local';
+export type KeyMode = 'courtesy' | 'custom';
+
+export interface AISettings {
+  provider: AIProviderId;
+  // Key mode preferences
+  geminiKeyMode?: KeyMode; // 'courtesy' (app key) or 'custom' (user key)
+  openrouterKeyMode?: KeyMode; // 'courtesy' (app key) or 'custom' (user key)
+  // User custom API keys (BYOK - Bring Your Own Key)
+  geminiApiKey?: string;
+  openaiApiKey?: string;
+  openrouterApiKey?: string;
+  // Model selections
+  geminiModel?: string;
+  openaiModel?: string;
+  openrouterModel?: string;
+  // Use app courtesy key if user key is not provided
+  useAppCourtesyKey: boolean;
+  // Courtesy Quota tracking
+  courtesyQuota: {
+    lastResetDate: string; // YYYY-MM-DD
+    usedToday: number;
+    maxDaily: number;
+  };
+}
+

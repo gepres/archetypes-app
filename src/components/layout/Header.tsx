@@ -1,7 +1,8 @@
 import React from 'react';
-import { Compass, Sparkles, Sun, User } from 'lucide-react';
+import { Compass, Sparkles, Sun, User, Settings, Cpu } from 'lucide-react';
 import { UserProfile } from '../../types';
 import { NavTab } from './Sidebar';
+import { BrandLogo } from '../common/BrandLogo';
 
 interface HeaderProps {
   currentTab: NavTab;
@@ -9,6 +10,7 @@ interface HeaderProps {
   onStartTest: (type?: 'full' | 'quick') => void;
   onOpenDailyOracle: () => void;
   onOpenAuthModal: () => void;
+  onOpenAiSettings: () => void;
   userProfile: UserProfile;
 }
 
@@ -18,28 +20,28 @@ export const Header: React.FC<HeaderProps> = ({
   onStartTest,
   onOpenDailyOracle,
   onOpenAuthModal,
+  onOpenAiSettings,
   userProfile,
 }) => {
   return (
     <header className="md:hidden flex items-center justify-between px-4 py-3 bg-[#0B1110] border-b border-[#1E2A25] sticky top-0 z-30">
       <div
         onClick={() => onSelectTab('landing')}
-        className="flex items-center gap-2.5 cursor-pointer"
+        className="cursor-pointer"
       >
-        <div className="w-8 h-8 rounded-lg bg-[#121A17] border border-[#315C45] flex items-center justify-center text-[#D6A84F]">
-          <span className="font-serif font-bold text-base">A</span>
-        </div>
-        <div>
-          <span className="font-serif text-base font-bold text-[#F2EFE6] block leading-none">
-            Arquetipos
-          </span>
-          <span className="text-[10px] text-[#9DA79F] tracking-widest uppercase">
-            Autoconocimiento
-          </span>
-        </div>
+        <BrandLogo size="sm" />
       </div>
 
       <div className="flex items-center gap-2">
+        {/* AI Settings Button */}
+        <button
+          onClick={onOpenAiSettings}
+          className="p-1.5 bg-[#121A17] hover:bg-[#1A2521] text-[#D6A84F] border border-[#315C45] rounded-lg transition-all"
+          title="Ajustes de IA y Modelos"
+        >
+          <Cpu className="w-4 h-4 text-[#D6A84F]" />
+        </button>
+
         {/* Daily Oracle trigger */}
         <button
           onClick={onOpenDailyOracle}

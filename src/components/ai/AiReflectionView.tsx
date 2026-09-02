@@ -6,22 +6,20 @@ import {
   RotateCcw,
   User,
   ShieldCheck,
-  Compass,
+  Settings,
   Lightbulb,
-  Flame,
-  Crown,
-  Sword,
-  Scroll,
-  Heart,
   Volume2,
+  Infinity,
+  Zap,
 } from 'lucide-react';
-import { ARCHETYPES, ARCHETYPES_LIST } from '../../data/archetypesData';
 import { ARCHETYPE_VISUALS } from '../../data/archetypeImages';
 import { GeminiService } from '../../services/geminiService';
+import { AIProviderService, PROVIDER_OPTIONS } from '../../services/aiProviderService';
 import { StorageService } from '../../services/storageService';
 import { ArchetypeId, AssessmentResult, ChatMessage } from '../../types';
 import { ArchetypeIllustratedArtwork } from '../archetypes/ArchetypeIllustratedArtwork';
 import { MarkdownRenderer } from '../common/MarkdownRenderer';
+import { AiSettingsModal } from './AiSettingsModal';
 
 interface AiReflectionViewProps {
   currentResult: AssessmentResult | null;
@@ -56,9 +54,35 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
   const [inputText, setInputText] = useState('');
   const [activePersona, setActivePersona] = useState<string>(initialPersona);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [aiUsageState, setAiUsageState] = useState(() => AIProviderService.getUsageStatus());
+  const [activeModelName, setActiveModelName] = useState(() => {
+    const s = AIProviderService.getSettings();
+    return s.provider === 'openrouter' ? (s.openrouterModel || 'Llama 3.3 70B') : s.provider;
+  });
+
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   const selectedPersonaObj = PERSONA_OPTIONS.find(p => p.id === activePersona) || PERSONA_OPTIONS[0];
+
+  const refreshAiStatus = () => {
+    const status = AIProviderService.getUsageStatus();
+    setAiUsageState(status);
+    const s = AIProviderService.getSettings();
+    const opt = PROVIDER_OPTIONS[s.provider];
+    let modelName = opt.name;
+    if (s.provider === 'openrouter') {
+      const found = opt.availableModels.find(m => m.id === s.openrouterModel);
+      modelName = found ? found.name : 'Llama 3.3 70B';
+    } else if (s.provider === 'gemini') {
+      const found = opt.availableModels.find(m => m.id === s.geminiModel);
+      modelName = found ? found.name : 'Gemini 2.5 Flash';
+    } else if (s.provider === 'openai') {
+      const found = opt.availableModels.find(m => m.id === s.openaiModel);
+      modelName = found ? found.name : 'GPT-4o Mini';
+    }
+    setActiveModelName(modelName);
+  };
 
   const samplePromptsByPersona: Record<string, string[]> = {
     general: [
@@ -105,7 +129,6 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
     scrollToBottom();
   }, [messages, isLoading]);
 
-  // Handle initial prompt if passed
   useEffect(() => {
     if (initialPersona) {
       setActivePersona(initialPersona);
@@ -155,6 +178,7 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
       const updated = [...newMessages, aiMsg];
       setMessages(updated);
       StorageService.saveChatMessages(updated);
+      refreshAiStatus();
     } catch (err) {
       console.error('Chat error:', err);
     } finally {
@@ -175,10 +199,31 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
       <div className="bg-gradient-to-r from-[#121A17] via-[#16221E] to-[#0F1714] border border-[#23332D] rounded-3xl p-4 sm:p-6 relative overflow-hidden shadow-xl">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
           <div className="space-y-1.5">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#1A2521] border border-[#315C45] text-[#D6A84F] text-[11px] sm:text-xs font-semibold uppercase tracking-widest">
-              <Bot className="w-3.5 h-3.5 text-[#86EFAC]" />
-              <span>Diálogo Filosófico Simbólico</span>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#1A2521] border border-[#315C45] text-[#D6A84F] text-[11px] sm:text-xs font-semibold uppercase tracking-widest">
+                <Bot className="w-3.5 h-3.5 text-[#86EFAC]" />
+                <span>Diálogo Filosófico Simbólico</span>
+              </div>
+
+              {/* Active Provider / Quota Badge */}
+              <button
+                id="open-ai-settings-pill-btn"
+                onClick={() => setIsSettingsOpen(true)}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-neutral-900/90 border border-amber-500/30 text-amber-300 text-[11px] hover:bg-neutral-800 transition-colors shadow-sm"
+              >
+                {aiUsageState.isUnlimited ? (
+                  <Infinity className="w-3.5 h-3.5 text-emerald-400" />
+                ) : (
+                  <Zap className="w-3.5 h-3.5 text-amber-400" />
+                )}
+                <span className="font-medium">{activeModelName}</span>
+                {aiUsageState.activeKeySource === 'none' && (
+                  <span className="text-[10px] text-amber-400 ml-1">(sin clave)</span>
+                )}
+                <Settings className="w-3 h-3 text-neutral-400 ml-0.5" />
+              </button>
             </div>
+
             <h1 className="font-serif text-xl sm:text-3xl font-bold text-[#F2EFE6] tracking-tight">
               Habla con tu Mapa & la Voz de tus Arquetipos
             </h1>
@@ -189,14 +234,27 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
             </p>
           </div>
 
-          <button
-            onClick={handleClearHistory}
-            className="px-3 py-2 bg-[#0E1513] hover:bg-[#1A2521] text-[#9DA79F] hover:text-[#F2EFE6] border border-[#23332D] rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 shrink-0 active:scale-95"
-            title="Reiniciar diálogo"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span>Reiniciar</span>
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              id="open-ai-settings-btn"
+              onClick={() => setIsSettingsOpen(true)}
+              className="px-3 py-2 bg-[#1A2521] hover:bg-[#23332D] text-[#D6A84F] border border-[#315C45]/60 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 active:scale-95 shadow-sm"
+              title="Configuración de IA y Proveedores"
+            >
+              <Settings className="w-3.5 h-3.5" />
+              <span>Ajustes IA</span>
+            </button>
+
+            <button
+              id="reset-chat-dialog-btn"
+              onClick={handleClearHistory}
+              className="px-3 py-2 bg-[#0E1513] hover:bg-[#1A2521] text-[#9DA79F] hover:text-[#F2EFE6] border border-[#23332D] rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 active:scale-95"
+              title="Reiniciar diálogo"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Reiniciar</span>
+            </button>
+          </div>
         </div>
 
         {/* Persona Selector Bar with Custom Scroll */}
@@ -222,6 +280,7 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
                 return (
                   <button
                     key={persona.id}
+                    id={`persona-btn-${persona.id}`}
                     onClick={() => setActivePersona(persona.id)}
                     className={`min-h-[44px] px-3.5 py-2 rounded-2xl text-xs font-medium whitespace-nowrap transition-all flex items-center gap-2.5 shrink-0 border select-none active:scale-95 ${
                       isActive
@@ -353,6 +412,7 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
           {currentSamplePrompts.map((prompt, idx) => (
             <button
               key={idx}
+              id={`sample-prompt-${idx}`}
               onClick={() => handleSend(prompt)}
               className="text-left text-xs bg-[#121A17] hover:bg-[#1A2521] text-[#C5CFC7] hover:text-[#F2EFE6] border border-[#23332D] hover:border-[#315C45] px-3.5 py-2.5 rounded-xl transition-all shadow-sm active:scale-95"
             >
@@ -371,6 +431,7 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
         className="flex gap-2 relative"
       >
         <textarea
+          id="chat-input-textarea"
           value={inputText}
           onChange={e => setInputText(e.target.value)}
           onKeyDown={e => {
@@ -384,6 +445,7 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
           className="flex-1 px-4 py-3 bg-[#121A17] border border-[#23332D] rounded-2xl text-xs sm:text-sm text-[#F2EFE6] placeholder-[#6B7A72] focus:outline-none focus:border-[#D6A84F] resize-none shadow-lg transition-colors"
         />
         <button
+          id="send-chat-msg-btn"
           type="submit"
           disabled={!inputText.trim() || isLoading}
           className="px-4 sm:px-5 bg-[#315C45] hover:bg-[#3D7055] disabled:opacity-50 text-[#F2EFE6] rounded-2xl font-semibold transition-all shadow-md flex items-center justify-center shrink-0 active:scale-95 min-h-[44px]"
@@ -401,8 +463,23 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
             Marco simbólico de autorreflexión. No constituye diagnóstico ni asesoramiento psicológico profesional.
           </span>
         </div>
-        <span className="text-[#D6A84F] font-semibold shrink-0">Gemini Flash Activo</span>
+        <button
+          onClick={() => setIsSettingsOpen(true)}
+          className="text-[#D6A84F] hover:underline font-semibold shrink-0 flex items-center gap-1"
+        >
+          <span>{activeModelName}</span>
+          <span className="text-[10px] text-neutral-400 font-normal">
+            ({aiUsageState.activeKeySource === 'none' ? 'Sin clave · local' : 'Ilimitado'})
+          </span>
+        </button>
       </div>
+
+      {/* AI Settings Modal */}
+      <AiSettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        onSettingsSaved={refreshAiStatus}
+      />
     </div>
   );
 };

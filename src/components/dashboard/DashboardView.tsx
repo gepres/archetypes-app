@@ -16,6 +16,7 @@ import { ArchetypeId, AssessmentResult, Challenge, JournalEntry } from '../../ty
 import { DimensionBar } from '../common/DimensionBar';
 import { RadarChartComponent } from '../common/RadarChartComponent';
 import { NavTab } from '../layout/Sidebar';
+import { AiModelStatusBadge } from '../common/AiModelStatusBadge';
 
 interface DashboardViewProps {
   currentResult: AssessmentResult | null;
@@ -26,6 +27,7 @@ interface DashboardViewProps {
   onSelectArchetype: (id: ArchetypeId) => void;
   onStartTest: (type?: 'full' | 'quick') => void;
   onToggleChallenge: (id: string) => void;
+  onOpenAiSettings?: () => void;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
@@ -37,6 +39,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onSelectArchetype,
   onStartTest,
   onToggleChallenge,
+  onOpenAiSettings,
 }) => {
   if (!currentResult) {
     return (
@@ -225,19 +228,36 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
           {/* AI Banner Card */}
           <div className="p-6 rounded-2xl bg-gradient-to-b from-[#16201D] to-[#121A17] border border-[#315C45] space-y-3">
-            <div className="flex items-center gap-2 text-xs font-semibold text-[#D6A84F]">
-              <Bot className="w-4 h-4" />
-              <span>Asistente de Reflexión IA</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xs font-semibold text-[#D6A84F]">
+                <Bot className="w-4 h-4" />
+                <span>Asistente de Reflexión IA</span>
+              </div>
+              {onOpenAiSettings && (
+                <button
+                  onClick={onOpenAiSettings}
+                  className="text-[11px] text-[#86EFAC] hover:underline flex items-center gap-1 font-medium"
+                >
+                  <span>Ajustes IA</span>
+                </button>
+              )}
             </div>
             <h4 className="font-serif font-bold text-base text-[#F2EFE6]">
               ¿Tienes dudas sobre cómo equilibrar tus arquetipos?
             </h4>
             <p className="text-xs text-[#9DA79F] leading-relaxed">
-              Consulta a la IA con el contexto de tu mapa arquetípico para explorar decisiones, sombras y ejercicios.
+              Consulta a la IA con el contexto de tu mapa arquetípico para explorar decisiones, sombras y ejercicios prácticos.
             </p>
+
+            {onOpenAiSettings && (
+              <div className="pt-1">
+                <AiModelStatusBadge onOpenSettings={onOpenAiSettings} variant="pill" />
+              </div>
+            )}
+
             <button
               onClick={() => onSelectTab('ai')}
-              className="w-full py-2 px-3 rounded-xl bg-[#315C45] hover:bg-[#3D7055] text-[#F2EFE6] text-xs font-semibold transition-all flex items-center justify-center gap-1.5"
+              className="w-full py-2 px-3 rounded-xl bg-[#315C45] hover:bg-[#3D7055] text-[#F2EFE6] text-xs font-semibold transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-95 mt-2"
             >
               <span>Abrir diálogo de reflexión</span>
               <ArrowRight className="w-3.5 h-3.5" />

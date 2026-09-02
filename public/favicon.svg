@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <!-- Background Gradient -->
+    <radialGradient id="bgGlow" cx="50%" cy="50%" r="50%" fx="30%" fy="30%">
+      <stop offset="0%" stop-color="#1D3629" />
+      <stop offset="60%" stop-color="#0E1714" />
+      <stop offset="100%" stop-color="#070B0A" />
+    </radialGradient>
+    
+    <!-- Gold Foil Gradient -->
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFF3C4" />
+      <stop offset="25%" stop-color="#E9C168" />
+      <stop offset="50%" stop-color="#D6A84F" />
+      <stop offset="75%" stop-color="#B88628" />
+      <stop offset="100%" stop-color="#7C550E" />
+    </linearGradient>
+
+    <!-- Emerald Gem Gradient -->
+    <linearGradient id="emeraldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#86EFAC" />
+      <stop offset="40%" stop-color="#315C45" />
+      <stop offset="80%" stop-color="#132B20" />
+      <stop offset="100%" stop-color="#0A1812" />
+    </linearGradient>
+
+    <!-- Glow Filter -->
+    <filter id="goldGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Base Rounded Shield Container -->
+  <rect width="512" height="512" rx="128" fill="url(#bgGlow)" stroke="#315C45" stroke-width="8"/>
+
+  <!-- Subtle Outer Sacred Geometry Circle -->
+  <circle cx="256" cy="256" r="200" stroke="#D6A84F" stroke-width="3" stroke-opacity="0.25" stroke-dasharray="6 8"/>
+  <circle cx="256" cy="256" r="176" stroke="#315C45" stroke-width="2" stroke-opacity="0.6"/>
+
+  <!-- 8-Point Archetypal Solar Rays / Compass Points -->
+  <g stroke="url(#goldGrad)" stroke-width="3" opacity="0.65">
+    <line x1="256" y1="56" x2="256" y2="92" stroke-linecap="round"/>
+    <line x1="256" y1="420" x2="256" y2="456" stroke-linecap="round"/>
+    <line x1="56" y1="256" x2="92" y2="256" stroke-linecap="round"/>
+    <line x1="420" y1="256" x2="456" y2="256" stroke-linecap="round"/>
+    <line x1="115" y1="115" x2="140" y2="140" stroke-linecap="round"/>
+    <line x1="372" y1="372" x2="397" y2="397" stroke-linecap="round"/>
+    <line x1="115" y1="397" x2="140" y2="372" stroke-linecap="round"/>
+    <line x1="372" y1="140" x2="397" y2="115" stroke-linecap="round"/>
+  </g>
+
+  <!-- Crown / Diamond / Apex Monogram Geometry -->
+  <!-- Outer Quad Diamond / Octagram -->
+  <polygon points="256,96 384,256 256,416 128,256" fill="#13231D" fill-opacity="0.8" stroke="url(#goldGrad)" stroke-width="6" stroke-linejoin="round"/>
+  
+  <!-- Intersecting Inverted Diamond (Merkaba/Octagram) -->
+  <polygon points="256,128 360,256 256,384 152,256" fill="none" stroke="#315C45" stroke-width="3" stroke-dasharray="4 4"/>
+
+  <!-- Majestic Archetypal 'A' & Crown Motif in Pure Vector -->
+  <!-- Crown Tri-Points on Top Apex -->
+  <path d="M208 192 L256 144 L304 192 L280 200 L256 176 L232 200 Z" fill="url(#goldGrad)" />
+  <circle cx="256" cy="134" r="7" fill="url(#goldGrad)" />
+  <circle cx="198" cy="188" r="5" fill="url(#goldGrad)" />
+  <circle cx="314" cy="188" r="5" fill="url(#goldGrad)" />
+
+  <!-- Main 'A' Monogram Arch & Crossbar -->
+  <path d="M256 170 L330 340 H292 L274 298 H238 L220 340 H182 Z M256 230 L245 268 H267 Z" 
+        fill="url(#goldGrad)" 
+        filter="url(#goldGlow)"
+        stroke="#7C550E" 
+        stroke-width="1.5" />
+
+  <!-- Central Emerald Star Jewel -->
+  <polygon points="256,242 263,256 256,270 249,256" fill="#86EFAC" stroke="#1D3629" stroke-width="1.5"/>
+  <circle cx="256" cy="256" r="3" fill="#FFFFFF" />
+
+  <!-- Base Inscription / Alchemical Dots -->
+  <circle cx="256" cy="370" r="4" fill="url(#goldGrad)" />
+  <circle cx="236" cy="370" r="2.5" fill="#D6A84F" opacity="0.6"/>
+  <circle cx="276" cy="370" r="2.5" fill="#D6A84F" opacity="0.6"/>
+</svg>

@@ -1,0 +1,21 @@
+# Dependencias
+node_modules/
+
+# Build
+dist/
+server.js
+
+# Entorno (nunca subir claves)
+.env
+.env.local
+.env.*.local
+
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+
+# Sistema / editor
+.DS_Store
+Thumbs.db
+*.log

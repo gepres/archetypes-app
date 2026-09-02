@@ -12,8 +12,12 @@ import {
   GitCompare,
   Sun,
   LogIn,
+  Cpu,
+  Settings,
 } from 'lucide-react';
 import { AssessmentResult, UserProfile } from '../../types';
+import { BrandLogo } from '../common/BrandLogo';
+import { AiModelStatusBadge } from '../common/AiModelStatusBadge';
 
 export type NavTab =
   | 'landing'
@@ -35,6 +39,7 @@ interface SidebarProps {
   onStartTest: (type?: 'full' | 'quick') => void;
   onOpenDailyOracle: () => void;
   onOpenAuthModal: () => void;
+  onOpenAiSettings: () => void;
   userProfile: UserProfile;
 }
 
@@ -45,6 +50,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onStartTest,
   onOpenDailyOracle,
   onOpenAuthModal,
+  onOpenAiSettings,
   userProfile,
 }) => {
   const mainNavItems = [
@@ -67,19 +73,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <div className="p-5 border-b border-[#1E2A25] flex flex-col gap-1">
         <div
           onClick={() => onSelectTab('landing')}
-          className="cursor-pointer flex items-center gap-3 group"
+          className="cursor-pointer group"
         >
-          <div className="w-9 h-9 rounded-xl bg-[#121A17] border border-[#315C45] flex items-center justify-center text-[#D6A84F] group-hover:border-[#D6A84F] transition-all">
-            <span className="font-serif text-xl font-bold">A</span>
-          </div>
-          <div>
-            <h1 className="font-serif text-lg font-bold tracking-tight text-[#F2EFE6] leading-none">
-              Arquetipos
-            </h1>
-            <p className="text-[10px] text-[#9DA79F] tracking-widest uppercase mt-1">
-              Mapa Simbólico
-            </p>
-          </div>
+          <BrandLogo size="md" />
         </div>
       </div>
 
@@ -179,6 +175,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </button>
           </div>
         )}
+
+        {/* AI Engine Status & Key Config */}
+        <AiModelStatusBadge onOpenSettings={onOpenAiSettings} variant="compact" />
 
         {/* User Account / Guest Status Bar */}
         <div

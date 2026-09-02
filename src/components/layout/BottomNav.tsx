@@ -14,15 +14,19 @@ import {
   Sun,
   ClipboardList,
   ChevronRight,
+  Cpu,
+  Settings,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { NavTab } from './Sidebar';
+import { AiModelStatusBadge } from '../common/AiModelStatusBadge';
 
 interface BottomNavProps {
   currentTab: NavTab;
   onSelectTab: (tab: NavTab) => void;
   onOpenDailyOracle?: () => void;
   onOpenAuthModal?: () => void;
+  onOpenAiSettings?: () => void;
   onStartTest?: (type?: 'full' | 'quick') => void;
 }
 
@@ -31,6 +35,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   onSelectTab,
   onOpenDailyOracle,
   onOpenAuthModal,
+  onOpenAiSettings,
   onStartTest,
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -178,6 +183,19 @@ export const BottomNav: React.FC<BottomNavProps> = ({
                   </button>
                 )}
               </div>
+
+              {/* AI Status Card inside Drawer */}
+              {onOpenAiSettings && (
+                <div className="mb-4">
+                  <AiModelStatusBadge
+                    onOpenSettings={() => {
+                      setIsMenuOpen(false);
+                      onOpenAiSettings();
+                    }}
+                    variant="compact"
+                  />
+                </div>
+              )}
 
               {/* Tools List */}
               <div className="space-y-2">

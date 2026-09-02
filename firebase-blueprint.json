@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ArchetypesAppBlueprint",
+  "description": "Firestore blueprint for Archetypes of the Soul application",
+  "entities": {
+    "UserProfile": {
+      "collection": "users",
+      "fields": {
+        "id": { "type": "string", "description": "User ID matching auth uid" },
+        "name": { "type": "string", "description": "Display name or archetype alias" },
+        "email": { "type": "string", "description": "User email address" },
+        "avatarEmoji": { "type": "string", "description": "Selected avatar emoji" },
+        "bio": { "type": "string", "description": "Short bio or notes" },
+        "createdAt": { "type": "string", "description": "ISO timestamp of creation" },
+        "lastActive": { "type": "string", "description": "ISO timestamp of last activity" },
+        "isGuest": { "type": "boolean", "description": "Whether this is an anonymous/guest account" }
+      }
+    },
+    "AssessmentResult": {
+      "collection": "users/{userId}/assessments",
+      "fields": {
+        "id": { "type": "string", "description": "Assessment ID" },
+        "date": { "type": "string", "description": "ISO timestamp" },
+        "scores": { "type": "object", "description": "Scores per archetype" },
+        "dominantArchetype": { "type": "object", "description": "Dominant archetype details" },
+        "top3": { "type": "array", "description": "Top 3 archetypes" },
+        "developmentArchetypes": { "type": "array", "description": "Development archetypes" },
+        "dimensionScores": { "type": "object", "description": "Scores per psychological dimension" },
+        "compositeProfile": { "type": "object", "description": "Title and description of composite profile" }
+      }
+    },
+    "JournalEntry": {
+      "collection": "users/{userId}/journals",
+      "fields": {
+        "id": { "type": "string", "description": "Journal entry ID" },
+        "date": { "type": "string", "description": "ISO timestamp" },
+        "title": { "type": "string", "description": "Title of entry" },
+        "content": { "type": "string", "description": "Markdown/text content" },
+        "relatedArchetypes": { "type": "array", "description": "Related archetypes IDs" },
+        "mood": { "type": "string", "description": "Mood descriptor" },
+        "promptUsed": { "type": "string", "description": "Reflection prompt" }
+      }
+    },
+    "Challenge": {
+      "collection": "users/{userId}/challenges",
+      "fields": {
+        "id": { "type": "string", "description": "Challenge ID" },
+        "archetypeId": { "type": "string", "description": "Associated archetype" },
+        "title": { "type": "string", "description": "Challenge title" },
+        "description": { "type": "string", "description": "Challenge description" },
+        "completed": { "type": "boolean", "description": "Completion state" },
+        "completedAt": { "type": "string", "description": "ISO timestamp of completion" }
+      }
+    },
+    "ChatMessage": {
+      "collection": "users/{userId}/chatHistory",
+      "fields": {
+        "id": { "type": "string", "description": "Message ID" },
+        "role": { "type": "string", "description": "user or model" },
+        "content": { "type": "string", "description": "Message content" },
+        "timestamp": { "type": "string", "description": "ISO timestamp" }
+      }
+    }
+  }
+}
