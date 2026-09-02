@@ -1,0 +1,6 @@
+{
+  "name": "Arquetipos Masculinos",
+  "description": "Plataforma de autoconocimiento, psicología simbólica y mapa de desarrollo personal basado en 12 arquetipos masculinos.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

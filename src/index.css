@@ -1,0 +1,94 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-serif: 'Cormorant Garamond', Georgia, serif;
+    --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: #0B1110;
+    color: #F2EFE6;
+  }
+
+  h1, h2, h3, .font-serif {
+    font-family: var(--font-serif);
+  }
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0B1110;
+}
+::-webkit-scrollbar-thumb {
+  background: #1E2A25;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #315C45;
+}
+
+/* Custom persona selector scrollbar */
+.scrollbar-persona {
+  scrollbar-width: thin;
+  scrollbar-color: #315C45 #0E1513;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+.scrollbar-persona::-webkit-scrollbar {
+  height: 5px;
+}
+
+.scrollbar-persona::-webkit-scrollbar-track {
+  background: #0E1513;
+  border-radius: 9999px;
+}
+
+.scrollbar-persona::-webkit-scrollbar-thumb {
+  background: linear-gradient(90deg, #254836, #315C45, #D6A84F);
+  border-radius: 9999px;
+}
+
+.scrollbar-persona::-webkit-scrollbar-thumb:hover {
+  background: #D6A84F;
+}
+
+/* Custom chat messages scrollbar */
+.scrollbar-chat {
+  scrollbar-width: thin;
+  scrollbar-color: #233F31 #121A17;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+.scrollbar-chat::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-chat::-webkit-scrollbar-track {
+  background: #121A17;
+  border-radius: 9999px;
+}
+
+.scrollbar-chat::-webkit-scrollbar-thumb {
+  background: #233F31;
+  border-radius: 9999px;
+}
+
+.scrollbar-chat::-webkit-scrollbar-thumb:hover {
+  background: #315C45;
+}
+
+/* Smooth safe touch scrolling utility */
+.touch-scroll-x {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+
