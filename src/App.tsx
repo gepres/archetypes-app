@@ -23,6 +23,7 @@ import { ProfileView } from './components/profile/ProfileView';
 import { AuthModal } from './components/auth/AuthModal';
 import { DailyOracleModal } from './components/archetypes/DailyOracleModal';
 import { AiSettingsModal } from './components/ai/AiSettingsModal';
+import { InstallAppBanner } from './components/pwa/InstallAppBanner';
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState<NavTab>('landing');
@@ -277,6 +278,9 @@ export default function App() {
           onStartTest={handleStartTest}
         />
       </div>
+
+      {/* Ofrecimiento de instalar la app; se oculta solo si ya está instalada */}
+      <InstallAppBanner />
 
       {/* Global Modals */}
       <AiSettingsModal

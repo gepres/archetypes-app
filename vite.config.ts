@@ -2,6 +2,7 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import { defineConfig, loadEnv, type Plugin } from 'vite';
+import { VitePWA } from 'vite-plugin-pwa';
 import { handleGeminiChat } from './src/server/geminiHandler';
 
 // Los .env.example vienen con marcadores tipo "MY_GEMINI_API_KEY": no son claves.
@@ -47,7 +48,56 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
 
   return {
-    plugins: [react(), tailwindcss(), geminiApiPlugin()],
+    plugins: [
+      react(),
+      tailwindcss(),
+      geminiApiPlugin(),
+      VitePWA({
+        registerType: 'autoUpdate',
+        includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'og-image.png'],
+        manifest: {
+          name: 'Arquetipos Masculinos',
+          short_name: 'Arquetipos',
+          description:
+            'Mapa simbólico de los 12 arquetipos masculinos: test, oráculo diario, diario de reflexión y retos de desarrollo.',
+          lang: 'es',
+          dir: 'ltr',
+          start_url: '/',
+          scope: '/',
+          display: 'standalone',
+          orientation: 'portrait',
+          background_color: '#0B1110',
+          theme_color: '#0B1110',
+          categories: ['lifestyle', 'education', 'health'],
+          icons: [
+            { src: '/pwa-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+            { src: '/pwa-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+            { src: '/pwa-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          ],
+        },
+        workbox: {
+          globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+          // El bundle ronda los 2 MB y el tope por defecto de Workbox es justo 2 MB
+          maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+          navigateFallback: '/index.html',
+          // Las APIs de IA y Firebase nunca deben servirse desde caché
+          navigateFallbackDenylist: [/^\/api/],
+          runtimeCaching: [
+            {
+              urlPattern: ({ url }) =>
+                url.origin === 'https://fonts.googleapis.com' || url.origin === 'https://fonts.gstatic.com',
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'google-fonts',
+                expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 365 },
+                cacheableResponse: { statuses: [0, 200] },
+              },
+            },
+          ],
+        },
+        devOptions: { enabled: false },
+      }),
+    ],
     define: {
       'import.meta.env.VITE_OPENROUTER_API_KEY': JSON.stringify(realKey(env.OPENROUTER_API_KEY)),
       'import.meta.env.VITE_GEMINI_API_KEY': JSON.stringify(realKey(env.GEMINI_API_KEY)),

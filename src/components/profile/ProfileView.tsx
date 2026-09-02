@@ -30,6 +30,7 @@ import { AIProviderService } from '../../services/aiProviderService';
 import { AccountRecord, AssessmentResult, UserProfile } from '../../types';
 import { NavTab } from '../layout/Sidebar';
 import { AiSettingsModal } from '../ai/AiSettingsModal';
+import { InstallAppCard } from '../pwa/InstallAppCard';
 
 interface ProfileViewProps {
   userProfile: UserProfile;
@@ -436,6 +437,9 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           </div>
         )}
       </div>
+
+      {/* Instalación como app: sigue accesible aunque se cierre el banner flotante */}
+      <InstallAppCard />
 
       {/* AI Provider & Engine Settings Card */}
       <div className="p-6 sm:p-7 rounded-3xl bg-[#121A17] border border-[#23332D] space-y-4 shadow-xl">
