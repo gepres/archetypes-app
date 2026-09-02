@@ -103,7 +103,8 @@ export const TestView: React.FC<TestViewProps> = ({
         value: answers[q.id] || 3, // default neutral if somehow unselected
       }));
 
-      const result = calculateAssessmentResult(answerList, testType);
+      const userProfile = StorageService.getUserProfile();
+      const result = calculateAssessmentResult(answerList, testType, userProfile.gender || 'male');
       StorageService.saveCurrentResult(result);
       StorageService.clearTestProgress();
       setIsCalculating(false);

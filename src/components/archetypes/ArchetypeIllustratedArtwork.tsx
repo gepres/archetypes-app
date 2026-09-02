@@ -798,6 +798,235 @@ export const ArchetypeIllustratedArtwork: React.FC<ArchetypeIllustratedArtworkPr
         </svg>
       );
 
+    case 'sacerdote':
+      return (
+        <svg viewBox="0 0 320 380" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+          <defs>
+            <radialGradient id="sacerdote-bg" cx="50%" cy="40%" r="65%">
+              <stop offset="0%" stopColor="#1E1B4B" />
+              <stop offset="50%" stopColor="#0F172A" />
+              <stop offset="100%" stopColor="#030712" />
+            </radialGradient>
+            <radialGradient id="sac-glow" cx="50%" cy="45%" r="50%">
+              <stop offset="0%" stopColor="#A855F7" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#3B82F6" stopOpacity="0" />
+            </radialGradient>
+          </defs>
+          <rect width="320" height="380" fill="url(#sacerdote-bg)" />
+          <circle cx="160" cy="160" r="100" fill="url(#sac-glow)" />
+          {/* Sacred Temple Columns & Veil */}
+          <line x1="80" y1="60" x2="80" y2="340" stroke="#6366F1" strokeWidth="2" opacity="0.4" />
+          <line x1="240" y1="60" x2="240" y2="340" stroke="#6366F1" strokeWidth="2" opacity="0.4" />
+          <path d="M80 100 Q160 140 240 100" stroke="#A855F7" strokeWidth="1.5" fill="none" opacity="0.6" />
+          {/* Sacred Chalice / Candlestick */}
+          <g transform="translate(160, 180)">
+            <path d="M-25 0 Q0 30 25 0 L15 60 Q0 65 -15 60 Z" fill="#312E81" stroke="#D6A84F" strokeWidth="2" />
+            <path d="M-35 -10 Q0 -25 35 -10 Q0 15 -35 -10 Z" fill="#4338CA" stroke="#D6A84F" strokeWidth="1.5" />
+            {/* Candle flame of inner wisdom */}
+            <path d="M0 -30 Q-10 -10 0 5 Q10 -10 0 -30 Z" fill="#FDE047" filter="drop-shadow(0 0 10px #F59E0B)" />
+            <circle cx="0" cy="-10" r="4" fill="#FFFFFF" />
+          </g>
+          {/* Lunar Crescent & Stars */}
+          <path d="M160 70 A15 15 0 0 0 160 100 A10 10 0 0 1 160 70 Z" fill="#E0E7FF" opacity="0.8" />
+        </svg>
+      );
+
+    case 'sanador':
+      return (
+        <svg viewBox="0 0 320 380" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+          <defs>
+            <radialGradient id="sanador-bg" cx="50%" cy="40%" r="65%">
+              <stop offset="0%" stopColor="#064E3B" />
+              <stop offset="50%" stopColor="#022C22" />
+              <stop offset="100%" stopColor="#011611" />
+            </radialGradient>
+            <radialGradient id="san-glow" cx="50%" cy="45%" r="50%">
+              <stop offset="0%" stopColor="#34D399" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#059669" stopOpacity="0" />
+            </radialGradient>
+          </defs>
+          <rect width="320" height="380" fill="url(#sanador-bg)" />
+          <circle cx="160" cy="160" r="100" fill="url(#san-glow)" />
+          {/* Healing Waves of Water */}
+          <path d="M40 300 Q100 280 160 300 T280 300" stroke="#34D399" strokeWidth="2" fill="none" opacity="0.6" />
+          <path d="M60 320 Q110 305 160 320 T260 320" stroke="#10B981" strokeWidth="1.5" fill="none" opacity="0.4" />
+          {/* Caduceus / Healing Plant of Life */}
+          <g transform="translate(160, 160)">
+            <line x1="0" y1="-80" x2="0" y2="80" stroke="#D6A84F" strokeWidth="3" />
+            <circle cx="0" cy="-80" r="10" fill="#D6A84F" />
+            {/* Twining Leaves / Serpents of Regeneration */}
+            <path d="M-30 -40 Q0 -60 30 -40 Q0 -20 -30 0 Q0 20 30 40 Q0 60 -30 40" stroke="#34D399" strokeWidth="2.5" fill="none" />
+            <path d="M30 -40 Q0 -60 -30 -40 Q0 -20 30 0 Q0 20 -30 40 Q0 60 30 40" stroke="#6EE7B7" strokeWidth="2" fill="none" opacity="0.8" />
+          </g>
+          <circle cx="160" cy="80" r="6" fill="#FDE047" opacity="0.9" />
+        </svg>
+      );
+
+    case 'constructor':
+      return (
+        <svg viewBox="0 0 320 380" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+          <defs>
+            <radialGradient id="const-bg" cx="50%" cy="40%" r="65%">
+              <stop offset="0%" stopColor="#312E81" />
+              <stop offset="50%" stopColor="#1E1B4B" />
+              <stop offset="100%" stopColor="#0B091E" />
+            </radialGradient>
+            <linearGradient id="gold-pillar" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#FDE047" />
+              <stop offset="50%" stopColor="#D6A84F" />
+              <stop offset="100%" stopColor="#854D0E" />
+            </linearGradient>
+          </defs>
+          <rect width="320" height="380" fill="url(#const-bg)" />
+          {/* Blueprint Grid Lines */}
+          <g stroke="#6366F1" strokeWidth="0.5" opacity="0.25">
+            {Array.from({ length: 9 }).map((_, i) => (
+              <line key={`h-${i}`} x1="20" y1={40 + i * 35} x2="300" y2={40 + i * 35} />
+            ))}
+            {Array.from({ length: 8 }).map((_, i) => (
+              <line key={`v-${i}`} x1={40 + i * 35} y1="30" x2={40 + i * 35} y2="350" />
+            ))}
+          </g>
+          {/* Classical Temple Facade / Solid Architecture */}
+          <g transform="translate(160, 190)">
+            {/* Pediment / Triangle Roof */}
+            <polygon points="0,-100 -90,-40 90,-40" fill="#1F2937" stroke="url(#gold-pillar)" strokeWidth="2.5" />
+            {/* Architrave */}
+            <rect x="-95" y="-40" width="190" height="15" fill="#374151" stroke="url(#gold-pillar)" strokeWidth="1.5" />
+            {/* 4 Sturdy Pillars */}
+            <rect x="-85" y="-25" width="20" height="130" fill="#1F2937" stroke="url(#gold-pillar)" strokeWidth="2" />
+            <rect x="-35" y="-25" width="20" height="130" fill="#1F2937" stroke="url(#gold-pillar)" strokeWidth="2" />
+            <rect x="15" y="-25" width="20" height="130" fill="#1F2937" stroke="url(#gold-pillar)" strokeWidth="2" />
+            <rect x="65" y="-25" width="20" height="130" fill="#1F2937" stroke="url(#gold-pillar)" strokeWidth="2" />
+            {/* Solid Foundation Steps */}
+            <rect x="-105" y="105" width="210" height="15" fill="#374151" stroke="url(#gold-pillar)" strokeWidth="2" />
+            <rect x="-120" y="120" width="240" height="20" fill="#1F2937" stroke="url(#gold-pillar)" strokeWidth="2" />
+          </g>
+        </svg>
+      );
+
+    case 'soberano':
+      return (
+        <svg viewBox="0 0 320 380" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+          <defs>
+            <radialGradient id="sob-bg" cx="50%" cy="40%" r="65%">
+              <stop offset="0%" stopColor="#451A03" />
+              <stop offset="50%" stopColor="#1C0E07" />
+              <stop offset="100%" stopColor="#0B0502" />
+            </radialGradient>
+            <radialGradient id="sob-glow" cx="50%" cy="35%" r="45%">
+              <stop offset="0%" stopColor="#F59E0B" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#F59E0B" stopOpacity="0" />
+            </radialGradient>
+          </defs>
+          <rect width="320" height="380" fill="url(#sob-bg)" />
+          <circle cx="160" cy="140" r="100" fill="url(#sob-glow)" />
+          {/* Radiant Solar Crown of Inner Dignity */}
+          <g transform="translate(160, 140)">
+            {/* Solar Ring */}
+            <circle cx="0" cy="0" r="70" stroke="#D6A84F" strokeWidth="2" strokeDasharray="6 4" opacity="0.8" />
+            {/* Solar Rays of Autonomy */}
+            {Array.from({ length: 16 }).map((_, i) => (
+              <line
+                key={i}
+                x1="0"
+                y1="0"
+                x2={Math.cos((i * 22.5 * Math.PI) / 180) * 85}
+                y2={Math.sin((i * 22.5 * Math.PI) / 180) * 85}
+                stroke="#FDE047"
+                strokeWidth="1.5"
+                opacity="0.5"
+              />
+            ))}
+            {/* Sovereign Seal Center */}
+            <circle cx="0" cy="0" r="35" fill="#78350F" stroke="#D6A84F" strokeWidth="3" />
+            <polygon points="0,-22 18,12 -18,12" fill="#D6A84F" />
+            <polygon points="0,22 18,-12 -18,-12" fill="#FDE047" opacity="0.6" />
+          </g>
+          {/* Sovereign Robe Silhouette */}
+          <path d="M70 380 C85 270 120 230 160 230 C200 230 235 270 250 380 Z" fill="#29140B" stroke="#D6A84F" strokeWidth="2" />
+        </svg>
+      );
+
+    case 'mistico':
+      return (
+        <svg viewBox="0 0 320 380" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+          <defs>
+            <radialGradient id="mist-bg" cx="50%" cy="45%" r="65%">
+              <stop offset="0%" stopColor="#1E1B4B" />
+              <stop offset="40%" stopColor="#0B0826" />
+              <stop offset="100%" stopColor="#03020A" />
+            </radialGradient>
+            <radialGradient id="mist-nebula" cx="50%" cy="40%" r="55%">
+              <stop offset="0%" stopColor="#818CF8" stopOpacity="0.4" />
+              <stop offset="50%" stopColor="#C084FC" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#1E1B4B" stopOpacity="0" />
+            </radialGradient>
+          </defs>
+          <rect width="320" height="380" fill="url(#mist-bg)" />
+          <circle cx="160" cy="150" r="110" fill="url(#mist-nebula)" />
+          {/* Cosmic Galaxy Spiral */}
+          <g transform="translate(160, 150)">
+            <path
+              d="M0 0 C20 -40 80 -30 70 20 C60 70 -10 80 -60 50 C-110 20 -90 -60 -40 -90 C20 -120 110 -90 120 -20"
+              stroke="#A5B4FC"
+              strokeWidth="2"
+              fill="none"
+              opacity="0.7"
+            />
+            <path
+              d="M0 0 C-20 40 -80 30 -70 -20 C-60 -70 10 -80 60 -50 C110 -20 90 60 40 90 C-20 120 -110 90 -120 20"
+              stroke="#E879F9"
+              strokeWidth="1.5"
+              fill="none"
+              opacity="0.5"
+            />
+            {/* Central Cosmic Eye / Star */}
+            <circle cx="0" cy="0" r="8" fill="#FFFFFF" filter="drop-shadow(0 0 12px #818CF8)" />
+          </g>
+          {/* Stardust */}
+          <circle cx="80" cy="80" r="1.5" fill="#FFFFFF" />
+          <circle cx="240" cy="70" r="2" fill="#E0E7FF" />
+          <circle cx="70" cy="240" r="1.5" fill="#C7D2FE" />
+          <circle cx="250" cy="230" r="2" fill="#F472B6" />
+          <circle cx="190" cy="290" r="1.5" fill="#FFFFFF" />
+        </svg>
+      );
+
+    case 'integrador':
+      return (
+        <svg viewBox="0 0 320 380" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+          <defs>
+            <radialGradient id="integ-bg" cx="50%" cy="45%" r="65%">
+              <stop offset="0%" stopColor="#1E293B" />
+              <stop offset="50%" stopColor="#0F172A" />
+              <stop offset="100%" stopColor="#020617" />
+            </radialGradient>
+            <linearGradient id="polar-fire-water" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#EF4444" />
+              <stop offset="35%" stopColor="#F59E0B" />
+              <stop offset="65%" stopColor="#10B981" />
+              <stop offset="100%" stopColor="#3B82F6" />
+            </linearGradient>
+          </defs>
+          <rect width="320" height="380" fill="url(#integ-bg)" />
+          {/* Sacred Geometric Mandala / Torus of Integration */}
+          <g transform="translate(160, 160)">
+            {/* Outer Ring of Unity */}
+            <circle cx="0" cy="0" r="90" stroke="url(#polar-fire-water)" strokeWidth="2.5" />
+            <circle cx="0" cy="0" r="70" stroke="#D6A84F" strokeWidth="1" strokeDasharray="4 4" opacity="0.6" />
+            {/* Interlocking Yin Yang / Polarities */}
+            <path d="M0 -70 A35 35 0 0 1 0 0 A35 35 0 0 0 0 70 A70 70 0 0 1 0 -70 Z" fill="#EF4444" opacity="0.3" stroke="#F59E0B" strokeWidth="1.5" />
+            <path d="M0 -70 A35 35 0 0 1 0 0 A35 35 0 0 0 0 70 A70 70 0 0 0 0 -70 Z" fill="#3B82F6" opacity="0.3" stroke="#10B981" strokeWidth="1.5" />
+            {/* The Unified Golden Center */}
+            <circle cx="0" cy="0" r="14" fill="#D6A84F" filter="drop-shadow(0 0 10px #FDE047)" />
+            <circle cx="0" cy="0" r="6" fill="#FFFFFF" />
+          </g>
+          {/* Synthesis Rings */}
+          <path d="M60 320 Q160 260 260 320" stroke="url(#polar-fire-water)" strokeWidth="2" fill="none" opacity="0.8" />
+        </svg>
+      );
+
     default:
       return null;
   }

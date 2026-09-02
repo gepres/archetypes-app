@@ -24,9 +24,9 @@ import {
   Activity,
   Award,
 } from 'lucide-react';
-import { ARCHETYPES, ARCHETYPES_LIST, DIMENSIONS } from '../../data/archetypesData';
+import { ARCHETYPES, ARCHETYPES_LIST, DIMENSIONS, getArchetype, getArchetypeList } from '../../data/archetypesData';
 import { ARCHETYPE_VISUALS } from '../../data/archetypeImages';
-import { Archetype, ArchetypeId, DimensionId, LifeDomainKey } from '../../types';
+import { Archetype, ArchetypeId, DimensionId, GenderMode, LifeDomainKey } from '../../types';
 import { NavTab } from '../layout/Sidebar';
 import { ArchetypePortraitCard } from './ArchetypePortraitCard';
 
@@ -35,6 +35,8 @@ interface ArchetypesListViewProps {
   onSelectArchetype: (id: ArchetypeId | null) => void;
   onSelectTab: (tab: NavTab) => void;
   onDiscussWithAi?: (archetypeName: string, archetypeId?: string) => void;
+  gender?: GenderMode;
+  onGenderChange?: (gender: GenderMode) => void;
 }
 
 const DOMAIN_LABELS: Record<LifeDomainKey, { label: string; icon: any }> = {
@@ -50,13 +52,18 @@ export const ArchetypesListView: React.FC<ArchetypesListViewProps> = ({
   onSelectArchetype,
   onSelectTab,
   onDiscussWithAi,
+  gender = 'male',
+  onGenderChange,
 }) => {
   const [selectedDimension, setSelectedDimension] = useState<DimensionId | 'todos'>('todos');
   const [selectedDomainFilter, setSelectedDomainFilter] = useState<LifeDomainKey | 'todos'>('todos');
   const [searchQuery, setSearchQuery] = useState('');
   const [detailActiveTab, setDetailActiveTab] = useState<'esencia' | 'luz_sombra' | 'ambitos' | 'ejercicios' | 'sinergias'>('esencia');
 
-  const filteredArchetypes = ARCHETYPES_LIST.filter(arch => {
+  const currentGender = gender || 'male';
+  const archetypesList = getArchetypeList(currentGender);
+
+  const filteredArchetypes = archetypesList.filter(arch => {
     const matchesDim = selectedDimension === 'todos' || arch.dimension === selectedDimension;
     const query = searchQuery.toLowerCase().trim();
     const matchesQuery =
@@ -70,7 +77,7 @@ export const ArchetypesListView: React.FC<ArchetypesListViewProps> = ({
   });
 
   const selectedArchetype: Archetype | null = selectedArchetypeId
-    ? ARCHETYPES[selectedArchetypeId]
+    ? getArchetype(selectedArchetypeId, currentGender)
     : null;
 
   // Render detail view if an archetype is selected
@@ -79,13 +86,57 @@ export const ArchetypesListView: React.FC<ArchetypesListViewProps> = ({
     return (
       <div id="archetype-detail-view" className="max-w-4xl mx-auto space-y-8 pb-24 pt-2 animate-fadeIn">
         {/* Back navigation */}
-        <button
-          onClick={() => onSelectArchetype(null)}
-          className="inline-flex items-center gap-2 text-xs text-[#9DA79F] hover:text-[#D6A84F] transition-colors py-1 px-3 bg-[#121A17] rounded-xl border border-[#23332D]"
-        >
-          <ChevronLeft className="w-4 h-4" />
-          <span>Volver a la galería de 12 arquetipos</span>
-        </button>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <button
+            onClick={() => onSelectArchetype(null)}
+            className="inline-flex items-center gap-2 text-xs text-[#9DA79F] hover:text-[#D6A84F] transition-colors py-1.5 px-3.5 bg-[#121A17] rounded-xl border border-[#23332D]"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            <span>Volver a la galería de 18 arquetipos</span>
+          </button>
+
+          {/* Gender Perspective switcher in detail view */}
+          {onGenderChange && (
+            <div className="flex items-center gap-1.5 bg-[#121A17] p-1 rounded-xl border border-[#23332D]">
+              <span className="text-[10px] font-bold text-[#8A968D] uppercase px-2">
+                Perspectiva:
+              </span>
+              <button
+                onClick={() => onGenderChange('male')}
+                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                  currentGender === 'male'
+                    ? 'bg-[#315C45] text-[#F2EFE6] border border-[#437A5C]'
+                    : 'text-[#9DA79F] hover:text-[#F2EFE6]'
+                }`}
+                title="Perspectiva Masculina"
+              >
+                ♂ Masculina
+              </button>
+              <button
+                onClick={() => onGenderChange('female')}
+                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                  currentGender === 'female'
+                    ? 'bg-[#7C3AED]/50 text-[#F2EFE6] border border-[#7C3AED]'
+                    : 'text-[#9DA79F] hover:text-[#F2EFE6]'
+                }`}
+                title="Perspectiva Femenina"
+              >
+                ♀ Femenina
+              </button>
+              <button
+                onClick={() => onGenderChange('universal')}
+                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                  currentGender === 'universal'
+                    ? 'bg-[#D6A84F]/25 text-[#D6A84F] border border-[#D6A84F]'
+                    : 'text-[#9DA79F] hover:text-[#F2EFE6]'
+                }`}
+                title="Perspectiva Universal / Dual"
+              >
+                ☯ Universal
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* Archetype Hero Header with Ornate Styling */}
         <div className="p-7 sm:p-9 rounded-3xl bg-gradient-to-b from-[#16221E] via-[#121A17] to-[#0E1513] border-2 border-[#315C45] shadow-2xl space-y-6 relative overflow-hidden">
@@ -424,23 +475,86 @@ export const ArchetypesListView: React.FC<ArchetypesListViewProps> = ({
     );
   }
 
-  // Gallery View of the 12 Archetypes
+  // Gallery View of the 18 Archetypes
   return (
     <div id="archetypes-gallery-view" className="space-y-8 animate-fadeIn max-w-6xl mx-auto">
       {/* Header Banner */}
-      <div className="bg-gradient-to-r from-[#121A17] via-[#16221E] to-[#0F1714] border border-[#23332D] rounded-3xl p-6 sm:p-8 relative overflow-hidden shadow-xl">
+      <div className="bg-gradient-to-r from-[#121A17] via-[#16221E] to-[#0F1714] border border-[#23332D] rounded-3xl p-6 sm:p-8 relative overflow-hidden shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="relative z-10 max-w-2xl space-y-3">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#1A2521] border border-[#315C45] text-[#D6A84F] text-xs font-semibold uppercase tracking-widest">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Enciclopedia Simbólica</span>
+            <span>Enciclopedia Simbólica Dinámica</span>
           </div>
           <h1 className="font-serif text-2xl sm:text-4xl font-bold text-[#F2EFE6] tracking-tight">
-            Los 12 Arquetipos Masculinos
+            {currentGender === 'male'
+              ? 'Los 18 Arquetipos Masculinos'
+              : currentGender === 'female'
+              ? 'Los 18 Arquetipos Femeninos'
+              : 'Los 18 Arquetipos Universales'}
           </h1>
           <p className="text-sm text-[#9DA79F] leading-relaxed">
-            Explora las 12 fuerzas simbólicas organizadas en cuatro dimensiones cardinales: Mente, Acción, Corazón y Construcción. Cada arquetipo encarna virtudes únicas, sombras a integrar y claves de maduración.
+            {currentGender === 'male'
+              ? 'Explora las 18 energías simbólicas en su manifestación masculina (El Rey, El Guerrero, El Mago, El Padre...). Conoce sus luces, sombras y prácticas evolutivas.'
+              : currentGender === 'female'
+              ? 'Explora las 18 energías simbólicas en su manifestación femenina (La Reina, La Guerrera, La Maga, La Madre...). Conoce sus luces, sombras y prácticas evolutivas.'
+              : 'Explora las 18 energías arquetípicas en su forma integrada y universal, organizada en cuatro dimensiones cardinales.'}
           </p>
         </div>
+
+        {/* Quick Gender Switcher in Banner */}
+        {onGenderChange && (
+          <div className="relative z-10 bg-[#0B1110] p-3 rounded-2xl border border-[#23332D] space-y-2 shrink-0">
+            <span className="text-[11px] font-bold text-[#D6A84F] uppercase tracking-wider block">
+              Perspectiva Activa
+            </span>
+            <div className="flex flex-col gap-1.5">
+              <button
+                onClick={() => onGenderChange('male')}
+                className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all flex items-center justify-between gap-3 ${
+                  currentGender === 'male'
+                    ? 'bg-[#315C45] text-[#F2EFE6] border border-[#437A5C] shadow'
+                    : 'bg-[#121A17] text-[#9DA79F] hover:text-[#F2EFE6] border border-[#1E2A25]'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <span>♂</span>
+                  <span>Masculina</span>
+                </div>
+                {currentGender === 'male' && <CheckCircle2 className="w-3.5 h-3.5 text-[#86EFAC]" />}
+              </button>
+
+              <button
+                onClick={() => onGenderChange('female')}
+                className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all flex items-center justify-between gap-3 ${
+                  currentGender === 'female'
+                    ? 'bg-[#7C3AED]/50 text-[#F2EFE6] border border-[#7C3AED] shadow'
+                    : 'bg-[#121A17] text-[#9DA79F] hover:text-[#F2EFE6] border border-[#1E2A25]'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <span>♀</span>
+                  <span>Femenina</span>
+                </div>
+                {currentGender === 'female' && <CheckCircle2 className="w-3.5 h-3.5 text-[#C084FC]" />}
+              </button>
+
+              <button
+                onClick={() => onGenderChange('universal')}
+                className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all flex items-center justify-between gap-3 ${
+                  currentGender === 'universal'
+                    ? 'bg-[#D6A84F]/25 text-[#D6A84F] border border-[#D6A84F] shadow'
+                    : 'bg-[#121A17] text-[#9DA79F] hover:text-[#F2EFE6] border border-[#1E2A25]'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <span>☯</span>
+                  <span>Universal</span>
+                </div>
+                {currentGender === 'universal' && <CheckCircle2 className="w-3.5 h-3.5 text-[#D6A84F]" />}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Filter and Search Bar */}
@@ -468,7 +582,7 @@ export const ArchetypesListView: React.FC<ArchetypesListViewProps> = ({
                   : 'bg-[#0E1513] text-[#9DA79F] hover:text-[#F2EFE6] border border-[#23332D]'
               }`}
             >
-              Todas (12)
+              Todos (18)
             </button>
             {(Object.keys(DIMENSIONS) as DimensionId[]).map(dimId => {
               const dim = DIMENSIONS[dimId];

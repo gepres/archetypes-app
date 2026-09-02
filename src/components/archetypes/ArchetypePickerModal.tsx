@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { X, Search, Sparkles, Check, Filter, Layers, Ban } from 'lucide-react';
-import { ARCHETYPES_LIST } from '../../data/archetypesData';
+import { ARCHETYPES_LIST, getArchetypeList } from '../../data/archetypesData';
 import { ARCHETYPE_VISUALS } from '../../data/archetypeImages';
-import { ArchetypeId } from '../../types';
+import { ArchetypeId, GenderMode } from '../../types';
 import { ArchetypeIllustratedArtwork } from './ArchetypeIllustratedArtwork';
 
 interface ArchetypePickerModalProps {
@@ -14,6 +14,7 @@ interface ArchetypePickerModalProps {
   subtitle?: string;
   allowNone?: boolean;
   disabledIds?: ArchetypeId[];
+  gender?: GenderMode;
 }
 
 export const ArchetypePickerModal: React.FC<ArchetypePickerModalProps> = ({
@@ -25,9 +26,14 @@ export const ArchetypePickerModal: React.FC<ArchetypePickerModalProps> = ({
   subtitle = 'Explora la galería arquetípica y elige la energía para comparar.',
   allowNone = false,
   disabledIds = [],
+  gender = 'male',
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDimension, setSelectedDimension] = useState<string>('todos');
+
+  const archetypeList = useMemo(() => {
+    return getArchetypeList(gender);
+  }, [gender]);
 
   // Handle ESC key to close
   useEffect(() => {
@@ -54,12 +60,12 @@ export const ArchetypePickerModal: React.FC<ArchetypePickerModalProps> = ({
 
   const dimensions = useMemo(() => {
     const set = new Set<string>();
-    ARCHETYPES_LIST.forEach(a => set.add(a.dimension));
+    archetypeList.forEach(a => set.add(a.dimension));
     return ['todos', ...Array.from(set)];
-  }, []);
+  }, [archetypeList]);
 
   const filteredArchetypes = useMemo(() => {
-    return ARCHETYPES_LIST.filter(arch => {
+    return archetypeList.filter(arch => {
       const matchesSearch =
         arch.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         arch.dimension.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -71,7 +77,7 @@ export const ArchetypePickerModal: React.FC<ArchetypePickerModalProps> = ({
 
       return matchesSearch && matchesDim;
     });
-  }, [searchTerm, selectedDimension]);
+  }, [searchTerm, selectedDimension, archetypeList]);
 
   if (!isOpen) return null;
 

@@ -27,7 +27,7 @@ import {
 import { StorageService } from '../../services/storageService';
 import { FirebaseService } from '../../services/firebaseService';
 import { AIProviderService } from '../../services/aiProviderService';
-import { AccountRecord, AssessmentResult, UserProfile } from '../../types';
+import { AccountRecord, AssessmentResult, GenderMode, UserProfile } from '../../types';
 import { NavTab } from '../layout/Sidebar';
 import { AiSettingsModal } from '../ai/AiSettingsModal';
 import { InstallAppCard } from '../pwa/InstallAppCard';
@@ -55,6 +55,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 }) => {
   const [name, setName] = useState(userProfile.name);
   const [email, setEmail] = useState(userProfile.email || '');
+  const [gender, setGender] = useState<GenderMode>(userProfile.gender || 'male');
   const [avatarEmoji, setAvatarEmoji] = useState(userProfile.avatarEmoji || '👑');
   const [bio, setBio] = useState(userProfile.bio || '');
   const [savedSuccess, setSavedSuccess] = useState(false);
@@ -71,6 +72,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
       ...userProfile,
       name: name.trim() || (userProfile.isGuest ? 'Invitado' : 'Usuario'),
       email: email.trim(),
+      gender: gender,
       avatarEmoji: avatarEmoji,
       bio: bio.trim(),
       isGuest: userProfile.isGuest && !email.trim(),
@@ -325,6 +327,85 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               placeholder="tu.correo@ejemplo.com"
               className="w-full p-3 rounded-xl bg-[#0E1513] border border-[#23332D] text-sm text-[#F2EFE6] focus:outline-none focus:border-[#D6A84F]"
             />
+          </div>
+
+          {/* Gender Perspective / Archetypal Focus */}
+          <div className="space-y-2 pt-1 pb-1">
+            <div className="flex items-center justify-between">
+              <label className="text-xs uppercase font-bold tracking-wider text-[#9DA79F] block">
+                Perspectiva de Género / Enfoque Arquetípico
+              </label>
+              <span className="text-[11px] text-[#D6A84F] hidden sm:inline">
+                Adapta nombres, títulos y narrativas
+              </span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {/* Masculine */}
+              <button
+                type="button"
+                onClick={() => setGender('male')}
+                className={`p-3.5 rounded-2xl border text-left transition-all relative ${
+                  gender === 'male'
+                    ? 'bg-[#182721] border-[#86EFAC] shadow-lg ring-1 ring-[#86EFAC]/50'
+                    : 'bg-[#0E1513] border-[#23332D] hover:border-[#315C45]'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-bold text-[#F2EFE6] flex items-center gap-1.5">
+                    <span className="text-base text-[#86EFAC]">♂</span>
+                    <span>Masculino</span>
+                  </span>
+                  {gender === 'male' && <Check className="w-4 h-4 text-[#86EFAC]" />}
+                </div>
+                <p className="text-[11px] text-[#9DA79F] leading-snug">
+                  El Rey, El Guerrero, El Mago, El Sabio, El Padre, El Amante...
+                </p>
+              </button>
+
+              {/* Feminine */}
+              <button
+                type="button"
+                onClick={() => setGender('female')}
+                className={`p-3.5 rounded-2xl border text-left transition-all relative ${
+                  gender === 'female'
+                    ? 'bg-[#22172E] border-[#C084FC] shadow-lg ring-1 ring-[#C084FC]/50'
+                    : 'bg-[#0E1513] border-[#23332D] hover:border-[#7C3AED]'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-bold text-[#F2EFE6] flex items-center gap-1.5">
+                    <span className="text-base text-[#C084FC]">♀</span>
+                    <span>Femenino</span>
+                  </span>
+                  {gender === 'female' && <Check className="w-4 h-4 text-[#C084FC]" />}
+                </div>
+                <p className="text-[11px] text-[#9DA79F] leading-snug">
+                  La Reina, La Guerrera, La Maga, La Sabia, La Madre, La Amante...
+                </p>
+              </button>
+
+              {/* Universal */}
+              <button
+                type="button"
+                onClick={() => setGender('universal')}
+                className={`p-3.5 rounded-2xl border text-left transition-all relative ${
+                  gender === 'universal'
+                    ? 'bg-[#262014] border-[#D6A84F] shadow-lg ring-1 ring-[#D6A84F]/50'
+                    : 'bg-[#0E1513] border-[#23332D] hover:border-[#D6A84F]'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-bold text-[#F2EFE6] flex items-center gap-1.5">
+                    <span className="text-base text-[#D6A84F]">☯</span>
+                    <span>Universal</span>
+                  </span>
+                  {gender === 'universal' && <Check className="w-4 h-4 text-[#D6A84F]" />}
+                </div>
+                <p className="text-[11px] text-[#9DA79F] leading-snug">
+                  Rey / Reina, Guerrero / Guerrera, Mago / Maga (Enfoque dual)
+                </p>
+              </button>
+            </div>
           </div>
 
           <div className="space-y-2">

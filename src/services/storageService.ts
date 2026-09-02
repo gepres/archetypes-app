@@ -7,6 +7,7 @@ import {
   Challenge,
   ChatMessage,
   DailyOracleCard,
+  GenderMode,
   JournalEntry,
   UserProfile,
 } from '../types';
@@ -74,6 +75,15 @@ export const StorageService = {
     } catch (e) {
       console.error("Error reading history:", e);
       return [];
+    }
+  },
+
+  saveAssessmentHistory(history: AssessmentResult[]): void {
+    try {
+      localStorage.setItem(STORAGE_KEYS.ASSESSMENT_HISTORY, JSON.stringify(history));
+      this.syncActiveAccountData();
+    } catch (e) {
+      console.error("Error saving history:", e);
     }
   },
 
@@ -224,13 +234,20 @@ export const StorageService = {
   getUserProfile(): UserProfile {
     try {
       const data = localStorage.getItem(STORAGE_KEYS.USER_PROFILE);
-      if (data) return JSON.parse(data);
+      if (data) {
+        const parsed = JSON.parse(data);
+        if (!parsed.gender) {
+          parsed.gender = 'male';
+        }
+        return parsed;
+      }
 
       const defaultProfile: UserProfile = {
         id: 'user-guest',
         name: 'Explorador Invitado',
         email: '',
         isGuest: true,
+        gender: 'male',
         avatarEmoji: '🧭',
         bio: 'Modo invitado activo. Los datos se guardan en este navegador.',
         createdAt: new Date().toISOString(),
@@ -244,6 +261,7 @@ export const StorageService = {
         name: 'Explorador Invitado',
         email: '',
         isGuest: true,
+        gender: 'male',
         avatarEmoji: '🧭',
         bio: 'Modo invitado activo.',
         createdAt: new Date().toISOString(),
@@ -255,6 +273,7 @@ export const StorageService = {
   saveUserProfile(profile: UserProfile): void {
     try {
       profile.lastActive = new Date().toISOString();
+      if (!profile.gender) profile.gender = 'male';
       localStorage.setItem(STORAGE_KEYS.USER_PROFILE, JSON.stringify(profile));
       this.syncActiveAccountData();
     } catch (e) {
@@ -280,7 +299,7 @@ export const StorageService = {
     }
   },
 
-  loginOrCreateAccount(accountData: { name: string; email: string; avatarEmoji?: string; pinCode?: string }): UserProfile {
+  loginOrCreateAccount(accountData: { name: string; email: string; avatarEmoji?: string; pinCode?: string; gender?: GenderMode }): UserProfile {
     const accounts = this.getSavedAccounts();
     const existingIndex = accounts.findIndex(
       a => a.email.toLowerCase().trim() === accountData.email.toLowerCase().trim()
@@ -335,11 +354,13 @@ export const StorageService = {
       this.saveAccountsVault(accounts);
     }
 
+    const currentSaved = this.getUserProfile();
     const newProfile: UserProfile = {
       id: targetAccount.id,
       name: targetAccount.name,
       email: targetAccount.email,
       isGuest: false,
+      gender: accountData.gender || currentSaved.gender || 'male',
       avatarEmoji: targetAccount.avatarEmoji,
       pinCode: accountData.pinCode,
       createdAt: targetAccount.createdAt,

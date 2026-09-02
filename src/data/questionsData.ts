@@ -1,7 +1,10 @@
 import { Question } from '../types';
 
 export const QUESTIONS_DATA: Question[] = [
-  // MENTE: Sabio / Mago / Comprensión / Análisis / Patrones
+  // ==========================================
+  // DIMENSIÓN 1: MENTE & TRASCENDENCIA (15 Preguntas)
+  // (Mago, Sabio, Sacerdote, Místico)
+  // ==========================================
   {
     id: 1,
     text: "Cuando aparece un problema difícil, mi primer impulso es detenerme a comprender la raíz oculta antes de reaccionar.",
@@ -30,25 +33,25 @@ export const QUESTIONS_DATA: Question[] = [
     dimensionFocus: "mente",
     weights: [
       { archetypeId: "mago", weight: 3 },
-      { archetypeId: "creador", weight: 2 },
-      { archetypeId: "rey", weight: 1 }
+      { archetypeId: "sacerdote", weight: 2 },
+      { archetypeId: "creador", weight: 1 }
     ],
     scenarioCategory: "Intuición y Estrategia"
   },
   {
     id: 4,
-    text: "Prefiero basarme en datos objetivos y argumentos lógicos verificables antes que dejarme llevar por emociones del momento.",
+    text: "Prefiero basarme en datos objetivos, principios éticos y argumentos lógicos verificables antes que dejarme llevar por emociones del momento.",
     dimensionFocus: "mente",
     weights: [
       { archetypeId: "sabio", weight: 3 },
-      { archetypeId: "guerrero", weight: 1 },
-      { archetypeId: "rey", weight: 1 }
+      { archetypeId: "soberano", weight: 2 },
+      { archetypeId: "constructor", weight: 1 }
     ],
     scenarioCategory: "Toma de Decisiones"
   },
   {
     id: 5,
-    text: "Me fascina encontrar soluciones ingeniosas o tecnológicas que transformen por completo una situación que parecía bloqueada.",
+    text: "Me fascina encontrar soluciones ingeniosas o herramientas innovadoras que transformen por completo una situación bloqueada.",
     dimensionFocus: "mente",
     weights: [
       { archetypeId: "mago", weight: 3 },
@@ -64,7 +67,7 @@ export const QUESTIONS_DATA: Question[] = [
     weights: [
       { archetypeId: "sabio", weight: 3 },
       { archetypeId: "explorador", weight: 2 },
-      { archetypeId: "rebelde", weight: 1 }
+      { archetypeId: "integrador", weight: 1 }
     ],
     scenarioCategory: "Verdad y Criterio"
   },
@@ -75,613 +78,629 @@ export const QUESTIONS_DATA: Question[] = [
     weights: [
       { archetypeId: "sabio", weight: 3 },
       { archetypeId: "rey", weight: 2 },
-      { archetypeId: "mago", weight: 1 }
+      { archetypeId: "soberano", weight: 1 }
     ],
     scenarioCategory: "Gestión de Crisis"
   },
   {
     id: 8,
-    text: "Me apasiona el conocimiento estratégico: entender la psicología humana y las dinámicas de poder para prever desenlaces.",
+    text: "Dedico tiempo voluntario al silencio, la meditación o la contemplación para escuchar mi intuición y mi voz interior.",
+    dimensionFocus: "mente",
+    weights: [
+      { archetypeId: "sacerdote", weight: 3 },
+      { archetypeId: "mistico", weight: 2 },
+      { archetypeId: "sabio", weight: 1 }
+    ],
+    scenarioCategory: "Mundo Interior"
+  },
+  {
+    id: 9,
+    text: "Siento una profunda conexión con el misterio de la vida, el cosmos y la sensación de que todo lo que existe está entrelazado.",
+    dimensionFocus: "mente",
+    weights: [
+      { archetypeId: "mistico", weight: 3 },
+      { archetypeId: "sacerdote", weight: 2 },
+      { archetypeId: "integrador", weight: 1 }
+    ],
+    scenarioCategory: "Trascendencia Cósmica"
+  },
+  {
+    id: 10,
+    text: "Trato mis decisiones y mis relaciones más íntimas con un sentido de reverencia y respeto por lo sagrado.",
+    dimensionFocus: "mente",
+    weights: [
+      { archetypeId: "sacerdote", weight: 3 },
+      { archetypeId: "amante", weight: 2 },
+      { archetypeId: "soberano", weight: 1 }
+    ],
+    scenarioCategory: "Ética Sagrada"
+  },
+  {
+    id: 11,
+    text: "En medio de las dificultades cotidianas, logro experimentar una paz de fondo reconociendo el flujo natural de los ciclos cósmicos.",
+    dimensionFocus: "mente",
+    weights: [
+      { archetypeId: "mistico", weight: 3 },
+      { archetypeId: "sanador", weight: 2 },
+      { archetypeId: "sabio", weight: 1 }
+    ],
+    scenarioCategory: "Paz Trascendente"
+  },
+  {
+    id: 12,
+    text: "A menudo recibo impresiones o corazonadas sutiles que luego resultan ser extraordinariamente acertadas.",
+    dimensionFocus: "mente",
+    weights: [
+      { archetypeId: "sacerdote", weight: 3 },
+      { archetypeId: "mago", weight: 2 },
+      { archetypeId: "sanador", weight: 1 }
+    ],
+    scenarioCategory: "Percepción Intuitiva"
+  },
+  {
+    id: 13,
+    text: "Me apasiona el conocimiento estratégico: comprender la psicología profunda y las dinámicas invisibles para prever desenlaces.",
     dimensionFocus: "mente",
     weights: [
       { archetypeId: "mago", weight: 3 },
       { archetypeId: "rey", weight: 2 },
-      { archetypeId: "guerrero", weight: 1 }
+      { archetypeId: "sabio", weight: 1 }
     ],
-    scenarioCategory: "Estrategia Humana"
-  },
-  {
-    id: 9,
-    text: "A menudo me pierdo durante horas reflexionando sobre el sentido de la existencia, la ética y las grandes preguntas humanas.",
-    dimensionFocus: "mente",
-    weights: [
-      { archetypeId: "sabio", weight: 3 },
-      { archetypeId: "amante", weight: 1 },
-      { archetypeId: "explorador", weight: 1 }
-    ],
-    scenarioCategory: "Contemplación"
-  },
-  {
-    id: 10,
-    text: "Me gusta actuar como un catalizador discreto que ayuda a otros a desbloquear su potencial o transformar su mentalidad.",
-    dimensionFocus: "mente",
-    weights: [
-      { archetypeId: "mago", weight: 3 },
-      { archetypeId: "padre", weight: 2 },
-      { archetypeId: "cuidador", weight: 1 }
-    ],
-    scenarioCategory: "Transformación Personal"
-  },
-  {
-    id: 11,
-    text: "Evito emitir juicios apresurados sobre las personas; primero intento entender el contexto y los motivos de fondo.",
-    dimensionFocus: "mente",
-    weights: [
-      { archetypeId: "sabio", weight: 3 },
-      { archetypeId: "cuidador", weight: 2 },
-      { archetypeId: "mago", weight: 1 }
-    ],
-    scenarioCategory: "Juicio y Comprensión"
-  },
-  {
-    id: 12,
-    text: "Me atraen las herramientas, métodos o disciplinas que permiten optimizar el rendimiento de la mente y los proyectos.",
-    dimensionFocus: "mente",
-    weights: [
-      { archetypeId: "mago", weight: 3 },
-      { archetypeId: "guerrero", weight: 2 },
-      { archetypeId: "creador", weight: 1 }
-    ],
-    scenarioCategory: "Optimización"
-  },
-  {
-    id: 13,
-    text: "Disfruto sintetizar grandes volúmenes de lectura o estudio en principios concisos y aplicables.",
-    dimensionFocus: "mente",
-    weights: [
-      { archetypeId: "sabio", weight: 3 },
-      { archetypeId: "padre", weight: 2 },
-      { archetypeId: "rey", weight: 1 }
-    ],
-    scenarioCategory: "Síntesis y Claridad"
+    scenarioCategory: "Estrategia Psicológica"
   },
   {
     id: 14,
-    text: "Cuando alguien me plantea una situación complicada, busco la 'palanca invisible' que puede cambiar todo con el menor esfuerzo.",
-    dimensionFocus: "mente",
-    weights: [
-      { archetypeId: "mago", weight: 3 },
-      { archetypeId: "creador", weight: 2 },
-      { archetypeId: "sabio", weight: 1 }
-    ],
-    scenarioCategory: "Eficacia Estratégica"
-  },
-  {
-    id: 15,
-    text: "Considero que la ignorancia y el autoengaño son las mayores causas del sufrimiento y la decadencia individual.",
+    text: "Busco la verdad esencial más allá de las apariencias y las modas superficiales impuestas por la sociedad.",
     dimensionFocus: "mente",
     weights: [
       { archetypeId: "sabio", weight: 3 },
-      { archetypeId: "rebelde", weight: 2 },
-      { archetypeId: "mago", weight: 1 }
+      { archetypeId: "soberano", weight: 2 },
+      { archetypeId: "mistico", weight: 1 }
     ],
-    scenarioCategory: "Valores Filosóficos"
+    scenarioCategory: "Autenticidad Mental"
+  },
+  {
+    id: 15,
+    text: "Experimento momentos de asombro y gratitud pura ante la inmensidad del universo o la naturaleza.",
+    dimensionFocus: "mente",
+    weights: [
+      { archetypeId: "mistico", weight: 3 },
+      { archetypeId: "amante", weight: 2 },
+      { archetypeId: "sacerdote", weight: 1 }
+    ],
+    scenarioCategory: "Asombro Cósmico"
   },
 
-  // ACCIÓN: Guerrero / Héroe / Rebelde / Explorador
+  // ==========================================
+  // DIMENSIÓN 2: ACCIÓN & CORAJE (15 Preguntas)
+  // (Guerrero, Héroe, Rebelde, Explorador)
+  // ==========================================
   {
     id: 16,
-    text: "Prefiero pasar a la acción y corregir sobre la marcha antes que quedarme inmóvil esperando tener certeza absoluta.",
+    text: "Cuando me comprometo con una meta, mantengo una disciplina rigurosa y no me permito excusas hasta concluirla.",
     dimensionFocus: "accion",
     weights: [
       { archetypeId: "guerrero", weight: 3 },
       { archetypeId: "heroe", weight: 2 },
-      { archetypeId: "explorador", weight: 2 }
+      { archetypeId: "constructor", weight: 1 }
     ],
-    scenarioCategory: "Iniciativa y Acción"
+    scenarioCategory: "Disciplina y Foco"
   },
   {
     id: 17,
-    text: "Cuando una norma o tradición establecida me parece injusta o absurda, no dudo en desafiarla abiertamente.",
+    text: "No tolero que sobrepasen mis límites personales y soy capaz de confrontar directamente a quien pretenda abusar o manipular.",
+    dimensionFocus: "accion",
+    weights: [
+      { archetypeId: "guerrero", weight: 3 },
+      { archetypeId: "soberano", weight: 2 },
+      { archetypeId: "rebelde", weight: 1 }
+    ],
+    scenarioCategory: "Firmeza y Límites"
+  },
+  {
+    id: 18,
+    text: "Me motiva enormemente enfrentar desafíos difíciles o situaciones de alta presión que ponen a prueba mi temple.",
+    dimensionFocus: "accion",
+    weights: [
+      { archetypeId: "heroe", weight: 3 },
+      { archetypeId: "guerrero", weight: 2 },
+      { archetypeId: "explorador", weight: 1 }
+    ],
+    scenarioCategory: "Superación Personal"
+  },
+  {
+    id: 19,
+    text: "Si una regla o estructura se ha vuelto absurda, injusta o sofocante, siento la necesidad imperiosa de desafiarla.",
     dimensionFocus: "accion",
     weights: [
       { archetypeId: "rebelde", weight: 3 },
       { archetypeId: "explorador", weight: 2 },
       { archetypeId: "heroe", weight: 1 }
     ],
-    scenarioCategory: "Desafío a la Autoridad"
+    scenarioCategory: "Disrupción y Revolución"
   },
   {
-    id: 18,
-    text: "Tengo la capacidad de sostener una disciplina férrea y tolerar el cansancio físico o mental para alcanzar una meta.",
+    id: 20,
+    text: "Valoro mi independencia por encima de la comodidad; prefiero abrir caminos nuevos aunque tenga que caminar solo.",
+    dimensionFocus: "accion",
+    weights: [
+      { archetypeId: "explorador", weight: 3 },
+      { archetypeId: "soberano", weight: 2 },
+      { archetypeId: "rebelde", weight: 1 }
+    ],
+    scenarioCategory: "Autonomía y Aventura"
+  },
+  {
+    id: 21,
+    text: "Ante una caída o derrota dolorosa, me levanto con mayor determinación y transformo el obstáculo en combustible.",
+    dimensionFocus: "accion",
+    weights: [
+      { archetypeId: "heroe", weight: 3 },
+      { archetypeId: "sanador", weight: 2 },
+      { archetypeId: "guerrero", weight: 1 }
+    ],
+    scenarioCategory: "Resiliencia Épica"
+  },
+  {
+    id: 22,
+    text: "Prefiero la acción imperfecta e inmediata antes que quedarme atrapado en la duda o la parálisis por análisis.",
     dimensionFocus: "accion",
     weights: [
       { archetypeId: "guerrero", weight: 3 },
       { archetypeId: "heroe", weight: 2 },
-      { archetypeId: "rey", weight: 1 }
+      { archetypeId: "constructor", weight: 1 }
     ],
-    scenarioCategory: "Fuerza de Voluntad"
-  },
-  {
-    id: 19,
-    text: "Siento una profunda necesidad periódica de alejarme de la rutina cotidiana y explorar lugares o caminos desconocidos.",
-    dimensionFocus: "accion",
-    weights: [
-      { archetypeId: "explorador", weight: 3 },
-      { archetypeId: "rebelde", weight: 2 },
-      { archetypeId: "amante", weight: 1 }
-    ],
-    scenarioCategory: "Búsqueda y Aventura"
-  },
-  {
-    id: 20,
-    text: "Me crezco ante las dificultades; cuando los demás se rinden, encuentro una fuerza interior para empujar hacia adelante.",
-    dimensionFocus: "accion",
-    weights: [
-      { archetypeId: "heroe", weight: 3 },
-      { archetypeId: "guerrero", weight: 3 },
-      { archetypeId: "padre", weight: 1 }
-    ],
-    scenarioCategory: "Resiliencia Heroica"
-  },
-  {
-    id: 21,
-    text: "No temo poner límites tajantes o decir 'no' cuando alguien intenta sobrepasar mi dignidad o mi tiempo.",
-    dimensionFocus: "accion",
-    weights: [
-      { archetypeId: "guerrero", weight: 3 },
-      { archetypeId: "rey", weight: 2 },
-      { archetypeId: "rebelde", weight: 1 }
-    ],
-    scenarioCategory: "Límites Personales"
-  },
-  {
-    id: 22,
-    text: "Me aburre profundamente la vida convencional y predecible; necesito sentir que estoy conquistando mi propia independencia.",
-    dimensionFocus: "accion",
-    weights: [
-      { archetypeId: "explorador", weight: 3 },
-      { archetypeId: "rebelde", weight: 3 },
-      { archetypeId: "creador", weight: 1 }
-    ],
-    scenarioCategory: "Autonomía"
+    scenarioCategory: "Iniciativa Rápida"
   },
   {
     id: 23,
-    text: "Estoy dispuesto a asumir sacrificios personales significativos si con ello defiendo una causa justa o protejo a mi gente.",
+    text: "Siento un llamado constante a viajar, explorar territorios desconocidos o experimentar nuevas formas de vivir.",
     dimensionFocus: "accion",
     weights: [
-      { archetypeId: "heroe", weight: 3 },
-      { archetypeId: "padre", weight: 2 },
-      { archetypeId: "cuidador", weight: 1 }
+      { archetypeId: "explorador", weight: 3 },
+      { archetypeId: "bufon", weight: 1 },
+      { archetypeId: "sabio", weight: 1 }
     ],
-    scenarioCategory: "Nobleza y Sacrificio"
+    scenarioCategory: "Búsqueda de Horizontes"
   },
   {
     id: 24,
-    text: "Detesto la hipocresía social y prefiero ser criticado por decir mi verdad antes que encajar a costa de mi autenticidad.",
+    text: "Digo lo que pienso con honestidad frontal y desprecio las falsas apariencias o la hipocresía social.",
     dimensionFocus: "accion",
     weights: [
       { archetypeId: "rebelde", weight: 3 },
       { archetypeId: "guerrero", weight: 2 },
-      { archetypeId: "sabio", weight: 1 }
+      { archetypeId: "soberano", weight: 1 }
     ],
-    scenarioCategory: "Autenticidad Radical"
+    scenarioCategory: "Verdad Frontal"
   },
   {
     id: 25,
-    text: "Mantengo la calma y la determinación en situaciones de confrontación directa o negociación tensa.",
+    text: "Tengo la capacidad física y mental de sostener un esfuerzo prolongado cuando la causa realmente lo amerita.",
     dimensionFocus: "accion",
     weights: [
       { archetypeId: "guerrero", weight: 3 },
-      { archetypeId: "rey", weight: 2 },
-      { archetypeId: "sabio", weight: 1 }
+      { archetypeId: "constructor", weight: 2 },
+      { archetypeId: "heroe", weight: 1 }
     ],
-    scenarioCategory: "Firmeza y Templanza"
+    scenarioCategory: "Resistencia y Entrega"
   },
   {
     id: 26,
-    text: "Me siento atraído por viajar solo o sumergirme en experiencias donde deba valerme exclusivamente por mis propios medios.",
-    dimensionFocus: "accion",
-    weights: [
-      { archetypeId: "explorador", weight: 3 },
-      { archetypeId: "sabio", weight: 1 },
-      { archetypeId: "guerrero", weight: 1 }
-    ],
-    scenarioCategory: "Autosuficiencia"
-  },
-  {
-    id: 27,
-    text: "Concibo mi vida como una gran travesía donde cada caída es una prueba necesaria para forjar mi carácter.",
+    text: "En momentos de crisis extrema, asumo la defensa de los vulnerables y tomo el liderazgo con coraje.",
     dimensionFocus: "accion",
     weights: [
       { archetypeId: "heroe", weight: 3 },
-      { archetypeId: "explorador", weight: 2 },
-      { archetypeId: "sabio", weight: 1 }
+      { archetypeId: "rey", weight: 2 },
+      { archetypeId: "cuidador", weight: 1 }
     ],
-    scenarioCategory: "Visión Existencial"
+    scenarioCategory: "Protección Valiente"
   },
   {
-    id: 28,
-    text: "Disfruto romper con lo obsoleto y provocar un cambio radical en sistemas que se han vuelto acomodados o corruptos.",
+    id: 27,
+    text: "Me resisto a que me encasillen en roles tradicionales y peleo por forjar mi propio destino sin pedir disculpas.",
     dimensionFocus: "accion",
     weights: [
       { archetypeId: "rebelde", weight: 3 },
-      { archetypeId: "creador", weight: 2 },
-      { archetypeId: "mago", weight: 1 }
+      { archetypeId: "soberano", weight: 2 },
+      { archetypeId: "explorador", weight: 1 }
     ],
-    scenarioCategory: "Transformación Disruptiva"
+    scenarioCategory: "Liberación de Moldes"
+  },
+  {
+    id: 28,
+    text: "Sé cuándo una batalla ya no tiene sentido y tengo la madurez para retirarme sin que mi orgullo sufra.",
+    dimensionFocus: "accion",
+    weights: [
+      { archetypeId: "guerrero", weight: 2 },
+      { archetypeId: "sabio", weight: 3 },
+      { archetypeId: "integrador", weight: 2 }
+    ],
+    scenarioCategory: "Discernimiento Bélico"
   },
   {
     id: 29,
-    text: "Cuando me comprometo con una meta deportiva, profesional o personal, no admito excusas de mí mismo.",
-    dimensionFocus: "accion",
-    weights: [
-      { archetypeId: "guerrero", weight: 3 },
-      { archetypeId: "heroe", weight: 2 },
-      { archetypeId: "rey", weight: 1 }
-    ],
-    scenarioCategory: "Exigencia Personal"
-  },
-  {
-    id: 30,
-    text: "Siento una profunda curiosidad por lo que hay más allá de las fronteras físicas, culturales o de pensamiento de mi entorno.",
+    text: "Abandono la rutina con facilidad si siento que mi vida se ha vuelto monótona o conformista.",
     dimensionFocus: "accion",
     weights: [
       { archetypeId: "explorador", weight: 3 },
-      { archetypeId: "sabio", weight: 2 },
+      { archetypeId: "rebelde", weight: 2 },
       { archetypeId: "creador", weight: 1 }
     ],
-    scenarioCategory: "Apertura al Mundo"
+    scenarioCategory: "Ruptura de Rutina"
+  },
+  {
+    id: 30,
+    text: "Estoy dispuesto a defender mis principios incluso cuando hacerlo me cueste popularidad o comodidad.",
+    dimensionFocus: "accion",
+    weights: [
+      { archetypeId: "heroe", weight: 3 },
+      { archetypeId: "soberano", weight: 2 },
+      { archetypeId: "rebelde", weight: 2 }
+    ],
+    scenarioCategory: "Honor y Principios"
   },
 
-  // CORAZÓN: Amante / Cuidador / Bufón
+  // ==========================================
+  // DIMENSIÓN 3: CORAZÓN & CONEXIÓN (15 Preguntas)
+  // (Amante, Cuidador, Bufón, Sanador)
+  // ==========================================
   {
     id: 31,
-    text: "Me conmueve profundamente la belleza del arte, la naturaleza, la música o una conversación sincera y vulnerable.",
+    text: "Me conmueve profundamente la belleza en el arte, la música, la naturaleza y los gestos humanos genuinos.",
     dimensionFocus: "corazon",
     weights: [
       { archetypeId: "amante", weight: 3 },
       { archetypeId: "creador", weight: 2 },
-      { archetypeId: "cuidador", weight: 1 }
+      { archetypeId: "mistico", weight: 1 }
     ],
     scenarioCategory: "Sensibilidad Estética"
   },
   {
     id: 32,
-    text: "Tengo una habilidad natural para percibir cuándo alguien cercano está sufriendo y ofrecerle mi apoyo sin juzgarlo.",
+    text: "Tengo una habilidad natural para percibir el dolor ajeno y ofrecer una presencia cálida que brinda alivio y consuelo.",
     dimensionFocus: "corazon",
     weights: [
-      { archetypeId: "cuidador", weight: 3 },
-      { archetypeId: "amante", weight: 2 },
-      { archetypeId: "padre", weight: 1 }
+      { archetypeId: "sanador", weight: 3 },
+      { archetypeId: "cuidador", weight: 2 },
+      { archetypeId: "amante", weight: 1 }
     ],
-    scenarioCategory: "Empatía Activa"
+    scenarioCategory: "Presencia Sanadora"
   },
   {
     id: 33,
-    text: "Utilizo el humor y la risa espontánea para desinflar momentos solemnes, aliviar la tensión y conectar con la gente.",
+    text: "Utilizo el humor y la risa para desarmar tensiones, relativizar los dramas y traer ligereza a quienes me rodean.",
     dimensionFocus: "corazon",
     weights: [
       { archetypeId: "bufon", weight: 3 },
-      { archetypeId: "amante", weight: 1 },
-      { archetypeId: "rebelde", weight: 1 }
+      { archetypeId: "sabio", weight: 1 },
+      { archetypeId: "amante", weight: 1 }
     ],
-    scenarioCategory: "Humor y Ligereza"
+    scenarioCategory: "Humor y Desdramatización"
   },
   {
     id: 34,
-    text: "Vivo mis vínculos afectivos y pasiones con intensidad total; prefiero la profundidad íntima a las relaciones superficiales.",
-    dimensionFocus: "corazon",
-    weights: [
-      { archetypeId: "amante", weight: 3 },
-      { archetypeId: "cuidador", weight: 1 },
-      { archetypeId: "creador", weight: 1 }
-    ],
-    scenarioCategory: "Intimidad Afectiva"
-  },
-  {
-    id: 35,
-    text: "Encuentro una satisfacción profunda al ser útil y facilitar la vida de otros de manera práctica y desinteresada.",
+    text: "Siento una vocación genuina de servicio desinteresado y me aseguro de que las necesidades básicas de mi grupo estén cubiertas.",
     dimensionFocus: "corazon",
     weights: [
       { archetypeId: "cuidador", weight: 3 },
       { archetypeId: "padre", weight: 2 },
-      { archetypeId: "heroe", weight: 1 }
+      { archetypeId: "sanador", weight: 1 }
     ],
-    scenarioCategory: "Servicio y Altruismo"
+    scenarioCategory: "Servicio y Apoyo"
+  },
+  {
+    id: 35,
+    text: "Valoro la intimidad emocional profunda; no temo mostrar mi vulnerabilidad ni expresar mi afecto con calidez.",
+    dimensionFocus: "corazon",
+    weights: [
+      { archetypeId: "amante", weight: 3 },
+      { archetypeId: "sanador", weight: 2 },
+      { archetypeId: "sacerdote", weight: 1 }
+    ],
+    scenarioCategory: "Vulnerabilidad e Intimidad"
   },
   {
     id: 36,
-    text: "No me tomo a mí mismo demasiado en serio; puedo reírme de mis propios tropiezos y debilidades con total naturalidad.",
+    text: "Comprendo que las heridas emocionales pueden transformarse en fuentes de sabiduría, perdón y crecimiento humano.",
+    dimensionFocus: "corazon",
+    weights: [
+      { archetypeId: "sanador", weight: 3 },
+      { archetypeId: "integrador", weight: 2 },
+      { archetypeId: "sabio", weight: 1 }
+    ],
+    scenarioCategory: "Transformación del Dolor"
+  },
+  {
+    id: 37,
+    text: "Me gusta jugar, improvisar y disfrutar del instante presente sin tomarme a mí mismo con demasiada solemnidad.",
+    dimensionFocus: "corazon",
+    weights: [
+      { archetypeId: "bufon", weight: 3 },
+      { archetypeId: "explorador", weight: 1 },
+      { archetypeId: "creador", weight: 1 }
+    ],
+    scenarioCategory: "Juego y Espontaneidad"
+  },
+  {
+    id: 38,
+    text: "Sé escuchar con empatía profunda a alguien que sufre sin juzgarlo ni apresurarme a darle consejos no pedidos.",
+    dimensionFocus: "corazon",
+    weights: [
+      { archetypeId: "sanador", weight: 3 },
+      { archetypeId: "cuidador", weight: 2 },
+      { archetypeId: "sacerdote", weight: 1 }
+    ],
+    scenarioCategory: "Escucha Compasiva"
+  },
+  {
+    id: 39,
+    text: "Busco crear momentos de deleite sensorial, buena comida, celebración y romance con las personas que amo.",
+    dimensionFocus: "corazon",
+    weights: [
+      { archetypeId: "amante", weight: 3 },
+      { archetypeId: "creador", weight: 2 },
+      { archetypeId: "bufon", weight: 1 }
+    ],
+    scenarioCategory: "Celebración y Sensualidad"
+  },
+  {
+    id: 40,
+    text: "Estoy atento a los detalles que hacen la vida más amable y cómoda para los demás, cuidando su bienestar integral.",
+    dimensionFocus: "corazon",
+    weights: [
+      { archetypeId: "cuidador", weight: 3 },
+      { archetypeId: "padre", weight: 2 },
+      { archetypeId: "sanador", weight: 1 }
+    ],
+    scenarioCategory: "Cuidado Cotidiano"
+  },
+  {
+    id: 41,
+    text: "Soy capaz de reírme de mis propios tropiezos y desdramatizar mis errores con simpatía.",
     dimensionFocus: "corazon",
     weights: [
       { archetypeId: "bufon", weight: 3 },
       { archetypeId: "sabio", weight: 2 },
-      { archetypeId: "explorador", weight: 1 }
+      { archetypeId: "integrador", weight: 1 }
     ],
-    scenarioCategory: "Autoaceptación Lúdica"
-  },
-  {
-    id: 37,
-    text: "Valoro enormemente los placeres sensoriales de la vida: una buena comida, una copa con calma, el tacto y el descanso pleno.",
-    dimensionFocus: "corazon",
-    weights: [
-      { archetypeId: "amante", weight: 3 },
-      { archetypeId: "bufon", weight: 2 },
-      { archetypeId: "creador", weight: 1 }
-    ],
-    scenarioCategory: "Disfrute Sensorial"
-  },
-  {
-    id: 38,
-    text: "Estoy dispuesto a posponer mis propios planes si un ser querido o compañero necesita ayuda urgente o escucha.",
-    dimensionFocus: "corazon",
-    weights: [
-      { archetypeId: "cuidador", weight: 3 },
-      { archetypeId: "padre", weight: 2 },
-      { archetypeId: "amante", weight: 1 }
-    ],
-    scenarioCategory: "Disponibilidad Afectiva"
-  },
-  {
-    id: 39,
-    text: "Disfruto el juego libre, la improvisación y desafiar la excesiva rigidez de los ambientes acartonados.",
-    dimensionFocus: "corazon",
-    weights: [
-      { archetypeId: "bufon", weight: 3 },
-      { archetypeId: "creador", weight: 2 },
-      { archetypeId: "explorador", weight: 1 }
-    ],
-    scenarioCategory: "Espontaneidad"
-  },
-  {
-    id: 40,
-    text: "Considero que la vulnerabilidad y la capacidad de expresar emociones auténticas son signos de verdadera madurez.",
-    dimensionFocus: "corazon",
-    weights: [
-      { archetypeId: "amante", weight: 3 },
-      { archetypeId: "cuidador", weight: 2 },
-      { archetypeId: "sabio", weight: 1 }
-    ],
-    scenarioCategory: "Madurez Emocional"
-  },
-  {
-    id: 41,
-    text: "Suelo estar atento al bienestar físico y anímico de las personas que me rodean en una casa o equipo de trabajo.",
-    dimensionFocus: "corazon",
-    weights: [
-      { archetypeId: "cuidador", weight: 3 },
-      { archetypeId: "padre", weight: 2 },
-      { archetypeId: "rey", weight: 1 }
-    ],
-    scenarioCategory: "Protección Comunitaria"
+    scenarioCategory: "Autoirrisión Sana"
   },
   {
     id: 42,
-    text: "Tengo facilidad para romper el hielo en grupos desconocidos y hacer que la gente se sienta relajada y alegre.",
+    text: "Fomento activamente la reconciliación y el perdón en grupos donde ha habido fricciones o rencores.",
     dimensionFocus: "corazon",
     weights: [
-      { archetypeId: "bufon", weight: 3 },
-      { archetypeId: "amante", weight: 2 },
-      { archetypeId: "cuidador", weight: 1 }
+      { archetypeId: "sanador", weight: 3 },
+      { archetypeId: "integrador", weight: 2 },
+      { archetypeId: "rey", weight: 1 }
     ],
-    scenarioCategory: "Conexión Social"
+    scenarioCategory: "Reconciliación y Paz"
   },
   {
     id: 43,
-    text: "Me mueve una pasión casi devocional por mis proyectos o amores; no concibo hacer las cosas a medias tintas.",
+    text: "Disfruto enormemente de la pasión en mis proyectos y me entrego en cuerpo y alma a lo que despierta mi deseo.",
     dimensionFocus: "corazon",
     weights: [
       { archetypeId: "amante", weight: 3 },
       { archetypeId: "creador", weight: 2 },
-      { archetypeId: "heroe", weight: 1 }
+      { archetypeId: "guerrero", weight: 1 }
     ],
     scenarioCategory: "Pasión Vital"
   },
   {
     id: 44,
-    text: "Me resulta fácil postergar el juicio moral y brindar consuelo a alguien que cometió un error grave.",
+    text: "Me esfuerzo por mantener el equilibrio entre cuidar a los míos y preservar mi propio tiempo de recarga y salud.",
     dimensionFocus: "corazon",
     weights: [
-      { archetypeId: "cuidador", weight: 3 },
-      { archetypeId: "amante", weight: 2 },
-      { archetypeId: "sabio", weight: 1 }
+      { archetypeId: "cuidador", weight: 2 },
+      { archetypeId: "soberano", weight: 3 },
+      { archetypeId: "sanador", weight: 2 }
     ],
-    scenarioCategory: "Compasión y Perdón"
+    scenarioCategory: "Autocuidado Consciente"
   },
   {
     id: 45,
-    text: "Creo firmemente que el juego y la capacidad de asombro son indispensables para no envejecer por dentro.",
+    text: "Aporto frescura, espontaneidad y un punto de saludable picardía a ambientes que se han vuelto demasiado rígidos.",
     dimensionFocus: "corazon",
     weights: [
       { archetypeId: "bufon", weight: 3 },
-      { archetypeId: "creador", weight: 2 },
+      { archetypeId: "rebelde", weight: 2 },
       { archetypeId: "amante", weight: 1 }
     ],
-    scenarioCategory: "Filosofía del Juego"
+    scenarioCategory: "Frescura y Ruptura"
   },
 
-  // CONSTRUCCIÓN: Rey / Padre / Creador
+  // ==========================================
+  // DIMENSIÓN 4: CONSTRUCCIÓN & SOBERANÍA (15 Preguntas)
+  // (Rey, Padre, Creador, Constructor, Soberano, Integrador)
+  // ==========================================
   {
     id: 46,
-    text: "Siento la responsabilidad natural de organizar grupos, fijar metas claras y coordinar esfuerzos para que las cosas funcionen.",
+    text: "Tiendo a asumir la responsabilidad de organizar mi entorno, definir prioridades claras y guiar a otros con calma.",
     dimensionFocus: "construccion",
     weights: [
       { archetypeId: "rey", weight: 3 },
-      { archetypeId: "padre", weight: 2 },
-      { archetypeId: "guerrero", weight: 1 }
+      { archetypeId: "soberano", weight: 2 },
+      { archetypeId: "padre", weight: 1 }
     ],
-    scenarioCategory: "Liderazgo y Estructura"
+    scenarioCategory: "Liderazgo Soberano"
   },
   {
     id: 47,
-    text: "Tengo una constante necesidad de materializar ideas originales: escribir, diseñar, programar, construir o emprender.",
+    text: "Me apasiona dar vida a ideas originales y transformar materiales, código o palabras en creaciones palpables y útiles.",
     dimensionFocus: "construccion",
     weights: [
       { archetypeId: "creador", weight: 3 },
-      { archetypeId: "mago", weight: 2 },
-      { archetypeId: "explorador", weight: 1 }
+      { archetypeId: "constructor", weight: 2 },
+      { archetypeId: "mago", weight: 1 }
     ],
-    scenarioCategory: "Manifestación Creativa"
+    scenarioCategory: "Creación y Materialización"
   },
   {
     id: 48,
-    text: "Me preocupo profundamente por el futuro de las nuevas generaciones y por transmitir enseñanzas éticas y prácticas.",
+    text: "Me preocupo profundamente por el legado ético y material que dejaré a las nuevas generaciones o a mi comunidad.",
     dimensionFocus: "construccion",
     weights: [
       { archetypeId: "padre", weight: 3 },
       { archetypeId: "rey", weight: 2 },
-      { archetypeId: "sabio", weight: 2 }
+      { archetypeId: "constructor", weight: 1 }
     ],
-    scenarioCategory: "Mentoría y Legado"
+    scenarioCategory: "Legado y Mentoría"
   },
   {
     id: 49,
-    text: "Cuando surge un conflicto entre personas con posturas enfrentadas, busco acuerdos justos y estables para el bien común.",
+    text: "Disfruto diseñar sistemas, procesos ordenados e infraestructuras estables que sigan funcionando a largo plazo.",
+    dimensionFocus: "construccion",
+    weights: [
+      { archetypeId: "constructor", weight: 3 },
+      { archetypeId: "rey", weight: 2 },
+      { archetypeId: "mago", weight: 1 }
+    ],
+    scenarioCategory: "Estructura y Sistemas"
+  },
+  {
+    id: 50,
+    text: "Camino erguido con base en mi propio código de honor y no permito que nadie pisotee mi dignidad inalienable.",
+    dimensionFocus: "construccion",
+    weights: [
+      { archetypeId: "soberano", weight: 3 },
+      { archetypeId: "rey", weight: 2 },
+      { archetypeId: "guerrero", weight: 1 }
+    ],
+    scenarioCategory: "Dignidad Interior"
+  },
+  {
+    id: 51,
+    text: "Busco integrar mis diferentes facetas (lógica y emoción, fuerza y ternura) viviendo desde una madurez psicológica plena.",
+    dimensionFocus: "construccion",
+    weights: [
+      { archetypeId: "integrador", weight: 3 },
+      { archetypeId: "sabio", weight: 2 },
+      { archetypeId: "sanador", weight: 1 }
+    ],
+    scenarioCategory: "Totalidad e Integración"
+  },
+  {
+    id: 52,
+    text: "Celebro y bendigo genuinamente los éxitos y talentos de las personas que forman parte de mi equipo o familia.",
     dimensionFocus: "construccion",
     weights: [
       { archetypeId: "rey", weight: 3 },
       { archetypeId: "padre", weight: 2 },
-      { archetypeId: "sabio", weight: 1 }
+      { archetypeId: "cuidador", weight: 1 }
     ],
-    scenarioCategory: "Arbitraje y Justicia"
+    scenarioCategory: "Bendición y Generosidad"
   },
   {
-    id: 50,
-    text: "No me basta con tener buenas ideas abstractas; necesito verlas convertidas en obras tangibles, estéticas y bien terminadas.",
+    id: 53,
+    text: "Soy metódico con mis finanzas y recursos; construyo cimientos económicos y profesionales sólidos paso a paso.",
     dimensionFocus: "construccion",
     weights: [
-      { archetypeId: "creador", weight: 3 },
-      { archetypeId: "guerrero", weight: 2 },
-      { archetypeId: "rey", weight: 1 }
+      { archetypeId: "constructor", weight: 3 },
+      { archetypeId: "padre", weight: 2 },
+      { archetypeId: "guerrero", weight: 1 }
     ],
-    scenarioCategory: "Maestría y Obra"
+    scenarioCategory: "Solidez Financiera"
   },
   {
-    id: 51,
-    text: "Disfruto aconsejar a personas más jóvenes o con menos experiencia, ayudándoles a descubrir y confiar en sus capacidades.",
+    id: 54,
+    text: "Siento orgullo de acompañar pacientemente el desarrollo de proyectos o personas desde su semilla hasta su madurez.",
     dimensionFocus: "construccion",
     weights: [
       { archetypeId: "padre", weight: 3 },
       { archetypeId: "cuidador", weight: 2 },
-      { archetypeId: "sabio", weight: 1 }
-    ],
-    scenarioCategory: "Formación Humana"
-  },
-  {
-    id: 52,
-    text: "Pienso habitualmente a 5, 10 o 20 años vista: qué estructuras, patrimonio o instituciones sólidas quiero dejar cimentadas.",
-    dimensionFocus: "construccion",
-    weights: [
-      { archetypeId: "rey", weight: 3 },
-      { archetypeId: "padre", weight: 3 },
       { archetypeId: "creador", weight: 1 }
     ],
-    scenarioCategory: "Visión a Largo Plazo"
-  },
-  {
-    id: 53,
-    text: "Me obsesiona la originalidad y la estética en todo lo que produzco; detesto las soluciones genéricas o de baja calidad.",
-    dimensionFocus: "construccion",
-    weights: [
-      { archetypeId: "creador", weight: 3 },
-      { archetypeId: "amante", weight: 2 },
-      { archetypeId: "mago", weight: 1 }
-    ],
-    scenarioCategory: "Criterio Estético"
-  },
-  {
-    id: 54,
-    text: "Sé cuándo contener con paciencia y cuándo exigir con firmeza para que alguien asuma su propia madurez.",
-    dimensionFocus: "construccion",
-    weights: [
-      { archetypeId: "padre", weight: 3 },
-      { archetypeId: "rey", weight: 2 },
-      { archetypeId: "guerrero", weight: 1 }
-    ],
-    scenarioCategory: "Exigencia Formativa"
+    scenarioCategory: "Nutrición de Procesos"
   },
   {
     id: 55,
-    text: "En un equipo, asumo con serenidad la responsabilidad final si las cosas salen mal, protegiendo a quienes confiaron en mí.",
+    text: "Combino la visión estética con la destreza técnica para pulir mis obras hasta que alcancen un alto estándar de excelencia.",
     dimensionFocus: "construccion",
     weights: [
-      { archetypeId: "rey", weight: 3 },
-      { archetypeId: "heroe", weight: 2 },
-      { archetypeId: "padre", weight: 2 }
+      { archetypeId: "creador", weight: 3 },
+      { archetypeId: "constructor", weight: 2 },
+      { archetypeId: "amante", weight: 1 }
     ],
-    scenarioCategory: "Responsabilidad Soberana"
+    scenarioCategory: "Maestría y Diseño"
   },
   {
     id: 56,
-    text: "Encuentro belleza y estado de flujo total cuando paso horas dando forma a un proyecto artesanal, artístico o intelectual.",
+    text: "Soy capaz de mantenerme en mi centro y no perder la compostura ni mi autoestima ante el juicio o la crítica externa.",
     dimensionFocus: "construccion",
     weights: [
-      { archetypeId: "creador", weight: 3 },
-      { archetypeId: "amante", weight: 2 },
-      { archetypeId: "mago", weight: 1 }
+      { archetypeId: "soberano", weight: 3 },
+      { archetypeId: "sabio", weight: 2 },
+      { archetypeId: "rey", weight: 1 }
     ],
-    scenarioCategory: "Estado de Flujo"
+    scenarioCategory: "Autodeterminación Serena"
   },
   {
     id: 57,
-    text: "Me alegra ver que quienes he formado o apoyado me superan en talento y alcanzan sus propios triunfos con autonomía.",
+    text: "En situaciones de polarización o conflicto de partes, actúo como mediador que encuentra síntesis armónicas.",
     dimensionFocus: "construccion",
     weights: [
-      { archetypeId: "padre", weight: 3 },
+      { archetypeId: "integrador", weight: 3 },
       { archetypeId: "rey", weight: 2 },
-      { archetypeId: "cuidador", weight: 1 }
+      { archetypeId: "sanador", weight: 1 }
     ],
-    scenarioCategory: "Generosidad Formativa"
+    scenarioCategory: "Síntesis de Opuestos"
   },
   {
     id: 58,
-    text: "Suelo evaluar las situaciones buscando cómo ordenar prioridades, optimizar recursos y crear estabilidad duradera.",
+    text: "Prefiero el pragmatismo que produce resultados duraderos frente a promesas vacías o especulaciones sin respaldo.",
     dimensionFocus: "construccion",
     weights: [
-      { archetypeId: "rey", weight: 3 },
-      { archetypeId: "sabio", weight: 2 },
-      { archetypeId: "mago", weight: 1 }
+      { archetypeId: "constructor", weight: 3 },
+      { archetypeId: "guerrero", weight: 2 },
+      { archetypeId: "rey", weight: 1 }
     ],
-    scenarioCategory: "Orden y Estabilidad"
+    scenarioCategory: "Pragmatismo Operativo"
   },
   {
     id: 59,
-    text: "Tengo facilidad para reinventar formatos o combinar disciplinas distintas en creaciones totalmente novedosas.",
+    text: "Trato a todas las personas con respeto fundamental, sin arrodillarme ante los poderosos ni despreciar a los humildes.",
     dimensionFocus: "construccion",
     weights: [
-      { archetypeId: "creador", weight: 3 },
-      { archetypeId: "mago", weight: 2 },
-      { archetypeId: "rebelde", weight: 2 }
+      { archetypeId: "soberano", weight: 3 },
+      { archetypeId: "integrador", weight: 2 },
+      { archetypeId: "rebelde", weight: 1 }
     ],
-    scenarioCategory: "Innovación Cruzada"
+    scenarioCategory: "Igualdad y Nobleza"
   },
   {
     id: 60,
-    text: "Considero que mi valor como ser humano se mide por la solidez de lo que construyo y por el espacio de seguridad que brindo a los míos.",
+    text: "Vivo mi vida como una obra de arte unificada, donde cada experiencia difícil encuentra su lugar en mi evolución.",
     dimensionFocus: "construccion",
     weights: [
-      { archetypeId: "rey", weight: 3 },
-      { archetypeId: "padre", weight: 3 },
-      { archetypeId: "creador", weight: 2 }
+      { archetypeId: "integrador", weight: 3 },
+      { archetypeId: "mistico", weight: 2 },
+      { archetypeId: "creador", weight: 1 }
     ],
-    scenarioCategory: "Propósito de Vida"
+    scenarioCategory: "Alquimia de Vida"
   }
 ];
 
-// Quick test selection (24 high-signal balanced questions, 2 per archetype)
-export const QUICK_QUESTION_IDS = [
-  1, 2, 3, 6, // Mente (Mago, Sabio)
-  16, 17, 18, 19, 20, 21, 22, 28, // Acción (Guerrero, Héroe, Rebelde, Explorador)
-  31, 32, 33, 34, 35, 36, // Corazón (Amante, Cuidador, Bufón)
-  46, 47, 48, 49, 50, 52 // Construcción (Rey, Padre, Creador)
+// Quick test selection (24 representative questions across all 18 archetypes)
+export const QUICK_QUESTION_IDS: number[] = [
+  1, 2, 8, 9, 13, // Mente & Trascendencia (Mago, Sabio, Sacerdote, Místico)
+  16, 17, 18, 19, 20, 21, // Acción & Coraje (Guerrero, Héroe, Rebelde, Explorador)
+  31, 32, 33, 34, 35, 36, // Corazón & Conexión (Amante, Cuidador, Bufón, Sanador)
+  46, 47, 48, 49, 50, 51, 57 // Construcción & Soberanía (Rey, Padre, Creador, Constructor, Soberano, Integrador)
 ];
 
-export const LIKERT_OPTIONS = [
-  { value: 1, label: "Nada parecido a mí", short: "1" },
-  { value: 2, label: "Poco parecido a mí", short: "2" },
-  { value: 3, label: "Neutral / A veces", short: "3" },
-  { value: 4, label: "Bastante parecido a mí", short: "4" },
-  { value: 5, label: "Muy parecido a mí", short: "5" },
+export interface LikertOption {
+  value: number;
+  label: string;
+  description: string;
+}
+
+export const LIKERT_OPTIONS: LikertOption[] = [
+  { value: 1, label: 'En total desacuerdo', description: 'Casi nunca resuena conmigo' },
+  { value: 2, label: 'En desacuerdo', description: 'Rara vez me identifico' },
+  { value: 3, label: 'Neutral / A veces', description: 'A veces sí, a veces no' },
+  { value: 4, label: 'De acuerdo', description: 'Habitual en mi comportamiento' },
+  { value: 5, label: 'Totalmente de acuerdo', description: 'Describe mi forma esencial de ser' },
 ];
+

@@ -16,9 +16,9 @@ import {
   SlidersHorizontal,
   X,
 } from 'lucide-react';
-import { ARCHETYPES, ARCHETYPES_LIST } from '../../data/archetypesData';
+import { ARCHETYPES, ARCHETYPES_LIST, getArchetype } from '../../data/archetypesData';
 import { ARCHETYPE_VISUALS } from '../../data/archetypeImages';
-import { ArchetypeId, LifeDomainKey } from '../../types';
+import { ArchetypeId, GenderMode, LifeDomainKey } from '../../types';
 import { ArchetypePortraitCard } from './ArchetypePortraitCard';
 import { ArchetypeIllustratedArtwork } from './ArchetypeIllustratedArtwork';
 import { ArchetypePickerModal } from './ArchetypePickerModal';
@@ -26,6 +26,8 @@ import { ArchetypePickerModal } from './ArchetypePickerModal';
 interface ArchetypeComparisonViewProps {
   onGoToAiWithPrompt: (prompt: string, personaId: string) => void;
   onGoToDetail: (archetypeId: ArchetypeId) => void;
+  gender?: GenderMode;
+  onGenderChange?: (gender: GenderMode) => void;
 }
 
 const DOMAIN_LABELS: Record<LifeDomainKey, string> = {
@@ -41,6 +43,8 @@ type ActivePickerSlot = 'first' | 'second' | 'third' | null;
 export const ArchetypeComparisonView: React.FC<ArchetypeComparisonViewProps> = ({
   onGoToAiWithPrompt,
   onGoToDetail,
+  gender = 'male',
+  onGenderChange,
 }) => {
   const [selectedFirst, setSelectedFirst] = useState<ArchetypeId>('rey');
   const [selectedSecond, setSelectedSecond] = useState<ArchetypeId>('guerrero');
@@ -48,9 +52,10 @@ export const ArchetypeComparisonView: React.FC<ArchetypeComparisonViewProps> = (
   const [activeDomain, setActiveDomain] = useState<LifeDomainKey>('liderazgo');
   const [pickerSlot, setPickerSlot] = useState<ActivePickerSlot>(null);
 
-  const arch1 = ARCHETYPES[selectedFirst];
-  const arch2 = ARCHETYPES[selectedSecond];
-  const arch3 = selectedThird !== 'none' ? ARCHETYPES[selectedThird] : null;
+  const currentGender = gender || 'male';
+  const arch1 = getArchetype(selectedFirst, currentGender);
+  const arch2 = getArchetype(selectedSecond, currentGender);
+  const arch3 = selectedThird !== 'none' ? getArchetype(selectedThird, currentGender) : null;
 
   const compareList = arch3 ? [arch1, arch2, arch3] : [arch1, arch2];
 
@@ -276,6 +281,7 @@ export const ArchetypeComparisonView: React.FC<ArchetypeComparisonViewProps> = (
         isOpen={pickerSlot !== null}
         onClose={handleClosePicker}
         onSelect={handleSelectFromPicker}
+        gender={currentGender}
         currentSelectedId={
           pickerSlot === 'first'
             ? selectedFirst

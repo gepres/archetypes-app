@@ -1,8 +1,15 @@
-import { AIProviderId, AISettings, AssessmentResult, ChatMessage } from '../types';
+import { getArchetype, getArchetypeNarrative, getArchetypeName } from '../data/archetypesData';
+import {
+  AIProviderId,
+  AISettings,
+  ArchetypeId,
+  AssessmentResult,
+  ChatMessage,
+  GenderMode,
+  UserProfile,
+} from '../types';
 
 // Claves incluidas con la app, inyectadas desde el .env por vite.config.ts.
-// OJO: viajan dentro del bundle, así que son públicas para quien abra el sitio.
-// Solo actúan como respaldo cuando el usuario no ha configurado la suya.
 export const APP_KEYS = {
   openrouter: import.meta.env.VITE_OPENROUTER_API_KEY || '',
   gemini: import.meta.env.VITE_GEMINI_API_KEY || '',
@@ -127,73 +134,73 @@ export const PROVIDER_OPTIONS: Record<AIProviderId, ProviderOption> = {
 
 export const AIProviderService = {
   getSettings(): AISettings {
-    const today = new Date().toISOString().split('T')[0];
-    const defaultSettings: AISettings = {
-      provider: 'openrouter',
-      openrouterKeyMode: 'courtesy',
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY_AI_SETTINGS);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        return this.normalizeSettings(parsed);
+      }
+    } catch (e) {
+      console.error('Error reading AI settings:', e);
+    }
+    return this.getDefaultSettings();
+  },
+
+  saveSettings(settings: AISettings): void {
+    try {
+      const normalized = this.normalizeSettings(settings);
+      localStorage.setItem(STORAGE_KEY_AI_SETTINGS, JSON.stringify(normalized));
+    } catch (e) {
+      console.error('Error saving AI settings:', e);
+    }
+  },
+
+  getDefaultSettings(): AISettings {
+    const today = new Date().toISOString().slice(0, 10);
+    const hasDefaultOpenRouter = Boolean(APP_KEYS.openrouter);
+    const defaultProvider: AIProviderId = hasDefaultOpenRouter ? 'openrouter' : 'local';
+
+    return {
+      provider: defaultProvider,
       geminiKeyMode: 'courtesy',
-      geminiApiKey: '',
-      openaiApiKey: '',
-      openrouterApiKey: '',
+      openrouterKeyMode: 'courtesy',
+      useAppCourtesyKey: true,
       geminiModel: PROVIDER_OPTIONS.gemini.defaultModel,
       openaiModel: PROVIDER_OPTIONS.openai.defaultModel,
       openrouterModel: PROVIDER_OPTIONS.openrouter.defaultModel,
-      useAppCourtesyKey: true,
       courtesyQuota: {
         lastResetDate: today,
         usedToday: 0,
         maxDaily: DEFAULT_COURTESY_DAILY_LIMIT,
       },
     };
-
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY_AI_SETTINGS);
-      if (!stored) return defaultSettings;
-      const parsed: AISettings = JSON.parse(stored);
-
-      // Reset daily quota if new day
-      if (parsed.courtesyQuota?.lastResetDate !== today) {
-        parsed.courtesyQuota = {
-          lastResetDate: today,
-          usedToday: 0,
-          maxDaily: DEFAULT_COURTESY_DAILY_LIMIT,
-        };
-      }
-
-      // Sanitize obsolete slugs
-      let sanitizedOpenrouterModel = parsed.openrouterModel || PROVIDER_OPTIONS.openrouter.defaultModel;
-      if (sanitizedOpenrouterModel.includes(':free') || sanitizedOpenrouterModel === 'google/gemini-2.0-flash-001') {
-        sanitizedOpenrouterModel = PROVIDER_OPTIONS.openrouter.defaultModel;
-      }
-
-      let sanitizedGeminiModel = parsed.geminiModel || PROVIDER_OPTIONS.gemini.defaultModel;
-      if (sanitizedGeminiModel === 'google/gemini-2.0-flash-001') {
-        sanitizedGeminiModel = 'gemini-2.5-flash';
-      }
-
-      return {
-        ...defaultSettings,
-        ...parsed,
-        openrouterModel: sanitizedOpenrouterModel,
-        geminiModel: sanitizedGeminiModel,
-        openrouterKeyMode: parsed.openrouterKeyMode || (parsed.openrouterApiKey?.trim() ? 'custom' : 'courtesy'),
-        geminiKeyMode: parsed.geminiKeyMode || (parsed.geminiApiKey?.trim() ? 'custom' : 'courtesy'),
-        courtesyQuota: parsed.courtesyQuota || defaultSettings.courtesyQuota,
-      };
-    } catch (e) {
-      return defaultSettings;
-    }
   },
 
-  saveSettings(settings: AISettings): void {
-    try {
-      localStorage.setItem(STORAGE_KEY_AI_SETTINGS, JSON.stringify(settings));
-    } catch (e) {
-      console.error('Error saving AI settings:', e);
+  normalizeSettings(settings: Partial<AISettings>): AISettings {
+    const defaults = this.getDefaultSettings();
+    const today = new Date().toISOString().slice(0, 10);
+
+    const quota = settings.courtesyQuota || defaults.courtesyQuota;
+    if (quota.lastResetDate !== today) {
+      quota.lastResetDate = today;
+      quota.usedToday = 0;
     }
+
+    return {
+      provider: settings.provider || defaults.provider,
+      geminiKeyMode: settings.geminiKeyMode || defaults.geminiKeyMode,
+      openrouterKeyMode: settings.openrouterKeyMode || defaults.openrouterKeyMode,
+      geminiApiKey: settings.geminiApiKey,
+      openaiApiKey: settings.openaiApiKey,
+      openrouterApiKey: settings.openrouterApiKey,
+      geminiModel: settings.geminiModel || defaults.geminiModel,
+      openaiModel: settings.openaiModel || defaults.openaiModel,
+      openrouterModel: settings.openrouterModel || defaults.openrouterModel,
+      useAppCourtesyKey: settings.useAppCourtesyKey ?? defaults.useAppCourtesyKey,
+      courtesyQuota: quota,
+    };
   },
 
-  // Con qué se responde: la clave del usuario, la incluida con la app, o el motor local.
   getUsageStatus(): {
     isUnlimited: boolean;
     provider: AIProviderId;
@@ -210,12 +217,10 @@ export const AIProviderService = {
       return { isUnlimited: true, provider, activeKeySource: 'local', ...sinCupo };
     }
 
-    // Clave propia: no hay cupo que administrar
     if (this.getUserKeyFor(provider)) {
       return { isUnlimited: true, provider, activeKeySource: 'custom', ...sinCupo };
     }
 
-    // Sin clave propia se recurre a la incluida con la app, con cupo diario
     if (this.getAppKeyFor(provider)) {
       const usedToday = settings.courtesyQuota?.usedToday || 0;
       const maxDaily = settings.courtesyQuota?.maxDaily || DEFAULT_COURTESY_DAILY_LIMIT;
@@ -232,7 +237,6 @@ export const AIProviderService = {
     return { isUnlimited: true, provider, activeKeySource: 'none', ...sinCupo };
   },
 
-  // Clave que el propio usuario guardo para un proveedor; cadena vacia si no hay ninguna.
   getUserKeyFor(provider: AIProviderId): string {
     const settings = this.getSettings();
     if (provider === 'openrouter') return (settings.openrouterApiKey || '').trim();
@@ -241,8 +245,6 @@ export const AIProviderService = {
     return '';
   },
 
-  // Clave incluida con la app. Gemini se sirve vía OpenRouter cuando no hay clave
-  // propia de Google, igual que en el diseño original.
   getAppKeyFor(provider: AIProviderId): string {
     if (provider === 'openrouter') return APP_KEYS.openrouter;
     if (provider === 'gemini') return APP_KEYS.gemini || APP_KEYS.openrouter;
@@ -250,12 +252,10 @@ export const AIProviderService = {
     return '';
   },
 
-  // La clave con la que se llamará realmente: primero la del usuario.
   getEffectiveKeyFor(provider: AIProviderId): string {
     return this.getUserKeyFor(provider) || this.getAppKeyFor(provider);
   },
 
-  // Consume una unidad del cupo diario de la clave incluida con la app.
   incrementCourtesyUsage(): void {
     const settings = this.getSettings();
     settings.courtesyQuota.usedToday += 1;
@@ -264,44 +264,79 @@ export const AIProviderService = {
 
   buildSystemPrompt(
     archetypePersona?: string,
-    currentResult?: AssessmentResult | null
+    currentResult?: AssessmentResult | null,
+    userProfile?: UserProfile | null,
+    gender: GenderMode = 'male'
   ): string {
+    const userGender: GenderMode = userProfile?.gender || gender || 'male';
+    const isFemale = userGender === 'female';
+
     let personaInstruction = '';
     if (archetypePersona && archetypePersona !== 'general') {
+      const archId = archetypePersona.toLowerCase() as ArchetypeId;
+      const narrative = getArchetypeNarrative(archId, userGender);
+      const archetypeName = getArchetypeName(archId, userGender);
+
       personaInstruction = `
 MODO DE PERSONA ARQUETÍPICA ACTIVO:
-Estás hablando EN PRIMERA PERSONA como la VOZ INTERIOR DEL ARQUETIPO: "${archetypePersona.toUpperCase()}".
-- Encarna las virtudes, el ritmo, la agudeza y la visión de este arquetipo.
-- Háblale al usuario de forma cercana, profunda, desafiante o sabia según corresponda a tu energía.
-- Mantén la consciencia de que eres una parte viva de su propia psique invitándole a la maduración e integración.
+Estás hablando EN PRIMERA PERSONA como la VOZ INTERIOR DEL ARQUETIPO: "${archetypeName.toUpperCase()}" (${isFemale ? 'Expresión Femenina' : 'Expresión Masculina'}).
+- Título / Esencia: ${narrative.characterTitle || narrative.shortDescription}
+- Desafío Nuclear / Pregunta de Poder: "${narrative.centralQuestion}"
+- Virtud y Fortaleza: ${narrative.strength}
+- Sombra y Riesgo de Desbalance: ${narrative.shadow} (${narrative.shadowDescription})
+- Comportamientos en Equilibrio: ${narrative.balancedBehavior.join(' | ')}
+- Comportamientos en Desequilibrio: ${narrative.unbalancedBehavior.join(' | ')}
+- Preguntas de Reflexión para el Usuario: ${narrative.reflectionQuestions.join(' | ')}
+- Mantra Guía: "${narrative.mantra}"
+- Instrucción: Encarna las virtudes, el ritmo, la agudeza y la visión de este arquetipo. Háblale al usuario de forma cercana, profunda y desafiante según corresponda a tu energía, ayudándole a integrar tus virtudes y reconocer tus sombras.
 `;
     }
 
-    let contextPrompt = '';
+    let profileContext = '';
+    if (userProfile) {
+      profileContext = `
+PERFIL DEL USUARIO:
+- Nombre: ${userProfile.name || 'Explorador'}
+- Género / Modalidad Narrativa: ${isFemale ? 'Mujer (Perspectiva y arquetipos femeninos aplicados)' : 'Hombre (Perspectiva y arquetipos masculinos aplicados)'}
+${userProfile.lifeStage ? `- Etapa de Vida: ${userProfile.lifeStage}` : ''}
+${userProfile.currentGoal ? `- Objetivo / Desafío Actual: ${userProfile.currentGoal}` : ''}
+`;
+    }
+
+    let resultContext = '';
     if (currentResult) {
-      contextPrompt = `
-CONTEXTO DEL MAPA ARQUETÍPICO DEL USUARIO (Modelo simbólico y reflexivo):
-- Arquetipo Dominante: ${currentResult.dominantArchetype.name}
-- Top 3 Arquetipos con mayor energía: ${currentResult.top3.map(a => a.name).join(', ')}
-- Arquetipos de desarrollo sugeridos para equilibrio: ${currentResult.developmentArchetypes.map(a => a.name).join(', ')}
+      const dominantArch = currentResult.dominantArchetype.archetypeId;
+      const dominantNarrative = getArchetypeNarrative(dominantArch, userGender);
+      const top3Names = currentResult.top3.map(a => getArchetypeName(a.archetypeId, userGender)).join(', ');
+      const devNames = currentResult.developmentArchetypes.map(a => getArchetypeName(a.archetypeId, userGender)).join(', ');
+
+      resultContext = `
+CONTEXTO DEL MAPA ARQUETÍPICO DEL USUARIO (Sistema de 18 Arquetipos Universales):
+- Arquetipo Dominante: ${getArchetypeName(dominantArch, userGender)} (${dominantNarrative.characterTitle || dominantNarrative.name})
+  * Esencia: ${dominantNarrative.shortDescription}
+  * Desafío Central: ${dominantNarrative.centralQuestion}
+- Tríada Dominante (Top 3): ${top3Names}
+- Arquetipos de Desarrollo (Equilibrio): ${devNames}
 - Balance Dimensional: Mente (${currentResult.dimensionScores.mente}%), Acción (${currentResult.dimensionScores.accion}%), Corazón (${currentResult.dimensionScores.corazon}%), Construcción (${currentResult.dimensionScores.construccion}%)
 - Perfil Compuesto: ${currentResult.compositeProfile?.title || 'Explorador reflexivo'}
+- Síntesis del Perfil: ${currentResult.compositeProfile?.synthesis || ''}
 `;
     }
 
-    return `Eres un Asistente Filosófico y Guía de Reflexión Simbólica para una aplicación de autoconocimiento basada en 12 arquetipos masculinos (Rey, Guerrero, Mago, Amante, Padre, Cuidador, Bufón, Explorador, Creador, Sabio, Héroe, Rebelde).
+    return `Eres un Asistente Filosófico y Guía de Sabiduría Arquetípica para una aplicación de autoconocimiento basada en 18 arquetipos universales con narrativas adaptativas por género.
 
-DIRECTRICES ÉTICAS Y DE TONO:
-1. NUNCA te presentes como psicólogo, terapeuta ni profesional clínico.
-2. NO realices diagnósticos psicológicos ni afirmaciones clínicas categóricas.
-3. Trata siempre los arquetipos como un MODELO SIMBÓLICO, metafórico y de indagación personal.
-4. Utiliza un lenguaje reflexivo, socrático y matizado: "este modelo sugiere que...", "podría indicar...", "desde esta perspectiva simbólica...", "quizás valga la pena observar si...".
-5. Estilo: Serio, elegante, empático, profundo, sin clichés ni dogmatismos.
+DIRECTRICES DE CONTENIDO Y GÉNERO:
+1. ADAPTACIÓN DE NARRATIVA: El usuario ha seleccionado una modalidad ${isFemale ? 'FEMENINA (ej: La Reina, La Guerrera, La Alquimista, La Sabia, La Sacerdotisa, La Amante, La Madre, La Cuidadora, etc.)' : 'MASCULINA (ej: El Rey, El Guerrero, El Mago, El Sabio, El Sacerdote, El Amante, El Padre, El Cuidador, etc.)'}. Adapta el tono, los nombres de los arquetipos, los ejemplos cotidianos y las reflexiones a esta perspectiva sin caer en estereotipos simplistas ni clichés.
+2. NUNCA te presentes como psicólogo, terapeuta ni profesional clínico.
+3. NO realices diagnósticos clínicos ni afirmaciones médicas categóricas.
+4. Trata siempre los arquetipos como un MODELO SIMBÓLICO, existencial y de autoindagación personal profunda.
+5. Utiliza un lenguaje socrático, respetuoso, lúcido y matizado: "este modelo sugiere que...", "podría indicar...", "desde la perspectiva de este arquetipo...", "quizás valga la pena observar si...".
 6. Ayuda al usuario a formular preguntas de autoindagación honesta e integrar sus arquetipos de desarrollo.
-7. Responde siempre en español fluido, respetuoso y reflexivo.
+7. Responde siempre en español fluido, cálido, digno y filosóficamente enriquecedor.
 
 ${personaInstruction}
-${contextPrompt}
+${profileContext}
+${resultContext}
 `.trim();
   },
 
@@ -309,23 +344,26 @@ ${contextPrompt}
     message: string,
     history: ChatMessage[],
     currentResult: AssessmentResult | null,
-    archetypePersona?: string
+    archetypePersona?: string,
+    userProfile?: UserProfile | null,
+    gender: GenderMode = 'male'
   ): Promise<{ text: string; modelUsed: string; provider: AIProviderId }> {
     const settings = this.getSettings();
     const status = this.getUsageStatus();
+    const effectiveGender = userProfile?.gender || gender;
 
-    // Sin ninguna clave disponible no hay a quién llamar: responde el motor local
+    // Sin ninguna clave disponible: responde el motor local
     if (status.activeKeySource === 'none') {
       return {
         text:
-          this.getLocalArchetypeReflection(message, currentResult, archetypePersona) +
+          this.getLocalArchetypeReflection(message, currentResult, archetypePersona, effectiveGender) +
           `\n\n---\n*Respuesta del **motor simbólico local**, sin conexión externa. Para conversar con un modelo de IA, añade tu propia clave en **Ajustes de IA**.*`,
         modelUsed: 'Motor Simbólico Local',
         provider: 'local',
       };
     }
 
-    // Cupo diario agotado sobre la clave incluida con la app
+    // Cupo diario agotado
     if (status.activeKeySource === 'app' && status.remainingCourtesy <= 0) {
       return {
         text:
@@ -337,12 +375,12 @@ ${contextPrompt}
       };
     }
 
-    const systemPrompt = this.buildSystemPrompt(archetypePersona, currentResult);
+    const systemPrompt = this.buildSystemPrompt(archetypePersona, currentResult, userProfile, effectiveGender);
 
     try {
       if (settings.provider === 'local') {
         return {
-          text: this.getLocalArchetypeReflection(message, currentResult, archetypePersona),
+          text: this.getLocalArchetypeReflection(message, currentResult, archetypePersona, effectiveGender),
           modelUsed: 'Motor Simbólico Local',
           provider: 'local',
         };
@@ -378,14 +416,14 @@ ${contextPrompt}
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${key}`,
             'HTTP-Referer': window.location.origin || 'https://archetypes-app.web.app',
-            'X-Title': 'Arquetipos Masculinos',
+            'X-Title': 'Arquetipos Universales',
           },
           body: JSON.stringify({
             model: model,
             models: fallbackModels,
             messages: formattedMessages,
             temperature: 0.7,
-            max_tokens: 900,
+            max_tokens: 950,
           }),
         });
 
@@ -398,7 +436,6 @@ ${contextPrompt}
         const reply = data.choices?.[0]?.message?.content?.trim();
         if (!reply) throw new Error('Respuesta vacía de OpenRouter');
 
-        // Solo consume cupo cuando se usa la clave incluida con la app
         if (status.activeKeySource === 'app') {
           this.incrementCourtesyUsage();
         }
@@ -436,7 +473,7 @@ ${contextPrompt}
             model: model,
             messages: formattedMessages,
             temperature: 0.7,
-            max_tokens: 900,
+            max_tokens: 950,
           }),
         });
 
@@ -461,81 +498,40 @@ ${contextPrompt}
       }
 
       if (settings.provider === 'gemini') {
-        const userKey = this.getUserKeyFor('gemini');
-
-        // Sin clave propia de Google, Gemini se sirve vía OpenRouter con la clave de la app
-        if (!userKey && !APP_KEYS.gemini && APP_KEYS.openrouter) {
-          const formattedMessages = [
-            { role: 'system', content: systemPrompt },
-            ...history.slice(-8).map(m => ({
-              role: m.role === 'model' ? 'assistant' : 'user',
-              content: m.content,
-            })),
-            { role: 'user', content: message },
-          ];
-
-          const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${APP_KEYS.openrouter}`,
-              'HTTP-Referer': window.location.origin || 'https://archetypes-mystical.web.app',
-              'X-Title': 'Arquetipos Masculinos',
-            },
-            body: JSON.stringify({
-              model: 'google/gemini-2.5-flash',
-              models: ['google/gemini-2.5-flash', 'google/gemini-flash-1.5', 'google/gemini-2.5-flash-lite'],
-              messages: formattedMessages,
-              temperature: 0.7,
-              max_tokens: 900,
-            }),
-          });
-
-          if (!res.ok) {
-            const errJson = await res.json().catch(() => ({}));
-            throw new Error(errJson?.error?.message || `Error HTTP Gemini: ${res.status}`);
-          }
-
-          const data = await res.json();
-          const reply = data.choices?.[0]?.message?.content?.trim();
-          if (!reply) throw new Error('Respuesta vacía de Gemini');
-
-          if (status.activeKeySource === 'app') {
-            this.incrementCourtesyUsage();
-          }
-
-          return {
-            text: reply,
-            modelUsed: 'Gemini 2.5 Flash (incluido con la app)',
-            provider: 'gemini',
-          };
-        }
-
-        const key = userKey || APP_KEYS.gemini;
+        const key = this.getEffectiveKeyFor('gemini');
         if (!key) {
-          throw new Error('Añade tu clave de Google Gemini en Ajustes de IA para usar este proveedor.');
+          if (APP_KEYS.openrouter) {
+            return this.sendMessage(message, history, currentResult, archetypePersona, userProfile, effectiveGender);
+          }
+          throw new Error('Por favor ingresa tu clave de Google Gemini en Ajustes de IA.');
         }
 
         const model = settings.geminiModel || PROVIDER_OPTIONS.gemini.defaultModel;
         const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
 
         const contents = [
+          {
+            role: 'user',
+            parts: [{ text: `[INSTRUCCIONES DEL SISTEMA]\n${systemPrompt}\n\n[INICIO DE LA CONVERSACIÓN]` }],
+          },
           ...history.slice(-8).map(m => ({
             role: m.role === 'model' ? 'model' : 'user',
             parts: [{ text: m.content }],
           })),
-          { role: 'user', parts: [{ text: message }] },
+          {
+            role: 'user',
+            parts: [{ text: message }],
+          },
         ];
 
         const res = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            systemInstruction: { parts: [{ text: systemPrompt }] },
             contents,
             generationConfig: {
               temperature: 0.7,
-              maxOutputTokens: 900,
+              maxOutputTokens: 950,
             },
           }),
         });
@@ -563,16 +559,20 @@ ${contextPrompt}
       throw new Error('No se pudo procesar la solicitud con el proveedor actual.');
     } catch (err: any) {
       console.warn('AI Provider fallback triggered:', err);
-      // Return safe fallback
       return {
-        text: `${this.getLocalArchetypeReflection(message, currentResult, archetypePersona)}\n\n*(Nota: Respuesta del motor local debido a: ${err.message || 'conexión de red'})*`,
+        text: `${this.getLocalArchetypeReflection(message, currentResult, archetypePersona, effectiveGender)}\n\n*(Nota: Respuesta del motor simbólico local debido a: ${err.message || 'conexión de red'})*`,
         modelUsed: 'Fallback Local',
         provider: 'local',
       };
     }
   },
 
-  async testConnection(provider: AIProviderId, customKey?: string, customModel?: string, keyMode?: 'courtesy' | 'custom'): Promise<{ success: boolean; message: string }> {
+  async testConnection(
+    provider: AIProviderId,
+    customKey?: string,
+    customModel?: string,
+    keyMode?: 'courtesy' | 'custom'
+  ): Promise<{ success: boolean; message: string }> {
     try {
       if (provider === 'local') {
         return { success: true, message: 'El motor local simbólico no requiere conexión y está siempre disponible.' };
@@ -628,7 +628,6 @@ ${contextPrompt}
         const propia = (customKey || '').trim() || this.getUserKeyFor('gemini');
         const key = propia || APP_KEYS.gemini;
         if (!key) {
-          // Sin clave de Google, Gemini se sirve vía OpenRouter con la clave de la app
           if (APP_KEYS.openrouter) {
             return this.testConnection('openrouter', '', 'google/gemini-2.5-flash');
           }
@@ -652,7 +651,7 @@ ${contextPrompt}
           return { success: false, message: err?.error?.message || `Error HTTP ${res.status}. Verifica que tu clave de Google AI Studio sea correcta.` };
         }
 
-        return { success: true, message: `Conexion exitosa con tu clave de Google Gemini (${model}).` };
+        return { success: true, message: `Conexión exitosa con tu clave de Google Gemini (${model}).` };
       }
 
       if (provider === 'openai') {
@@ -692,28 +691,36 @@ ${contextPrompt}
   getLocalArchetypeReflection(
     message: string,
     result: AssessmentResult | null,
-    archetypePersona?: string
+    archetypePersona?: string,
+    gender: GenderMode = 'male'
   ): string {
     if (archetypePersona && archetypePersona !== 'general') {
+      const archId = archetypePersona.toLowerCase() as ArchetypeId;
+      const name = getArchetypeName(archId, gender);
+      const narrative = getArchetypeNarrative(archId, gender);
+
       return (
-        `Como la voz de tu ${archetypePersona.toUpperCase()} interior: He escuchado tu reflexión ("${message}"). ` +
-        `Mi energía te recuerda mantenerte firme en lo esencial, no desgastarte en batallas estériles y recordar el propósito superior que guía tu camino hacia la madurez e integración.`
+        `Como la voz de tu ${name.toUpperCase()} interior:\n\n` +
+        `He escuchado tu reflexión: "${message}".\n\n` +
+        `Desde mi energía (${narrative.characterTitle || narrative.shortDescription}), te propongo contemplar este dilema:\n` +
+        `> "${narrative.centralQuestion}"\n\n` +
+        `Pregunta para tu indagación: ${narrative.reflectionQuestions[0] || '¿Cómo puedes integrar esta virtud hoy?'}`
       );
     }
 
     if (!result) {
       return (
-        'Observo tu inquietud. Para ofrecerte un análisis simbólico más preciso, te sugiero completar el test de arquetipos. Mientras tanto, reflexiona: ¿Qué arquetipo (el Guerrero que actúa y pone límites, el Mago que analiza con serenidad, el Amante que conecta con empatía o el Rey que organiza) aportaría mayor equilibrio a esta situación?'
+        `Observo tu inquietud. Para ofrecerte un análisis simbólico más preciso, te sugiero completar el test de 18 arquetipos. Mientras tanto, reflexiona: ¿Qué energía (la acción enfocada, la visión analítica, la conexión empática o la organización soberana) aportaría mayor balance a esta situación?`
       );
     }
 
-    const dom = result.dominantArchetype.name;
-    const dev = result.developmentArchetypes.map(d => d.name).join(' y ');
+    const domName = result.dominantArchetype.name;
+    const devNames = result.developmentArchetypes.map(d => d.name).join(' y ');
 
     return (
-      `Considerando tu mapa arquetípico (donde predomina el ${dom} y tus arquetipos de desarrollo sugeridos son ${dev}), esta situación podría indicar que estás operando con mucha fuerza desde tus inclinaciones habituales.\n\n` +
-      `¿Cómo cambiaría tu perspectiva si convocaras por un momento la energía de ${result.developmentArchetypes[0]?.name || 'tu arquetipo complementario'}?\n\n` +
-      `Este modelo sugiere que no se trata de anular tu ${dom}, sino de enriquecerlo con nuevos recursos de acción y presencia consciente.`
+      `Considerando tu mapa arquetípico (donde predomina **${domName}** y tus arquetipos sugeridos de desarrollo son **${devNames}**), esta situación podría indicar que estás operando con mucha fuerza desde tus patrones habituales.\n\n` +
+      `¿Cómo cambiaría tu perspectiva si convocaras por un momento la energía y virtudes de **${result.developmentArchetypes[0]?.name || 'tu arquetipo complementario'}**?\n\n` +
+      `Este modelo sugiere que no se trata de anular tu ${domName}, sino de enriquecerlo con nuevos recursos de sabiduría y presencia consciente.`
     );
   },
 };

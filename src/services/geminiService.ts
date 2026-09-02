@@ -1,36 +1,22 @@
-import { AssessmentResult, ChatMessage } from '../types';
+import { AssessmentResult, ChatMessage, GenderMode, UserProfile } from '../types';
 import { AIProviderService } from './aiProviderService';
-
-export interface ChatRequestPayload {
-  message: string;
-  history?: Array<{ role: 'user' | 'model'; parts: string }>;
-  archetypePersona?: string;
-  archetypeContext?: {
-    dominant: string;
-    top3: string[];
-    development: string[];
-    dimensions: {
-      mente: number;
-      accion: number;
-      corazon: number;
-      construccion: number;
-    };
-    compositeProfileTitle?: string;
-  };
-}
 
 export const GeminiService = {
   async sendMessage(
     message: string,
     history: ChatMessage[],
     currentResult: AssessmentResult | null,
-    archetypePersona?: string
+    archetypePersona?: string,
+    userProfile?: UserProfile | null,
+    gender?: GenderMode
   ): Promise<string> {
     const result = await AIProviderService.sendMessage(
       message,
       history,
       currentResult,
-      archetypePersona
+      archetypePersona,
+      userProfile,
+      gender
     );
     return result.text;
   },
@@ -38,8 +24,9 @@ export const GeminiService = {
   getLocalArchetypeReflection(
     message: string,
     result: AssessmentResult | null,
-    archetypePersona?: string
+    archetypePersona?: string,
+    gender: GenderMode = 'male'
   ): string {
-    return AIProviderService.getLocalArchetypeReflection(message, result, archetypePersona);
+    return AIProviderService.getLocalArchetypeReflection(message, result, archetypePersona, gender);
   },
 };

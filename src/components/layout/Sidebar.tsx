@@ -16,6 +16,7 @@ import {
   Settings,
 } from 'lucide-react';
 import { AssessmentResult, UserProfile } from '../../types';
+import { getArchetypeName } from '../../data/archetypesData';
 import { BrandLogo } from '../common/BrandLogo';
 import { AiModelStatusBadge } from '../common/AiModelStatusBadge';
 
@@ -56,7 +57,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const mainNavItems = [
     { id: 'landing', label: 'Inicio', icon: Compass },
     { id: 'dashboard', label: 'Mi Mapa', icon: LayoutDashboard },
-    { id: 'archetypes', label: 'Los 12 Arquetipos', icon: BookOpen },
+    { id: 'archetypes', label: 'Los 18 Arquetipos', icon: BookOpen },
     { id: 'compare', label: 'Comparador & Matriz', icon: GitCompare },
     { id: 'synergies', label: 'Relaciones & Sinergias', icon: GitMerge },
     { id: 'journal', label: 'Diario de Reflexión', icon: Sparkles },
@@ -142,7 +143,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div className="flex items-center gap-2">
               <span className="text-xl">{currentResult.dominantArchetype.emoji}</span>
               <span className="font-serif font-bold text-sm text-[#F2EFE6]">
-                {currentResult.dominantArchetype.name}
+                {getArchetypeName(currentResult.dominantArchetype.archetypeId, userProfile.gender || 'male')}
               </span>
             </div>
             <div className="flex gap-1.5 pt-1">

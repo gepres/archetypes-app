@@ -11,12 +11,13 @@ import {
   RotateCcw,
   Calendar,
 } from 'lucide-react';
-import { ARCHETYPES } from '../../data/archetypesData';
-import { ArchetypeId, AssessmentResult, Challenge, JournalEntry } from '../../types';
+import { getArchetype, getArchetypeName } from '../../data/archetypesData';
+import { ArchetypeId, AssessmentResult, Challenge, GenderMode, JournalEntry } from '../../types';
 import { DimensionBar } from '../common/DimensionBar';
 import { RadarChartComponent } from '../common/RadarChartComponent';
 import { NavTab } from '../layout/Sidebar';
 import { AiModelStatusBadge } from '../common/AiModelStatusBadge';
+import { PerspectiveSwitcher } from '../common/PerspectiveSwitcher';
 
 interface DashboardViewProps {
   currentResult: AssessmentResult | null;
@@ -28,6 +29,8 @@ interface DashboardViewProps {
   onStartTest: (type?: 'full' | 'quick') => void;
   onToggleChallenge: (id: string) => void;
   onOpenAiSettings?: () => void;
+  gender?: GenderMode;
+  onGenderChange?: (gender: GenderMode) => void;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
@@ -40,10 +43,24 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onStartTest,
   onToggleChallenge,
   onOpenAiSettings,
+  gender = 'male',
+  onGenderChange,
 }) => {
+  const currentGender = gender || 'male';
+
   if (!currentResult) {
     return (
       <div className="max-w-2xl mx-auto text-center py-16 space-y-6">
+        {onGenderChange && (
+          <div className="flex justify-center mb-4">
+            <PerspectiveSwitcher
+              gender={currentGender}
+              onGenderChange={onGenderChange}
+              size="sm"
+              showLabel={true}
+            />
+          </div>
+        )}
         <div className="w-16 h-16 rounded-2xl bg-[#121A17] border border-[#315C45] flex items-center justify-center mx-auto text-[#D6A84F]">
           <Compass className="w-8 h-8" />
         </div>
@@ -77,11 +94,31 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const recentEntries = journalEntries.slice(0, 3);
   const activeChallenges = challenges.slice(0, 4);
 
+  const dominantName = getArchetypeName(currentResult.dominantArchetype.archetypeId, currentGender);
+
   // Past comparison result if multiple evaluations exist
   const previousResult = history.length > 1 ? history[1] : undefined;
 
   return (
-    <div id="dashboard-view" className="max-w-5xl mx-auto space-y-10 pb-24 pt-2">
+    <div id="dashboard-view" className="max-w-5xl mx-auto space-y-8 pb-24 pt-2">
+      {/* Top Perspective Switcher Banner */}
+      {onGenderChange && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 bg-[#121A17] border border-[#23332D] rounded-2xl shadow-sm">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-[#D6A84F]">✦</span>
+            <span className="text-xs text-[#C5CFC7] font-medium">
+              Perspectiva de tu Mapa Arquetípico:
+            </span>
+          </div>
+          <PerspectiveSwitcher
+            gender={currentGender}
+            onGenderChange={onGenderChange}
+            size="sm"
+            showLabel={false}
+          />
+        </div>
+      )}
+
       {/* Top Banner */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#1E2A25] pb-6">
         <div>
@@ -93,7 +130,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             {currentResult.compositeProfile.title}
           </h1>
           <p className="text-xs sm:text-sm text-[#9DA79F] mt-0.5">
-            Dominante: <strong className="text-[#F2EFE6] font-serif">{currentResult.dominantArchetype.name}</strong> ({currentResult.dominantArchetype.normalizedScore}%) · Actualizado en {new Date(currentResult.date).toLocaleDateString('es-ES', { month: 'short', day: 'numeric', year: 'numeric' })}
+            Dominante: <strong className="text-[#F2EFE6] font-serif">{dominantName}</strong> ({currentResult.dominantArchetype.normalizedScore}%) · Actualizado en {new Date(currentResult.date).toLocaleDateString('es-ES', { month: 'short', day: 'numeric', year: 'numeric' })}
           </p>
         </div>
 
@@ -131,7 +168,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </span>
           </div>
           <h3 className="font-serif font-bold text-lg text-[#F2EFE6]">
-            {currentResult.dominantArchetype.name}
+            {dominantName}
           </h3>
         </div>
 
@@ -144,7 +181,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             {currentResult.top3.map((a, i) => (
               <div key={a.archetypeId} className="flex items-center justify-between text-xs">
                 <span className="text-[#F2EFE6] font-medium flex items-center gap-1.5">
-                  <span>{a.emoji}</span> {a.name}
+                  <span>{a.emoji}</span> {getArchetypeName(a.archetypeId, currentGender)}
                 </span>
                 <span className="font-mono text-[#D6A84F]">{a.normalizedScore}%</span>
               </div>
@@ -165,7 +202,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 className="flex items-center justify-between text-xs cursor-pointer hover:text-[#D6A84F]"
               >
                 <span className="text-[#C5CFC7] flex items-center gap-1.5">
-                  <span>{a.emoji}</span> {a.name}
+                  <span>{a.emoji}</span> {getArchetypeName(a.archetypeId, currentGender)}
                 </span>
                 <span className="text-[10px] text-[#9DA79F] px-1.5 py-0.5 rounded bg-[#1A2521]">
                   Activar
@@ -287,7 +324,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     <Calendar className="w-3 h-3" />
                     {new Date(h.date).toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })}
                   </span>
-                  <span className="font-bold text-[#D6A84F]">{h.dominantArchetype.name}</span>
+                  <span className="font-bold text-[#D6A84F]">
+                    {getArchetypeName(h.dominantArchetype.archetypeId, currentGender)}
+                  </span>
                 </div>
                 <p className="font-serif font-bold text-sm text-[#F2EFE6]">
                   {h.compositeProfile.title}
@@ -321,7 +360,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
             <div className="space-y-2">
               {activeChallenges.map(c => {
-                const arch = ARCHETYPES[c.archetypeId];
+                const arch = getArchetype(c.archetypeId, currentGender);
                 return (
                   <div
                     key={c.id}

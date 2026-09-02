@@ -4,8 +4,9 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { ArchetypeId, AssessmentResult, Challenge, DailyOracleCard, JournalEntry, UserProfile } from './types';
+import { ArchetypeId, AssessmentResult, Challenge, DailyOracleCard, GenderMode, JournalEntry, UserProfile } from './types';
 import { StorageService } from './services/storageService';
+import { adaptAssessmentResultToGender } from './services/scoringEngine';
 import { Sidebar, NavTab } from './components/layout/Sidebar';
 import { Header } from './components/layout/Header';
 import { BottomNav } from './components/layout/BottomNav';
@@ -24,6 +25,7 @@ import { AuthModal } from './components/auth/AuthModal';
 import { DailyOracleModal } from './components/archetypes/DailyOracleModal';
 import { AiSettingsModal } from './components/ai/AiSettingsModal';
 import { InstallAppBanner } from './components/pwa/InstallAppBanner';
+import { WelcomePerspectiveModal } from './components/common/WelcomePerspectiveModal';
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState<NavTab>('landing');
@@ -36,6 +38,14 @@ export default function App() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isDailyOracleOpen, setIsDailyOracleOpen] = useState(false);
   const [isAiSettingsOpen, setIsAiSettingsOpen] = useState(false);
+  const [isWelcomePerspectiveOpen, setIsWelcomePerspectiveOpen] = useState<boolean>(() => {
+    try {
+      const alreadyChosen = localStorage.getItem('archetype_perspective_selected');
+      return !alreadyChosen;
+    } catch {
+      return false;
+    }
+  });
 
   // Persistent States
   const [currentResult, setCurrentResult] = useState<AssessmentResult | null>(() =>
@@ -101,12 +111,55 @@ export default function App() {
     setJournalEntries(StorageService.getJournalEntries());
   };
 
+  const handleGenderChange = (newGender: GenderMode) => {
+    try {
+      localStorage.setItem('archetype_perspective_selected', 'true');
+    } catch {}
+
+    const updatedProfile: UserProfile = {
+      ...userProfile,
+      gender: newGender,
+    };
+    StorageService.saveUserProfile(updatedProfile);
+    setUserProfile(updatedProfile);
+
+    // If there is an active assessment result, re-adapt its labels and composite profile
+    if (currentResult) {
+      const adapted = adaptAssessmentResultToGender(currentResult, newGender);
+      setCurrentResult(adapted);
+      StorageService.saveCurrentResult(adapted);
+    }
+
+    // Also re-adapt history
+    const currentHistory = StorageService.getAssessmentHistory();
+    if (currentHistory.length > 0) {
+      const adaptedHistory = currentHistory.map(item => adaptAssessmentResultToGender(item, newGender));
+      setHistory(adaptedHistory);
+      StorageService.saveAssessmentHistory(adaptedHistory);
+    }
+  };
+
   const handleUpdateProfile = (profile: UserProfile) => {
+    const genderChanged = profile.gender !== userProfile.gender;
     StorageService.saveUserProfile(profile);
     setUserProfile(profile);
-    // Refresh states in case account switched
-    setCurrentResult(StorageService.getCurrentResult());
-    setHistory(StorageService.getAssessmentHistory());
+
+    let res = StorageService.getCurrentResult();
+    let hist = StorageService.getAssessmentHistory();
+
+    if (genderChanged && profile.gender) {
+      if (res) {
+        res = adaptAssessmentResultToGender(res, profile.gender);
+        StorageService.saveCurrentResult(res);
+      }
+      if (hist.length > 0) {
+        hist = hist.map(item => adaptAssessmentResultToGender(item, profile.gender!));
+        StorageService.saveAssessmentHistory(hist);
+      }
+    }
+
+    setCurrentResult(res);
+    setHistory(hist);
     setJournalEntries(StorageService.getJournalEntries());
     setChallenges(StorageService.getChallenges());
   };
@@ -170,6 +223,8 @@ export default function App() {
               onSelectTab={setCurrentTab}
               onSelectArchetype={handleSelectArchetype}
               currentResult={currentResult}
+              gender={userProfile.gender || 'male'}
+              onGenderChange={handleGenderChange}
             />
           )}
 
@@ -187,6 +242,7 @@ export default function App() {
               onSelectTab={setCurrentTab}
               onSelectArchetype={handleSelectArchetype}
               onRetakeTest={() => handleStartTest('full')}
+              gender={userProfile.gender || 'male'}
             />
           )}
 
@@ -201,6 +257,8 @@ export default function App() {
               onStartTest={handleStartTest}
               onToggleChallenge={handleToggleChallenge}
               onOpenAiSettings={() => setIsAiSettingsOpen(true)}
+              gender={userProfile.gender || 'male'}
+              onGenderChange={handleGenderChange}
             />
           )}
 
@@ -210,6 +268,8 @@ export default function App() {
               onSelectArchetype={setSelectedArchetypeId}
               onSelectTab={setCurrentTab}
               onDiscussWithAi={handleDiscussWithAi}
+              gender={userProfile.gender || 'male'}
+              onGenderChange={handleGenderChange}
             />
           )}
 
@@ -217,11 +277,17 @@ export default function App() {
             <ArchetypeComparisonView
               onGoToAiWithPrompt={handleDiscussWithAi}
               onGoToDetail={handleSelectArchetype}
+              gender={userProfile.gender || 'male'}
+              onGenderChange={handleGenderChange}
             />
           )}
 
           {currentTab === 'synergies' && (
-            <SynergiesExplorerView onSelectArchetype={handleSelectArchetype} />
+            <SynergiesExplorerView
+              onSelectArchetype={handleSelectArchetype}
+              gender={userProfile.gender || 'male'}
+              onGenderChange={handleGenderChange}
+            />
           )}
 
           {currentTab === 'journal' && (
@@ -237,6 +303,8 @@ export default function App() {
               challenges={challenges}
               onToggleChallenge={handleToggleChallenge}
               onSelectArchetype={handleSelectArchetype}
+              gender={userProfile.gender || 'male'}
+              onGenderChange={handleGenderChange}
             />
           )}
 
@@ -245,6 +313,8 @@ export default function App() {
               currentResult={currentResult}
               initialPrompt={aiInitialPrompt}
               initialPersona={aiInitialPersona}
+              gender={userProfile.gender || 'male'}
+              onGenderChange={handleGenderChange}
             />
           )}
 
@@ -283,6 +353,13 @@ export default function App() {
       <InstallAppBanner />
 
       {/* Global Modals */}
+      <WelcomePerspectiveModal
+        isOpen={isWelcomePerspectiveOpen}
+        onClose={() => setIsWelcomePerspectiveOpen(false)}
+        currentGender={userProfile.gender || 'male'}
+        onSelectPerspective={handleGenderChange}
+      />
+
       <AiSettingsModal
         isOpen={isAiSettingsOpen}
         onClose={() => setIsAiSettingsOpen(false)}

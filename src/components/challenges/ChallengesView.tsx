@@ -9,21 +9,29 @@ import {
   ArrowRight,
   Shield,
 } from 'lucide-react';
-import { ARCHETYPES, ARCHETYPES_LIST } from '../../data/archetypesData';
-import { ArchetypeId, Challenge } from '../../types';
+import { getArchetype, getArchetypeList } from '../../data/archetypesData';
+import { ArchetypeId, Challenge, GenderMode } from '../../types';
 import { ArchetypeBadge } from '../common/ArchetypeBadge';
+import { PerspectiveSwitcher } from '../common/PerspectiveSwitcher';
 
 interface ChallengesViewProps {
   challenges: Challenge[];
   onToggleChallenge: (id: string) => void;
   onSelectArchetype: (id: ArchetypeId) => void;
+  gender?: GenderMode;
+  onGenderChange?: (gender: GenderMode) => void;
 }
 
 export const ChallengesView: React.FC<ChallengesViewProps> = ({
   challenges,
   onToggleChallenge,
   onSelectArchetype,
+  gender = 'male',
+  onGenderChange,
 }) => {
+  const currentGender = gender || 'male';
+  const archetypeList = getArchetypeList(currentGender);
+
   const [filterStatus, setFilterStatus] = useState<'todos' | 'pendientes' | 'completados'>('todos');
   const [selectedArchetypeFilter, setSelectedArchetypeFilter] = useState<string>('todos');
 
@@ -67,6 +75,17 @@ export const ChallengesView: React.FC<ChallengesViewProps> = ({
         <p className="text-sm text-[#9DA79F] max-w-xl mx-auto font-light">
           Los arquetipos se fortalecen mediante la acción deliberada en el mundo real. Elige una práctica para expandir tus capacidades.
         </p>
+
+        {onGenderChange && (
+          <div className="flex justify-center pt-2">
+            <PerspectiveSwitcher
+              gender={currentGender}
+              onGenderChange={onGenderChange}
+              size="sm"
+              showLabel={true}
+            />
+          </div>
+        )}
       </div>
 
       {/* Progress Card */}
@@ -139,7 +158,7 @@ export const ChallengesView: React.FC<ChallengesViewProps> = ({
             className="p-1.5 rounded-lg bg-[#121A17] border border-[#1E2A25] text-xs text-[#F2EFE6] focus:outline-none"
           >
             <option value="todos">Todos los arquetipos</option>
-            {ARCHETYPES_LIST.map(a => (
+            {archetypeList.map(a => (
               <option key={a.id} value={a.id}>
                 {a.emoji} {a.name}
               </option>
@@ -151,7 +170,7 @@ export const ChallengesView: React.FC<ChallengesViewProps> = ({
       {/* Challenges List */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {filteredChallenges.map(challenge => {
-          const arch = ARCHETYPES[challenge.archetypeId];
+          const arch = getArchetype(challenge.archetypeId, currentGender);
           return (
             <div
               key={challenge.id}

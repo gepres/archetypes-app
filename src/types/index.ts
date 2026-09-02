@@ -1,16 +1,24 @@
+export type GenderMode = 'male' | 'female' | 'universal';
+
 export type ArchetypeId =
   | 'rey'
   | 'guerrero'
   | 'mago'
+  | 'sabio'
+  | 'sacerdote'
   | 'amante'
   | 'padre'
   | 'cuidador'
   | 'bufon'
   | 'explorador'
   | 'creador'
-  | 'sabio'
   | 'heroe'
-  | 'rebelde';
+  | 'rebelde'
+  | 'sanador'
+  | 'constructor'
+  | 'soberano'
+  | 'mistico'
+  | 'integrador';
 
 export type DimensionId = 'mente' | 'accion' | 'corazon' | 'construccion';
 
@@ -32,9 +40,34 @@ export interface ArchetypeSynergy {
 
 export type LifeDomainKey = 'liderazgo' | 'relaciones' | 'crisis' | 'creatividad' | 'paternidad';
 
+export interface ArchetypeNarrativeVariant {
+  name: string; // e.g. "El Guerrero", "La Guerrera", "Guerrero / Guerrera"
+  characterTitle?: string;
+  centralQuestion: string;
+  shortDescription: string;
+  fullDescription: string;
+  mantra: string;
+  strength: string;
+  shadow: string;
+  shadowDescription: string;
+  shadowAntidote: string;
+  domains: Record<LifeDomainKey, string>;
+  balancedBehavior: string[];
+  unbalancedBehavior: string[];
+  reflectionQuestions: string[];
+  developmentExercises: {
+    title: string;
+    description: string;
+    actionStep: string;
+  }[];
+}
+
 export interface Archetype {
   id: ArchetypeId;
-  name: string;
+  name: string; // Active resolved name based on gender
+  universalName: string; // e.g. "Rey / Reina" or "Guerrero / Guerrera"
+  masculineName: string; // e.g. "El Rey", "El Guerrero"
+  feminineName: string; // e.g. "La Reina", "La Guerrera"
   emoji: string;
   dimension: DimensionId;
   concepts: string[];
@@ -61,6 +94,11 @@ export interface Archetype {
     actionStep: string;
   }[];
   synergies: ArchetypeSynergy[];
+  variants?: {
+    masculine: ArchetypeNarrativeVariant;
+    feminine: ArchetypeNarrativeVariant;
+    universal: ArchetypeNarrativeVariant;
+  };
 }
 
 export interface QuestionWeight {
@@ -165,6 +203,9 @@ export interface UserProfile {
   name: string;
   email: string;
   isGuest: boolean;
+  gender?: GenderMode;
+  lifeStage?: string;
+  currentGoal?: string;
   avatarEmoji?: string;
   bio?: string;
   pinCode?: string;

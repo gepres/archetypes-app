@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   Bot,
   Send,
@@ -11,43 +11,41 @@ import {
   Volume2,
   Infinity,
   Zap,
+  ChevronLeft,
+  ChevronRight,
+  LayoutGrid,
+  ListFilter,
+  Layers,
 } from 'lucide-react';
 import { ARCHETYPE_VISUALS } from '../../data/archetypeImages';
+import { getArchetype, getArchetypeList, getArchetypeName, getArchetypeNarrative, DIMENSIONS } from '../../data/archetypesData';
 import { GeminiService } from '../../services/geminiService';
 import { AIProviderService, PROVIDER_OPTIONS } from '../../services/aiProviderService';
 import { StorageService } from '../../services/storageService';
-import { ArchetypeId, AssessmentResult, ChatMessage } from '../../types';
+import { ArchetypeId, AssessmentResult, ChatMessage, GenderMode, UserProfile } from '../../types';
 import { ArchetypeIllustratedArtwork } from '../archetypes/ArchetypeIllustratedArtwork';
 import { MarkdownRenderer } from '../common/MarkdownRenderer';
 import { AiSettingsModal } from './AiSettingsModal';
+import { PerspectiveSwitcher } from '../common/PerspectiveSwitcher';
 
 interface AiReflectionViewProps {
   currentResult: AssessmentResult | null;
   initialPrompt?: string;
   initialPersona?: string;
+  gender?: GenderMode;
+  onGenderChange?: (gender: GenderMode) => void;
 }
-
-const PERSONA_OPTIONS: Array<{ id: string; name: string; emoji: string; tone: string }> = [
-  { id: 'general', name: 'Asistente Integral', emoji: '🔮', tone: 'Síntesis filosófica y equilibrada' },
-  { id: 'rey', name: 'Rey', emoji: '👑', tone: 'Soberanía, orden, bendición y visión de conjunto' },
-  { id: 'guerrero', name: 'Guerrero', emoji: '⚔️', tone: 'Disciplina, límites firmes, coraje e impecabilidad' },
-  { id: 'mago', name: 'Mago', emoji: '🔮', tone: 'Estrategia, discernimiento y transformación profunda' },
-  { id: 'amante', name: 'Amante', emoji: '🔥', tone: 'Sensibilidad, pasión, belleza y afecto auténtico' },
-  { id: 'padre', name: 'Padre', emoji: '🏛️', tone: 'Sostén generativo, guía madura y legado' },
-  { id: 'cuidador', name: 'Cuidador', emoji: '🛡️', tone: 'Compasión, servicio altruista y sanación' },
-  { id: 'bufon', name: 'Bufón', emoji: '🃏', tone: 'Humor sabio, ligereza y desmitificación sagrada' },
-  { id: 'explorador', name: 'Explorador', emoji: '🧭', tone: 'Libertad, aventura y búsqueda de autenticidad' },
-  { id: 'creador', name: 'Creador', emoji: '🎨', tone: 'Originalidad, oficio artesanal y manifestación' },
-  { id: 'sabio', name: 'Sabio', emoji: '📜', tone: 'Verdad esencial, ecuanimidad y filosofía estoica' },
-  { id: 'heroe', name: 'Héroe', emoji: '⚡', tone: 'Superación de límites, misión noble y coraje épico' },
-  { id: 'rebelde', name: 'Rebelde', emoji: '⚡', tone: 'Disrupción de lo caduco y verdad sin concesiones' },
-];
 
 export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
   currentResult,
   initialPrompt,
   initialPersona = 'general',
+  gender: propGender,
+  onGenderChange,
 }) => {
+  const [userProfile, setUserProfile] = useState<UserProfile>(() => StorageService.getUserProfile());
+  const currentGender: GenderMode = propGender || userProfile.gender || 'male';
+
   const [messages, setMessages] = useState<ChatMessage[]>(() =>
     StorageService.getChatMessages()
   );
@@ -55,6 +53,9 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
   const [activePersona, setActivePersona] = useState<string>(initialPersona);
   const [isLoading, setIsLoading] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [personaViewMode, setPersonaViewMode] = useState<'carousel' | 'grid'>('carousel');
+  const [selectedDimensionFilter, setSelectedDimensionFilter] = useState<string>('todos');
+
   const [aiUsageState, setAiUsageState] = useState(() => AIProviderService.getUsageStatus());
   const [activeModelName, setActiveModelName] = useState(() => {
     const s = AIProviderService.getSettings();
@@ -62,8 +63,46 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
   });
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const personaScrollRef = useRef<HTMLDivElement | null>(null);
 
-  const selectedPersonaObj = PERSONA_OPTIONS.find(p => p.id === activePersona) || PERSONA_OPTIONS[0];
+  // Dynamic persona options based on 18 archetypes and active gender
+  const personaOptions = useMemo(() => {
+    const archetypes = getArchetypeList(currentGender);
+    const generalOption = {
+      id: 'general',
+      name: 'Asistente Integral',
+      emoji: '🔮',
+      tone: 'Síntesis filosófica y equilibrada de tus 18 arquetipos',
+      dimension: 'universal',
+    };
+
+    const archOptions = archetypes.map(a => ({
+      id: a.id,
+      name: a.name,
+      emoji: a.emoji,
+      tone: a.shortDescription,
+      dimension: a.dimension,
+    }));
+
+    return [generalOption, ...archOptions];
+  }, [currentGender]);
+
+  const filteredPersonaOptions = useMemo(() => {
+    if (selectedDimensionFilter === 'todos') return personaOptions;
+    return personaOptions.filter(
+      p => p.id === 'general' || p.dimension.toLowerCase() === selectedDimensionFilter.toLowerCase()
+    );
+  }, [personaOptions, selectedDimensionFilter]);
+
+  const selectedPersonaObj =
+    personaOptions.find(p => p.id === activePersona) || personaOptions[0];
+
+  const scrollPersonas = (direction: 'left' | 'right') => {
+    if (personaScrollRef.current) {
+      const scrollAmount = direction === 'left' ? -260 : 260;
+      personaScrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
 
   const refreshAiStatus = () => {
     const status = AIProviderService.getUsageStatus();
@@ -82,44 +121,43 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
       modelName = found ? found.name : 'GPT-4o Mini';
     }
     setActiveModelName(modelName);
+    setUserProfile(StorageService.getUserProfile());
   };
 
-  const samplePromptsByPersona: Record<string, string[]> = {
-    general: [
-      '¿Cómo puedo equilibrar la exigencia de mi Guerrero con la ternura del Amante?',
-      '¿Qué sombra arquetípica podría estar jugándome en contra en mis proyectos?',
-      '¿Cómo integro mi arquetipo menos desarrollado en mi vida diaria?',
-      '¿Qué hábitos cotidianos me ayudarían a consolidar mi arquetipo dominante?',
-    ],
-    rey: [
-      'Rey interior: ¿En qué área de mi vida estoy abdicando y permitiendo el caos?',
-      '¿Cómo puedo liderar con generosidad sin caer en el autoritarismo?',
-      '¿A quién o qué proyectos necesito bendecir y respaldar hoy?',
-    ],
-    guerrero: [
-      'Guerrero: ¿Qué límite innegociable necesito poner hoy para cuidar mi energía?',
-      '¿Cómo puedo cultivar la disciplina sin volverme un verdugo de mí mismo?',
-      '¿Qué batalla secundaria estoy peleando que debería abandonar con dignidad?',
-    ],
-    mago: [
-      'Mago: ¿Qué patrón oculto estoy repitiendo sin darme cuenta?',
-      '¿Cómo traduzco mis teorías y reflexiones en una acción práctica hoy?',
-      '¿Cómo evito la trampa del aislamiento intelectual o la soberbia?',
-    ],
-    amante: [
-      'Amante: ¿Dónde me he vuelto frío o excesivamente utilitario?',
-      '¿Cómo abro mi corazón a la intimidad sin perder mi propia individualidad?',
-      '¿Qué belleza o disfrute necesito regalarme hoy para reconectar con la vida?',
-    ],
-    sabio: [
-      'Sabio: ¿Cuál es la verdad esencial detrás del conflicto que estoy viviendo?',
-      '¿Cómo cultivo la ecuanimidad y la calma ante la incertidumbre?',
-      '¿Qué lectura o silencio reflexivo me conviene adoptar en esta etapa?',
-    ],
-  };
+  // Dynamic suggested prompts from the gender-specific narrative layer
+  const currentSamplePrompts = useMemo(() => {
+    if (activePersona === 'general') {
+      return currentGender === 'female'
+        ? [
+            '¿Cómo puedo equilibrar la firmeza de mi Guerrera con la sensibilidad de la Amante?',
+            '¿Qué sombra arquetípica podría estar jugándome en contra en mi momento actual?',
+            '¿Cómo integro mi arquetipo menos desarrollado en mis desafíos cotidianos?',
+            '¿Qué prácticas diarias me ayudarían a consolidar la sabiduría de mi Reina interior?',
+          ]
+        : [
+            '¿Cómo puedo equilibrar la exigencia de mi Guerrero con la ternura del Amante?',
+            '¿Qué sombra arquetípica podría estar jugándome en contra en mis proyectos?',
+            '¿Cómo integro mi arquetipo menos desarrollado en mi vida diaria?',
+            '¿Qué hábitos cotidianos me ayudarían a consolidar la soberanía del Rey interior?',
+          ];
+    }
 
-  const currentSamplePrompts =
-    samplePromptsByPersona[activePersona] || samplePromptsByPersona.general;
+    try {
+      const narrative = getArchetypeNarrative(activePersona as ArchetypeId, currentGender);
+      return narrative.reflectionQuestions.length > 0
+        ? narrative.reflectionQuestions.slice(0, 4)
+        : [
+            `¿Cómo puedo manifestar la energía de ${selectedPersonaObj.name} con mayor pureza?`,
+            `¿Qué sombra debo vigilar para no caer en el desbalance?`,
+            `¿Cuál es el siguiente paso evolutivo para este arquetipo?`,
+          ];
+    } catch {
+      return [
+        '¿Cómo puedo integrar las virtudes de este arquetipo en mis decisiones?',
+        '¿Qué límites necesito clarificar hoy?',
+      ];
+    }
+  }, [activePersona, currentGender, selectedPersonaObj.name]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -164,7 +202,9 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
         text.trim(),
         messages,
         currentResult,
-        activePersona
+        activePersona,
+        userProfile,
+        currentGender
       );
 
       const aiMsg: ChatMessage = {
@@ -193,10 +233,14 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
     }
   };
 
+  const dominantName = currentResult
+    ? getArchetypeName(currentResult.dominantArchetype.archetypeId, currentGender)
+    : '';
+
   return (
     <div id="ai-reflection-view" className="max-w-4xl mx-auto space-y-6 pb-20 animate-fadeIn">
       {/* Header Banner */}
-      <div className="bg-gradient-to-r from-[#121A17] via-[#16221E] to-[#0F1714] border border-[#23332D] rounded-3xl p-4 sm:p-6 relative overflow-hidden shadow-xl">
+      <div className="bg-gradient-to-r from-[#121A17] via-[#16221E] to-[#0F1714] border border-[#23332D] rounded-3xl p-4 sm:p-6 relative overflow-hidden shadow-xl space-y-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
           <div className="space-y-1.5">
             <div className="flex flex-wrap items-center gap-2">
@@ -204,6 +248,26 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
                 <Bot className="w-3.5 h-3.5 text-[#86EFAC]" />
                 <span>Diálogo Filosófico Simbólico</span>
               </div>
+
+              {/* Perspective Indicator / Switcher */}
+              {onGenderChange ? (
+                <PerspectiveSwitcher
+                  gender={currentGender}
+                  onGenderChange={onGenderChange}
+                  size="sm"
+                  showLabel={false}
+                />
+              ) : (
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#16221E] border border-[#315C45]/50 text-neutral-300 text-[11px]">
+                  <span>
+                    {currentGender === 'female'
+                      ? '🌸 Perspectiva Femenina'
+                      : currentGender === 'universal'
+                      ? '☯ Perspectiva Universal'
+                      : '🏛️ Perspectiva Masculina'}
+                  </span>
+                </div>
+              )}
 
               {/* Active Provider / Quota Badge */}
               <button
@@ -230,12 +294,12 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
             </div>
 
             <h1 className="font-serif text-xl sm:text-3xl font-bold text-[#F2EFE6] tracking-tight">
-              Habla con tu Mapa & la Voz de tus Arquetipos
+              Habla con tu Mapa & la Voz de tus 18 Arquetipos
             </h1>
             <p className="text-xs sm:text-sm text-[#9DA79F]">
               {currentResult
-                ? `Contextualizado con tu arquetipo central: ${currentResult.dominantArchetype.name}`
-                : 'Diálogo abierto para indagar en cualquier desafío o encrucijada personal.'}
+                ? `Contextualizado con tu arquetipo central: ${dominantName}`
+                : 'Diálogo socrático abierto para indagar en cualquier desafío o encrucijada vital.'}
             </p>
           </div>
 
@@ -262,63 +326,179 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
           </div>
         </div>
 
-        {/* Persona Selector Bar with Custom Scroll */}
-        <div className="mt-4 pt-3.5 border-t border-[#1E2A25] space-y-2.5">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] uppercase font-bold text-[#D6A84F] tracking-wider flex items-center gap-1.5">
-              <Volume2 className="w-3.5 h-3.5 text-[#86EFAC] shrink-0" />
-              <span>Voz Activa:</span>
-              <span className="text-[#F2EFE6] font-semibold">{selectedPersonaObj.name}</span>
-            </span>
-            <span className="text-[11px] text-[#9DA79F] italic line-clamp-1 max-w-[200px] sm:max-w-none text-right">
-              {ARCHETYPE_VISUALS[activePersona as ArchetypeId]?.characterTitle || selectedPersonaObj.tone}
-            </span>
+        {/* Enhanced Persona Selector Section */}
+        <div className="pt-3.5 border-t border-[#1E2A25] space-y-3">
+          {/* Header Row with Active Persona Info & View Mode Toggle */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <div className="flex items-center gap-2">
+              <span className="text-xs uppercase font-bold text-[#D6A84F] tracking-wider flex items-center gap-1.5">
+                <Volume2 className="w-4 h-4 text-[#86EFAC] shrink-0" />
+                <span>Voz Activa:</span>
+              </span>
+              <span className="px-2.5 py-1 rounded-lg bg-[#1D3228] border border-[#315C45] text-[#F2EFE6] font-serif font-bold text-sm flex items-center gap-1.5">
+                <span>{selectedPersonaObj.emoji}</span>
+                <span>{selectedPersonaObj.name}</span>
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2 self-end sm:self-auto">
+              {/* Carousel Scroll Controls */}
+              {personaViewMode === 'carousel' && (
+                <div className="flex items-center gap-1 bg-[#0E1513] p-1 rounded-xl border border-[#23332D]">
+                  <button
+                    onClick={() => scrollPersonas('left')}
+                    className="p-1.5 rounded-lg hover:bg-[#1A2521] text-[#9DA79F] hover:text-[#F2EFE6] transition-colors"
+                    title="Desplazar a la izquierda"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <span className="text-[10px] text-[#6B7A72] px-1 font-mono">19 voces</span>
+                  <button
+                    onClick={() => scrollPersonas('right')}
+                    className="p-1.5 rounded-lg hover:bg-[#1A2521] text-[#9DA79F] hover:text-[#F2EFE6] transition-colors"
+                    title="Desplazar a la derecha"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+
+              {/* View Mode Toggle Button */}
+              <button
+                onClick={() => setPersonaViewMode(m => (m === 'carousel' ? 'grid' : 'carousel'))}
+                className={`px-2.5 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                  personaViewMode === 'grid'
+                    ? 'bg-[#315C45] text-[#F2EFE6] border-[#4E8B69]'
+                    : 'bg-[#121A17] text-[#C5CFC7] border-[#23332D] hover:border-[#315C45]'
+                }`}
+                title={personaViewMode === 'grid' ? 'Cambiar a vista carrusel' : 'Ver todos en cuadrícula'}
+              >
+                <LayoutGrid className="w-3.5 h-3.5 text-[#D6A84F]" />
+                <span>{personaViewMode === 'grid' ? 'Vista Carrusel' : 'Ver Cuadrícula'}</span>
+              </button>
+            </div>
           </div>
 
-          {/* Persona selector scrollable track with customized scrollbar & smooth momentum */}
-          <div className="relative group">
-            <div className="flex gap-2 overflow-x-auto pb-2.5 pt-1 px-1 touch-scroll-x scrollbar-persona">
-              {PERSONA_OPTIONS.map(persona => {
+          {/* Dimension Filter Tabs for fast navigation */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+            <span className="text-[11px] text-[#6B7A72] shrink-0 font-medium">Filtrar:</span>
+            {[
+              { id: 'todos', label: 'Todos (19)' },
+              { id: 'mente', label: 'Mente' },
+              { id: 'accion', label: 'Acción' },
+              { id: 'corazon', label: 'Corazón' },
+              { id: 'construccion', label: 'Construcción' },
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setSelectedDimensionFilter(tab.id)}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all shrink-0 ${
+                  selectedDimensionFilter === tab.id
+                    ? 'bg-[#315C45] text-[#F2EFE6] font-semibold'
+                    : 'bg-[#0E1513] text-[#9DA79F] hover:text-[#F2EFE6] border border-[#1E2A25]'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Persona Selection Area: Carousel or Full Grid */}
+          {personaViewMode === 'carousel' ? (
+            <div className="relative">
+              <div
+                ref={personaScrollRef}
+                className="flex gap-2.5 overflow-x-auto pb-3 pt-1 px-1 touch-scroll-x scrollbar-persona scroll-smooth"
+              >
+                {filteredPersonaOptions.map(persona => {
+                  const isActive = activePersona === persona.id;
+                  const isGeneral = persona.id === 'general';
+                  const isArchetype = !isGeneral;
+                  return (
+                    <button
+                      key={persona.id}
+                      id={`persona-btn-${persona.id}`}
+                      onClick={() => setActivePersona(persona.id)}
+                      className={`min-h-[48px] px-3.5 py-2.5 rounded-2xl text-xs font-medium whitespace-nowrap transition-all flex items-center gap-2.5 shrink-0 border select-none active:scale-95 ${
+                        isActive
+                          ? isGeneral
+                            ? 'bg-gradient-to-r from-[#1E2E27] to-[#15241E] text-[#F2EFE6] border-[#D6A84F] shadow-lg shadow-[#D6A84F]/15 font-bold ring-2 ring-[#D6A84F]'
+                            : 'bg-[#1E2E27] text-[#F2EFE6] border-[#D6A84F] shadow-lg font-bold ring-2 ring-[#D6A84F]'
+                          : isGeneral
+                          ? 'bg-[#121E19] text-[#C5CFC7] hover:text-[#F2EFE6] border-[#2A4436] hover:border-[#315C45]'
+                          : 'bg-[#0E1513] text-[#9DA79F] hover:text-[#F2EFE6] border-[#23332D] hover:border-[#315C45]'
+                      }`}
+                    >
+                      {isGeneral ? (
+                        <div className="w-7 h-7 rounded-full bg-[#1A2C23] border border-[#D6A84F] flex items-center justify-center text-xs text-[#D6A84F] shadow-inner shrink-0">
+                          <Sparkles className="w-4 h-4 text-[#D6A84F]" />
+                        </div>
+                      ) : isArchetype ? (
+                        <div className="w-7 h-7 rounded-full overflow-hidden border border-[#D6A84F]/80 shrink-0 bg-[#0B1110]">
+                          <ArchetypeIllustratedArtwork
+                            archetypeId={persona.id as ArchetypeId}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <span className="text-sm">{persona.emoji}</span>
+                      )}
+                      <span className="tracking-tight text-xs font-semibold">{persona.name}</span>
+                      {isGeneral && (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[#D6A84F]/20 text-[#D6A84F] font-bold uppercase tracking-wider">
+                          Síntesis
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            /* Grid View: All 18 archetypes + general persona clearly visible */
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 pt-1 max-h-[300px] overflow-y-auto pr-1 scrollbar-chat">
+              {filteredPersonaOptions.map(persona => {
                 const isActive = activePersona === persona.id;
                 const isGeneral = persona.id === 'general';
                 const isArchetype = !isGeneral;
                 return (
                   <button
                     key={persona.id}
-                    id={`persona-btn-${persona.id}`}
-                    onClick={() => setActivePersona(persona.id)}
-                    className={`min-h-[44px] px-3.5 py-2 rounded-2xl text-xs font-medium whitespace-nowrap transition-all flex items-center gap-2.5 shrink-0 border select-none active:scale-95 ${
+                    onClick={() => {
+                      setActivePersona(persona.id);
+                      setPersonaViewMode('carousel');
+                    }}
+                    className={`p-2.5 rounded-xl text-left border transition-all flex items-center gap-2.5 ${
                       isActive
-                        ? isGeneral
-                          ? 'bg-gradient-to-r from-[#1E2E27] to-[#15241E] text-[#F2EFE6] border-[#D6A84F] shadow-lg shadow-[#D6A84F]/10 font-bold ring-1 ring-[#D6A84F]/60'
-                          : 'bg-[#1E2E27] text-[#F2EFE6] border-[#D6A84F] shadow-lg font-bold'
-                        : isGeneral
-                        ? 'bg-[#121E19] text-[#C5CFC7] hover:text-[#F2EFE6] border-[#2A4436] hover:border-[#315C45]'
-                        : 'bg-[#0E1513] text-[#9DA79F] hover:text-[#F2EFE6] border-[#23332D] hover:border-[#315C45]'
+                        ? 'bg-[#1E2E27] border-[#D6A84F] text-[#F2EFE6] font-bold ring-2 ring-[#D6A84F]'
+                        : 'bg-[#0E1513] border-[#23332D] text-[#9DA79F] hover:text-[#F2EFE6] hover:border-[#315C45]'
                     }`}
                   >
                     {isGeneral ? (
-                      <div className="w-6 h-6 rounded-full bg-[#1A2C23] border border-[#D6A84F]/80 flex items-center justify-center text-xs text-[#D6A84F] shadow-inner shrink-0">
+                      <div className="w-7 h-7 rounded-full bg-[#1A2C23] border border-[#D6A84F] flex items-center justify-center shrink-0">
                         <Sparkles className="w-3.5 h-3.5 text-[#D6A84F]" />
                       </div>
                     ) : isArchetype ? (
-                      <div className="w-6 h-6 rounded-full overflow-hidden border border-[#D6A84F]/60 shrink-0 bg-[#0B1110]">
-                        <ArchetypeIllustratedArtwork archetypeId={persona.id as ArchetypeId} className="w-full h-full object-cover" />
+                      <div className="w-7 h-7 rounded-full overflow-hidden border border-[#D6A84F]/80 shrink-0 bg-[#0B1110]">
+                        <ArchetypeIllustratedArtwork
+                          archetypeId={persona.id as ArchetypeId}
+                          className="w-full h-full object-cover"
+                        />
                       </div>
                     ) : (
-                      <span className="text-sm">{persona.emoji}</span>
+                      <span>{persona.emoji}</span>
                     )}
-                    <span className="tracking-tight">{persona.name}</span>
-                    {isGeneral && (
-                      <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[#D6A84F]/20 text-[#D6A84F] font-bold uppercase tracking-wider hidden sm:inline">
-                        Síntesis
-                      </span>
-                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-semibold truncate text-[#F2EFE6]">{persona.name}</p>
+                      <p className="text-[10px] text-[#6B7A72] truncate">
+                        {isGeneral ? 'Síntesis global' : persona.dimension}
+                      </p>
+                    </div>
                   </button>
                 );
               })}
             </div>
-          </div>
+          )}
         </div>
       </div>
 
@@ -353,142 +533,105 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
                 )}
               </div>
 
-              {/* Message Bubble */}
+              {/* Message bubble */}
               <div
-                className={`max-w-[88%] sm:max-w-[82%] rounded-2xl p-3.5 sm:p-4 space-y-1.5 shadow-md leading-relaxed text-xs sm:text-sm break-words overflow-hidden ${
+                className={`max-w-[88%] sm:max-w-[78%] rounded-2xl p-3.5 sm:p-4 text-xs sm:text-sm leading-relaxed shadow-md ${
                   isUser
-                    ? 'bg-[#162620] border border-[#315C45]/50 text-[#F2EFE6]'
-                    : 'bg-[#0E1513] border border-[#23332D] text-[#C5CFC7]'
+                    ? 'bg-[#315C45] text-[#F2EFE6] rounded-tr-none border border-[#437A5C]'
+                    : 'bg-[#16201D] text-[#E3DDCF] rounded-tl-none border border-[#23332D]'
                 }`}
               >
-                {/* Persona Tag */}
-                {msg.personaUsed && (
-                  <div className="text-[10px] text-[#D6A84F] font-bold uppercase tracking-wider mb-1 flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#D6A84F]" />
-                    <span>Voz: {msg.personaUsed}</span>
+                {!isUser && (
+                  <div className="flex items-center justify-between gap-2 pb-2 mb-2 border-b border-[#23332D]">
+                    <span className="font-serif font-bold text-xs text-[#D6A84F] flex items-center gap-1.5">
+                      <span>{selectedPersonaObj.emoji}</span>
+                      <span>{msg.personaUsed || selectedPersonaObj.name}</span>
+                    </span>
+                    <span className="text-[10px] text-[#6B7A72]">
+                      {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
                   </div>
                 )}
 
                 {isUser ? (
-                  <div className="whitespace-pre-wrap leading-relaxed text-[#F2EFE6]">{msg.content}</div>
+                  <p className="whitespace-pre-wrap">{msg.content}</p>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <MarkdownRenderer content={msg.content} />
-                  </div>
+                  <MarkdownRenderer content={msg.content} />
                 )}
-
-                <div
-                  className={`text-[10px] pt-1 ${
-                    isUser ? 'text-[#86EFAC]/70 text-right' : 'text-[#6B7A72]'
-                  }`}
-                >
-                  {new Date(msg.timestamp).toLocaleTimeString([], {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </div>
               </div>
             </div>
           );
         })}
 
         {isLoading && (
-          <div className="flex gap-2.5 sm:gap-3.5 items-start">
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#0E1513] border border-[#23332D] flex items-center justify-center text-[#D6A84F] shrink-0">
-              <Sparkles className="w-4 h-4 animate-spin text-[#D6A84F]" />
-            </div>
-            <div className="p-3.5 sm:p-4 bg-[#0E1513] border border-[#23332D] rounded-2xl flex items-center gap-2 text-xs text-[#9DA79F]">
-              <span className="w-2 h-2 rounded-full bg-[#D6A84F] animate-pulse" />
-              <span>Sintonizando la sabiduría del {selectedPersonaObj.name}...</span>
-            </div>
+          <div className="flex gap-3 items-center text-xs text-[#D6A84F] p-3 rounded-xl bg-[#16201D]/60 border border-[#23332D] w-fit">
+            <Sparkles className="w-4 h-4 animate-spin text-[#86EFAC]" />
+            <span className="font-medium animate-pulse">
+              {selectedPersonaObj.name} está articulando una respuesta...
+            </span>
           </div>
         )}
 
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Suggested Prompts Pill Container */}
+      {/* Suggested Questions based on Active Persona */}
       <div className="space-y-2">
-        <div className="flex items-center gap-1.5 text-xs font-semibold text-[#9DA79F]">
-          <Lightbulb className="w-3.5 h-3.5 text-[#D6A84F]" />
-          <span>Sugerencias para el {selectedPersonaObj.name}:</span>
+        <div className="flex items-center gap-1.5 text-xs text-[#D6A84F] font-semibold">
+          <Lightbulb className="w-3.5 h-3.5 text-[#86EFAC]" />
+          <span>Indagaciones recomendadas para {selectedPersonaObj.name}:</span>
         </div>
-        <div className="flex flex-wrap gap-2">
-          {currentSamplePrompts.map((prompt, idx) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {currentSamplePrompts.map((prompt, i) => (
             <button
-              key={idx}
-              id={`sample-prompt-${idx}`}
+              key={i}
               onClick={() => handleSend(prompt)}
-              className="text-left text-xs bg-[#121A17] hover:bg-[#1A2521] text-[#C5CFC7] hover:text-[#F2EFE6] border border-[#23332D] hover:border-[#315C45] px-3.5 py-2.5 rounded-xl transition-all shadow-sm active:scale-95"
+              className="text-left p-2.5 rounded-xl bg-[#121A17] hover:bg-[#1A2521] border border-[#23332D] hover:border-[#315C45] text-xs text-[#C5CFC7] hover:text-[#F2EFE6] transition-all flex items-start gap-2"
             >
-              {prompt}
+              <span className="text-[#D6A84F] mt-0.5 font-bold">›</span>
+              <span className="line-clamp-2">{prompt}</span>
             </button>
           ))}
         </div>
       </div>
 
-      {/* Input Box */}
+      {/* Input Form Bar */}
       <form
         onSubmit={e => {
           e.preventDefault();
           handleSend();
         }}
-        className="flex gap-2 relative"
+        className="flex gap-2 p-2 bg-[#121A17] border border-[#315C45] rounded-2xl shadow-xl focus-within:border-[#D6A84F] transition-all"
       >
-        <textarea
-          id="chat-input-textarea"
+        <input
+          id="chat-input-text"
+          type="text"
           value={inputText}
           onChange={e => setInputText(e.target.value)}
-          onKeyDown={e => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              handleSend();
-            }
-          }}
-          placeholder={`Escribe tu consulta o dilema personal para el ${selectedPersonaObj.name}...`}
-          rows={2}
-          className="flex-1 px-4 py-3 bg-[#121A17] border border-[#23332D] rounded-2xl text-xs sm:text-sm text-[#F2EFE6] placeholder-[#6B7A72] focus:outline-none focus:border-[#D6A84F] resize-none shadow-lg transition-colors"
+          placeholder={`Consulta o reflexiona con la voz de ${selectedPersonaObj.name}...`}
+          disabled={isLoading}
+          className="flex-1 bg-transparent px-3 py-2 text-xs sm:text-sm text-[#F2EFE6] placeholder-[#6B7A72] focus:outline-none disabled:opacity-50"
         />
         <button
-          id="send-chat-msg-btn"
+          id="chat-submit-btn"
           type="submit"
           disabled={!inputText.trim() || isLoading}
-          className="px-4 sm:px-5 bg-[#315C45] hover:bg-[#3D7055] disabled:opacity-50 text-[#F2EFE6] rounded-2xl font-semibold transition-all shadow-md flex items-center justify-center shrink-0 active:scale-95 min-h-[44px]"
-          title="Enviar mensaje"
+          className="px-4 py-2 bg-[#315C45] hover:bg-[#3D7055] disabled:bg-[#1A2521] disabled:text-[#6B7A72] text-[#F2EFE6] text-xs font-semibold rounded-xl transition-all flex items-center gap-1.5 shrink-0 active:scale-95 shadow-md"
         >
-          <Send className="w-4 h-4" />
+          <span>Preguntar</span>
+          <Send className="w-3.5 h-3.5" />
         </button>
       </form>
-
-      {/* Ethical & Model Disclaimer */}
-      <div className="p-3.5 rounded-xl bg-[#0E1513] border border-[#1E2A25] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[11px] text-[#6B7A72]">
-        <div className="flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-[#315C45] shrink-0" />
-          <span>
-            Marco simbólico de autorreflexión. No constituye diagnóstico ni asesoramiento psicológico profesional.
-          </span>
-        </div>
-        <button
-          onClick={() => setIsSettingsOpen(true)}
-          className="text-[#D6A84F] hover:underline font-semibold shrink-0 flex items-center gap-1"
-        >
-          <span>{activeModelName}</span>
-          <span className="text-[10px] text-neutral-400 font-normal">
-            ({aiUsageState.activeKeySource === 'none'
-              ? 'Sin clave · local'
-              : aiUsageState.activeKeySource === 'app'
-                ? `Incluido ${aiUsageState.remainingCourtesy}/${aiUsageState.maxDaily}`
-                : 'Ilimitado'})
-          </span>
-        </button>
-      </div>
 
       {/* AI Settings Modal */}
       <AiSettingsModal
         isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        onSettingsSaved={refreshAiStatus}
+        onClose={() => {
+          setIsSettingsOpen(false);
+          refreshAiStatus();
+        }}
       />
     </div>
   );
 };
+

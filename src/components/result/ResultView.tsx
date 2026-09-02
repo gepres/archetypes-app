@@ -14,8 +14,8 @@ import {
   Zap,
   Image as ImageIcon,
 } from 'lucide-react';
-import { ARCHETYPES } from '../../data/archetypesData';
-import { ArchetypeId, AssessmentResult } from '../../types';
+import { ARCHETYPES, getArchetype } from '../../data/archetypesData';
+import { ArchetypeId, AssessmentResult, GenderMode } from '../../types';
 import { ArchetypeBadge } from '../common/ArchetypeBadge';
 import { DimensionBar } from '../common/DimensionBar';
 import { RadarChartComponent } from '../common/RadarChartComponent';
@@ -27,6 +27,7 @@ interface ResultViewProps {
   onSelectTab: (tab: NavTab) => void;
   onSelectArchetype: (id: ArchetypeId) => void;
   onRetakeTest: () => void;
+  gender?: GenderMode;
 }
 
 export const ResultView: React.FC<ResultViewProps> = ({
@@ -34,6 +35,7 @@ export const ResultView: React.FC<ResultViewProps> = ({
   onSelectTab,
   onSelectArchetype,
   onRetakeTest,
+  gender = 'male',
 }) => {
   useEffect(() => {
     // Elegant subtle confetti
@@ -50,7 +52,7 @@ export const ResultView: React.FC<ResultViewProps> = ({
   }, []);
 
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const dominant = ARCHETYPES[result.dominantArchetype.archetypeId];
+  const dominant = getArchetype(result.dominantArchetype.archetypeId, gender);
   const { compositeProfile } = result;
 
   const handleShare = () => {

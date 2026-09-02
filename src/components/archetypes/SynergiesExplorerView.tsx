@@ -1,26 +1,31 @@
 import React, { useState } from 'react';
 import { GitMerge, Shuffle, ChevronRight, SlidersHorizontal } from 'lucide-react';
-import { ARCHETYPES, ARCHETYPES_LIST } from '../../data/archetypesData';
+import { ARCHETYPES, ARCHETYPES_LIST, getArchetype } from '../../data/archetypesData';
 import { ARCHETYPE_VISUALS } from '../../data/archetypeImages';
-import { ArchetypeId } from '../../types';
+import { ArchetypeId, GenderMode } from '../../types';
 import { ArchetypeIllustratedArtwork } from './ArchetypeIllustratedArtwork';
 import { ArchetypePickerModal } from './ArchetypePickerModal';
 
 interface SynergiesExplorerViewProps {
   onSelectArchetype: (id: ArchetypeId) => void;
+  gender?: GenderMode;
+  onGenderChange?: (gender: GenderMode) => void;
 }
 
 type ActivePickerSlot = 'first' | 'second' | null;
 
 export const SynergiesExplorerView: React.FC<SynergiesExplorerViewProps> = ({
   onSelectArchetype,
+  gender = 'male',
+  onGenderChange,
 }) => {
   const [firstId, setFirstId] = useState<ArchetypeId>('rey');
   const [secondId, setSecondId] = useState<ArchetypeId>('guerrero');
   const [pickerSlot, setPickerSlot] = useState<ActivePickerSlot>(null);
 
-  const arch1 = ARCHETYPES[firstId];
-  const arch2 = ARCHETYPES[secondId];
+  const currentGender = gender || 'male';
+  const arch1 = getArchetype(firstId, currentGender);
+  const arch2 = getArchetype(secondId, currentGender);
 
   const handleRandomize = () => {
     const list = ARCHETYPES_LIST.map(a => a.id);
@@ -153,6 +158,7 @@ export const SynergiesExplorerView: React.FC<SynergiesExplorerViewProps> = ({
           isOpen={pickerSlot !== null}
           onClose={() => setPickerSlot(null)}
           onSelect={handleSelectFromPicker}
+          gender={currentGender}
           currentSelectedId={pickerSlot === 'first' ? firstId : secondId}
           disabledIds={pickerSlot === 'first' ? [secondId] : [firstId]}
           title={pickerSlot === 'first' ? 'Seleccionar Primer Arquetipo' : 'Seleccionar Segundo Arquetipo'}

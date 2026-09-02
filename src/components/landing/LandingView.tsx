@@ -14,18 +14,21 @@ import {
   BookOpen,
   Eye,
 } from 'lucide-react';
-import { ARCHETYPES, ARCHETYPES_LIST, DIMENSIONS } from '../../data/archetypesData';
+import { getArchetype, getArchetypeName, getArchetypeList, DIMENSIONS } from '../../data/archetypesData';
 import { ARCHETYPE_VISUALS } from '../../data/archetypeImages';
-import { ArchetypeId, AssessmentResult } from '../../types';
+import { ArchetypeId, AssessmentResult, GenderMode } from '../../types';
 import { NavTab } from '../layout/Sidebar';
 import { ArchetypePortraitCard } from '../archetypes/ArchetypePortraitCard';
 import { ArchetypeIllustratedArtwork } from '../archetypes/ArchetypeIllustratedArtwork';
+import { PerspectiveSwitcher } from '../common/PerspectiveSwitcher';
 
 interface LandingViewProps {
   onStartTest: (type: 'full' | 'quick') => void;
   onSelectTab: (tab: NavTab) => void;
   onSelectArchetype: (id: ArchetypeId) => void;
   currentResult: AssessmentResult | null;
+  gender?: GenderMode;
+  onGenderChange?: (gender: GenderMode) => void;
 }
 
 export const LandingView: React.FC<LandingViewProps> = ({
@@ -33,16 +36,38 @@ export const LandingView: React.FC<LandingViewProps> = ({
   onSelectTab,
   onSelectArchetype,
   currentResult,
+  gender = 'male',
+  onGenderChange,
 }) => {
   const [activeSpotlight, setActiveSpotlight] = useState<ArchetypeId>('rey');
 
-  const spotlightArchetype = ARCHETYPES[activeSpotlight];
+  const currentGender = gender || 'male';
+  const spotlightArchetype = getArchetype(activeSpotlight, currentGender);
   const spotlightVisual = ARCHETYPE_VISUALS[activeSpotlight];
+  const archetypesList = getArchetypeList(currentGender);
 
   return (
-    <div id="landing-view" className="space-y-16 pb-20 max-w-5xl mx-auto">
+    <div id="landing-view" className="space-y-12 pb-20 max-w-5xl mx-auto">
+      {/* Top Interactive Perspective Bar */}
+      {onGenderChange && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3.5 bg-[#121A17] border border-[#23332D] rounded-2xl shadow-sm">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-[#D6A84F]">✦</span>
+            <span className="text-xs text-[#C5CFC7] font-medium">
+              Explora el mapa en tu perspectiva preferida:
+            </span>
+          </div>
+          <PerspectiveSwitcher
+            gender={currentGender}
+            onGenderChange={onGenderChange}
+            size="sm"
+            showLabel={true}
+          />
+        </div>
+      )}
+
       {/* Hero Section */}
-      <section className="relative pt-6 md:pt-10 text-center space-y-6">
+      <section className="relative pt-4 md:pt-8 text-center space-y-6">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#D6A84F]/40 bg-[#121A17] text-xs text-[#D6A84F] tracking-wide shadow-md">
           <Sparkles className="w-3.5 h-3.5 text-[#D6A84F]" />
           <span>Psicología Simbólica · Ilustraciones Arquetípicas · Autoconocimiento</span>
@@ -53,7 +78,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
             Conócete desde otra perspectiva.
           </h1>
           <p className="text-base sm:text-lg text-[#9DA79F] leading-relaxed max-w-2xl mx-auto font-light">
-            Explora los 12 arquetipos míticos y sus fuerzas universales. Descubre tu mapa de personalidad mediante símbolos, indagación psicológica y arte arquetípico.
+            Explora los 18 arquetipos míticos y sus fuerzas universales. Descubre tu mapa de personalidad mediante símbolos, indagación psicológica y arte arquetípico.
           </p>
         </div>
 
@@ -82,7 +107,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl border border-[#23332D] bg-transparent hover:bg-[#121A17] text-[#9DA79F] hover:text-[#F2EFE6] font-medium text-sm transition-all"
           >
             <BookOpen className="w-4 h-4 text-[#D6A84F]" />
-            <span>Explorar los 12 arquetipos</span>
+            <span>Explorar los 18 arquetipos</span>
           </button>
         </div>
 
@@ -96,7 +121,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
               <div>
                 <p className="text-xs text-[#9DA79F]">Tu mapa activo guardado:</p>
                 <p className="font-serif font-bold text-[#F2EFE6] text-base">
-                  {currentResult.compositeProfile.title} ({currentResult.dominantArchetype.name})
+                  {currentResult.compositeProfile.title} ({getArchetypeName(currentResult.dominantArchetype.archetypeId, currentGender)})
                 </p>
               </div>
             </div>
@@ -186,10 +211,10 @@ export const LandingView: React.FC<LandingViewProps> = ({
                 <span className="text-[11px] text-[#D6A84F] font-bold uppercase tracking-wider block">
                   Selecciona un arquetipo para visualizar:
                 </span>
-                <span className="text-[10px] text-[#86968D]">12 de 12 arquetipos</span>
+                <span className="text-[10px] text-[#86968D]">18 de 18 arquetipos</span>
               </div>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-                {ARCHETYPES_LIST.map(arch => {
+                {archetypesList.map(arch => {
                   const isSel = arch.id === activeSpotlight;
                   return (
                     <button
@@ -247,7 +272,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
             El Modelo de las 4 Dimensiones
           </h2>
           <p className="text-sm text-[#9DA79F] max-w-xl mx-auto">
-            Los 12 arquetipos se articulan en cuatro energías fundamentales para sostener una vida integrada.
+            Los 18 arquetipos se articulan en cuatro energías fundamentales para sostener una vida integrada.
           </p>
         </div>
 
@@ -258,12 +283,18 @@ export const LandingView: React.FC<LandingViewProps> = ({
               <Brain className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-serif text-lg font-bold text-[#F2EFE6]">Mente</h3>
+              <h3 className="font-serif text-lg font-bold text-[#F2EFE6]">Mente & Trascendencia</h3>
               <p className="text-xs text-[#9DA79F] mt-1">{DIMENSIONS.mente.subtitle}</p>
             </div>
-            <div className="pt-2 border-t border-[#1E2A25] flex gap-2">
-              <span className="text-xs px-2 py-0.5 rounded bg-[#1A2521] text-[#C5CFC7]">🧙 Mago</span>
-              <span className="text-xs px-2 py-0.5 rounded bg-[#1A2521] text-[#C5CFC7]">📚 Sabio</span>
+            <div className="pt-2 border-t border-[#1E2A25] flex flex-wrap gap-1.5">
+              {DIMENSIONS.mente.archetypes.map(id => {
+                const arch = getArchetype(id, currentGender);
+                return (
+                  <span key={id} className="text-xs px-2 py-0.5 rounded bg-[#1A2521] text-[#C5CFC7]">
+                    {arch.emoji} {arch.name}
+                  </span>
+                );
+              })}
             </div>
           </div>
 
@@ -273,14 +304,18 @@ export const LandingView: React.FC<LandingViewProps> = ({
               <Zap className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-serif text-lg font-bold text-[#F2EFE6]">Acción</h3>
+              <h3 className="font-serif text-lg font-bold text-[#F2EFE6]">Acción & Coraje</h3>
               <p className="text-xs text-[#9DA79F] mt-1">{DIMENSIONS.accion.subtitle}</p>
             </div>
             <div className="pt-2 border-t border-[#1E2A25] flex flex-wrap gap-1.5">
-              <span className="text-xs px-1.5 py-0.5 rounded bg-[#1A2521] text-[#C5CFC7]">⚔️ Guerrero</span>
-              <span className="text-xs px-1.5 py-0.5 rounded bg-[#1A2521] text-[#C5CFC7]">🦸 Héroe</span>
-              <span className="text-xs px-1.5 py-0.5 rounded bg-[#1A2521] text-[#C5CFC7]">🔥 Rebelde</span>
-              <span className="text-xs px-1.5 py-0.5 rounded bg-[#1A2521] text-[#C5CFC7]">🧭 Explorador</span>
+              {DIMENSIONS.accion.archetypes.map(id => {
+                const arch = getArchetype(id, currentGender);
+                return (
+                  <span key={id} className="text-xs px-1.5 py-0.5 rounded bg-[#1A2521] text-[#C5CFC7]">
+                    {arch.emoji} {arch.name}
+                  </span>
+                );
+              })}
             </div>
           </div>
 
@@ -290,13 +325,18 @@ export const LandingView: React.FC<LandingViewProps> = ({
               <Heart className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-serif text-lg font-bold text-[#F2EFE6]">Corazón</h3>
+              <h3 className="font-serif text-lg font-bold text-[#F2EFE6]">Corazón & Conexión</h3>
               <p className="text-xs text-[#9DA79F] mt-1">{DIMENSIONS.corazon.subtitle}</p>
             </div>
             <div className="pt-2 border-t border-[#1E2A25] flex flex-wrap gap-1.5">
-              <span className="text-xs px-1.5 py-0.5 rounded bg-[#1A2521] text-[#C5CFC7]">❤️ Amante</span>
-              <span className="text-xs px-1.5 py-0.5 rounded bg-[#1A2521] text-[#C5CFC7]">🌱 Cuidador</span>
-              <span className="text-xs px-1.5 py-0.5 rounded bg-[#1A2521] text-[#C5CFC7]">🃏 Bufón</span>
+              {DIMENSIONS.corazon.archetypes.map(id => {
+                const arch = getArchetype(id, currentGender);
+                return (
+                  <span key={id} className="text-xs px-1.5 py-0.5 rounded bg-[#1A2521] text-[#C5CFC7]">
+                    {arch.emoji} {arch.name}
+                  </span>
+                );
+              })}
             </div>
           </div>
 
@@ -306,19 +346,24 @@ export const LandingView: React.FC<LandingViewProps> = ({
               <Hammer className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-serif text-lg font-bold text-[#F2EFE6]">Construcción</h3>
+              <h3 className="font-serif text-lg font-bold text-[#F2EFE6]">Construcción & Soberanía</h3>
               <p className="text-xs text-[#9DA79F] mt-1">{DIMENSIONS.construccion.subtitle}</p>
             </div>
             <div className="pt-2 border-t border-[#1E2A25] flex flex-wrap gap-1.5">
-              <span className="text-xs px-1.5 py-0.5 rounded bg-[#1A2521] text-[#C5CFC7]">👑 Rey</span>
-              <span className="text-xs px-1.5 py-0.5 rounded bg-[#1A2521] text-[#C5CFC7]">🛡️ Padre</span>
-              <span className="text-xs px-1.5 py-0.5 rounded bg-[#1A2521] text-[#C5CFC7]">🎨 Creador</span>
+              {DIMENSIONS.construccion.archetypes.map(id => {
+                const arch = getArchetype(id, currentGender);
+                return (
+                  <span key={id} className="text-xs px-1.5 py-0.5 rounded bg-[#1A2521] text-[#C5CFC7]">
+                    {arch.emoji} {arch.name}
+                  </span>
+                );
+              })}
             </div>
           </div>
         </div>
       </section>
 
-      {/* 12 Archetypes Illustrated Gallery on Home Screen */}
+      {/* 18 Archetypes Illustrated Gallery on Home Screen */}
       <section className="space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4">
           <div>
@@ -326,7 +371,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
               El Panteón Ilustrado
             </p>
             <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#F2EFE6]">
-              Los 12 Arquetipos Ilustrados
+              Los 18 Arquetipos Ilustrados
             </h2>
             <p className="text-xs sm:text-sm text-[#9DA79F] mt-1">
               Haz clic en cualquier carta ilustrada para explorar su análisis y lecciones.
@@ -342,8 +387,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-          {ARCHETYPES_LIST.map(arch => {
-            const visual = ARCHETYPE_VISUALS[arch.id];
+          {archetypesList.map(arch => {
             return (
               <div
                 key={arch.id}
