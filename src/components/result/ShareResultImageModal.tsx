@@ -168,7 +168,7 @@ export const ShareResultImageModal: React.FC<ShareResultImageModalProps> = ({
         await navigator.share({
           files: [file],
           title: `Mi Mapa Arquetípico: ${compositeProfile.title}`,
-          text: `Descubrí mi arquetipo dominante: ${dominant.name} (${result.dominantArchetype.normalizedScore}%). Conócete con Los 12 Arquetipos.`,
+          text: `Descubrí mi arquetipo dominante: ${dominant.name} (${result.dominantArchetype.normalizedScore}%). Conócete con Los 18 Arquetipos.`,
         });
         setShareSuccess(true);
         setTimeout(() => setShareSuccess(false), 3000);
@@ -429,7 +429,7 @@ export const ShareResultImageModal: React.FC<ShareResultImageModalProps> = ({
                 <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-[9px] uppercase tracking-widest font-bold shadow-sm"
                      style={{ borderColor: `${themeStyles.accentColor}50`, color: themeStyles.accentColor }}>
                   <Sparkles className="w-2.5 h-2.5" />
-                  <span>Los 12 Arquetipos · Mapa Simbólico</span>
+                  <span>Los 18 Arquetipos · Mapa Simbólico</span>
                 </div>
 
                 {userName && (

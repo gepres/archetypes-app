@@ -56,10 +56,10 @@ export default defineConfig(({ mode }) => {
         registerType: 'autoUpdate',
         includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'og-image.png'],
         manifest: {
-          name: 'Arquetipos Masculinos',
+          name: 'Arquetipos Universales',
           short_name: 'Arquetipos',
           description:
-            'Mapa simbólico de los 12 arquetipos masculinos: test, oráculo diario, diario de reflexión y retos de desarrollo.',
+            'Mapa simbólico de los 18 arquetipos universales, con narrativa masculina, femenina y universal: test, oráculo diario, diario de reflexión y retos de desarrollo.',
           lang: 'es',
           dir: 'ltr',
           start_url: '/',

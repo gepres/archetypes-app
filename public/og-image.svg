@@ -57,7 +57,7 @@
 
     <!-- Main Title -->
     <text x="0" y="90" font-family="'Cormorant Garamond', Georgia, serif" font-size="64" font-weight="700" fill="#F2EFE6" letter-spacing="-1">
-      Arquetipos Masculinos
+      Arquetipos Universales
     </text>
     
     <!-- Subtitle / Value Proposition -->
@@ -66,7 +66,7 @@
     </text>
 
     <text x="0" y="185" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-size="17" font-weight="300" fill="#9DA79F" width="600">
-      Descubre tus 12 energías arquetípicas, luz, sombra, integración y oráculo diario.
+      Descubre tus 18 energías arquetípicas, luz, sombra, integración y oráculo diario.
     </text>
 
     <!-- Feature Tags -->
@@ -85,10 +85,10 @@
     </g>
   </g>
 
-  <!-- 12 Archetype Solar Ring Badge Bottom-Right -->
+  <!-- 18 Archetype Solar Ring Badge Bottom-Right -->
   <g transform="translate(1030, 520)">
     <circle r="44" fill="#13231D" stroke="#D6A84F" stroke-width="2" />
-    <text text-anchor="middle" y="6" font-family="'Cormorant Garamond', Georgia, serif" font-size="28" font-weight="700" fill="#D6A84F">12</text>
+    <text text-anchor="middle" y="6" font-family="'Cormorant Garamond', Georgia, serif" font-size="28" font-weight="700" fill="#D6A84F">18</text>
     <text text-anchor="middle" y="22" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-size="9" font-weight="700" fill="#86EFAC" letter-spacing="1">ENERGÍAS</text>
   </g>
 </svg>

@@ -79,7 +79,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
           <span
             className={`text-[#9DA79F] tracking-widest uppercase font-semibold mt-0.5 ${subSizes}`}
           >
-            Masculinos
+            Universales
           </span>
         </div>
       )}

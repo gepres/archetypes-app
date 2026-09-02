@@ -141,7 +141,7 @@ export const ResultView: React.FC<ResultViewProps> = ({
         <div className="lg:col-span-7 p-6 rounded-2xl bg-[#121A17] border border-[#1E2A25] flex flex-col justify-between space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="font-serif text-lg font-bold text-[#F2EFE6]">
-              Geometría de tus 12 Arquetipos
+              Geometría de tus Arquetipos
             </h3>
             <span className="text-[11px] text-[#9DA79F]">0 a 100% normalizado</span>
           </div>
@@ -229,7 +229,7 @@ export const ResultView: React.FC<ResultViewProps> = ({
         <div className="flex items-center justify-between">
           <div>
             <h3 className="font-serif text-2xl font-bold text-[#F2EFE6]">
-              Ranking Completo de los 12 Arquetipos
+              Ranking Completo de los 18 Arquetipos
             </h3>
             <p className="text-xs text-[#9DA79F]">
               Haz clic en cualquier arquetipo para explorar su simbolismo y ejercicios
