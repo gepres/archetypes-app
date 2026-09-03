@@ -9,6 +9,7 @@ import {
 import type { Archetype } from '../lib/domain';
 import { CAPITULOS } from '../lib/capitulos';
 import { callar, decir, vibrar } from '../lib/voice';
+import { SigiloVivo } from './SigiloVivo';
 
 interface HistoriaScreenProps {
   silencio: boolean;
@@ -180,7 +181,7 @@ export const HistoriaScreen: React.FC<HistoriaScreenProps> = ({
       <div className="relative z-10 flex-1 min-h-0 overflow-y-auto overscroll-contain px-5 pb-4">
         <div className="max-w-lg mx-auto min-h-full flex flex-col items-center justify-center gap-5 py-2">
           {/* El rostro */}
-          <div className="relative w-[168px] sm:w-[196px] shrink-0">
+          <div className="relative w-[210px] sm:w-[240px] shrink-0">
             <motion.span
               aria-hidden="true"
               className="absolute -inset-4 rounded-[2rem] blur-2xl"
@@ -188,7 +189,7 @@ export const HistoriaScreen: React.FC<HistoriaScreenProps> = ({
               transition={{ duration: 1.1 }}
             />
             <div
-              className="relative aspect-[4/5] rounded-[1.5rem] overflow-hidden border-2 shadow-2xl bg-[#0B1110] transition-colors duration-700"
+              className="relative aspect-square rounded-full overflow-hidden border shadow-2xl bg-[#0B1110]/60 transition-colors duration-700"
               style={{ borderColor: `${acento}66` }}
             >
               <AnimatePresence mode="wait">
@@ -200,26 +201,21 @@ export const HistoriaScreen: React.FC<HistoriaScreenProps> = ({
                   exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96 }}
                   transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
                 >
-                  <ArchetypeIllustratedArtwork
+                  {/* El sigilo es la ilustracion, no un adorno encima de otra:
+                      se traza solo al entrar, gira despues y late en el centro.
+                      Es geometria generada del propio arquetipo, asi que los
+                      dieciocho se leen como una familia. */}
+                  <SigiloVivo
+                    key={`sigilo-${rostroActual}`}
                     archetypeId={rostroActual}
-                    className="w-full h-full object-cover"
+                    dimension={arquetipos.find(a => a.id === rostroActual)?.dimension ?? 'mente'}
+                    color={acento}
+                    emoji={arquetipos.find(a => a.id === rostroActual)?.emoji}
+                    className="absolute inset-0"
                   />
                 </motion.div>
               </AnimatePresence>
 
-              {enGaleria && (
-                <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-[#070C0B] via-[#070C0B]/85 to-transparent">
-                  <p
-                    className="text-[9px] font-bold uppercase tracking-widest"
-                    style={{ color: actual.colorHex }}
-                  >
-                    {DIMENSIONS[actual.dimension].name}
-                  </p>
-                  <p className="font-serif text-lg font-bold leading-tight">
-                    {actual.emoji} {actual.name}
-                  </p>
-                </div>
-              )}
             </div>
           </div>
 
@@ -235,6 +231,12 @@ export const HistoriaScreen: React.FC<HistoriaScreenProps> = ({
                 <>
                   <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#7B8880]">
                     {galeria + 1} de {arquetipos.length}
+                  </p>
+                  <p
+                    className="text-[10px] font-bold uppercase tracking-widest"
+                    style={{ color: actual.colorHex }}
+                  >
+                    {DIMENSIONS[actual.dimension].name}
                   </p>
                   <h1 className="font-serif text-2xl sm:text-3xl font-bold leading-tight">
                     {actual.name}

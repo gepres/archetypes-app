@@ -30,6 +30,16 @@ const MASCULINAS = [
 let vocesCache: SpeechSynthesisVoice[] = [];
 let elegida: SpeechSynthesisVoice | null = null;
 
+const CLAVE_VOZ = 'arquetipos_v2_voz';
+
+function vozGuardada(): string | null {
+  try {
+    return localStorage.getItem(CLAVE_VOZ);
+  } catch {
+    return null;
+  }
+}
+
 export function soportaVoz(): boolean {
   return typeof window !== 'undefined' && 'speechSynthesis' in window;
 }
@@ -49,8 +59,16 @@ function puntuar(v: SpeechSynthesisVoice): number {
   if (/female|femenin/.test(nombre)) p += 40;
   else if (/(^|[^a-z])male([^a-z]|$)|masculin/.test(nombre)) p -= 40;
 
-  // Una voz local no depende de la red ni se corta a mitad de frase.
-  if (v.localService) p += 6;
+  // Las senales de que una voz es neuronal, que es lo que separa una voz que
+  // suena a persona de una que suena a maquina.
+  if (/natural|neural|premium|enhanced|wavenet|studio/.test(nombre)) p += 30;
+  if (nombre.includes('google')) p += 18;
+
+  // OJO: aqui antes se premiaba la voz LOCAL, y era justo al reves. Las locales
+  // del sistema son las viejas, las que suenan robotico; las buenas son de red.
+  // La red se paga con latencia, pero `decir` ya tiene su tope de tiempo.
+  if (!v.localService) p += 14;
+
   // El castellano de America suena mas cercano al publico de la app.
   if (lang.startsWith('es-mx') || lang.startsWith('es-us') || lang.startsWith('es-419')) p += 3;
   return p;
@@ -65,7 +83,12 @@ function refrescarVoces() {
     // negativa sigue siendo mejor que quedarse sin voz.
     .filter(x => x.p > -50)
     .sort((a, b) => b.p - a.p);
-  elegida = candidatas.length ? candidatas[0].v : null;
+
+  // Si hay una elegida a mano, manda sobre cualquier heuristica: quien la oye
+  // sabe mejor que este codigo cual suena bien en su aparato.
+  const guardada = vozGuardada();
+  const aMano = guardada ? vocesCache.find(v => v.name === guardada) : undefined;
+  elegida = aMano || (candidatas.length ? candidatas[0].v : null);
 }
 
 /**
@@ -153,4 +176,24 @@ export function vibrar(patron: number | number[] = 12) {
       navigator.vibrate(patron);
     }
   } catch {}
+}
+
+/** Las voces en espanol del aparato, de la que mejor suena a la que peor. */
+export function vocesDisponibles(): { nombre: string; lang: string; deRed: boolean }[] {
+  if (!soportaVoz()) return [];
+  if (!vocesCache.length) refrescarVoces();
+  return vocesCache
+    .map(v => ({ v, p: puntuar(v) }))
+    .filter(x => x.p > -50)
+    .sort((a, b) => b.p - a.p)
+    .map(x => ({ nombre: x.v.name, lang: x.v.lang, deRed: !x.v.localService }));
+}
+
+/** Fija la voz a mano, o vuelve a la automatica con `null`. */
+export function elegirVoz(nombre: string | null) {
+  try {
+    if (nombre) localStorage.setItem(CLAVE_VOZ, nombre);
+    else localStorage.removeItem(CLAVE_VOZ);
+  } catch {}
+  refrescarVoces();
 }

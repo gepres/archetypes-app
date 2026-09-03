@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
-import { BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
+import { BookOpen, ChevronDown, ChevronUp, Wand2 } from 'lucide-react';
+import { VozPicker } from './VozPicker';
 import { QUESTIONS_DATA, QUICK_QUESTION_IDS } from '../lib/domain';
 import type { TipoTest } from './TestScreen';
 import { decir, prepararVoz, vibrar } from '../lib/voice';
@@ -29,6 +30,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onEmpezar, onConoc
   const [arrancando, setArrancando] = useState(false);
   // El corto por defecto: quien llega aqui viene de "no quiero leer".
   const [tipo, setTipo] = useState<TipoTest>('quick');
+  const [eligiendoVoz, setEligiendoVoz] = useState(false);
 
   const empezar = async () => {
     if (arrancando) return;
@@ -158,13 +160,23 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onEmpezar, onConoc
           <BookOpen className="w-4 h-4 text-[#D6A84F]" />
           ¿Qué es un arquetipo? Te lo cuento
         </button>
-        <a
-          href="/"
-          className="text-[11px] text-[#4E5C55] hover:text-[#8A968D] transition-colors"
-        >
-          Ir a la versión completa
-        </a>
+        <div className="flex items-center gap-3 text-[11px]">
+          <button
+            type="button"
+            onClick={() => setEligiendoVoz(true)}
+            className="inline-flex items-center gap-1.5 text-[#4E5C55] hover:text-[#D6A84F] transition-colors"
+          >
+            <Wand2 className="w-3 h-3" />
+            Cambiar la voz
+          </button>
+          <span className="text-[#23332D]">·</span>
+          <a href="/" className="text-[#4E5C55] hover:text-[#8A968D] transition-colors">
+            Versión completa
+          </a>
+        </div>
       </div>
+
+      <VozPicker abierto={eligiendoVoz} onCerrar={() => setEligiendoVoz(false)} />
     </div>
   );
 };

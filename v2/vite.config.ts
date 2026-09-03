@@ -13,6 +13,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@v1': path.resolve(__dirname, '../src'),
+      '@sigils': path.resolve(__dirname, '../packages/sigils/src'),
     },
   },
   build: {

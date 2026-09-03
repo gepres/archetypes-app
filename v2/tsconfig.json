@@ -19,7 +19,8 @@
     "types": ["node", "vite/client"],
     "baseUrl": ".",
     "paths": {
-      "@v1/*": ["../src/*"]
+      "@v1/*": ["../src/*"],
+      "@sigils": ["../packages/sigils/src/index.ts"]
     }
   },
   "include": ["src", "vite.config.ts"]
