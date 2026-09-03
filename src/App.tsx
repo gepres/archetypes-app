@@ -200,6 +200,19 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'auto' });
   };
 
+  // El test se hace a pantalla completa, sin barra lateral, cabecera ni
+  // navegacion inferior. Responder sesenta afirmaciones con el menu de la app
+  // alrededor invita a irse; sin el, lo unico que hay que hacer es contestar.
+  if (currentTab === 'test') {
+    return (
+      <TestView
+        testType={testType}
+        onComplete={handleCompleteTest}
+        onCancel={() => setCurrentTab(currentResult ? 'dashboard' : 'landing')}
+      />
+    );
+  }
+
   // La bienvenida es una página completa, no una ventana sobre la app.
   if (isOnboardingOpen) {
     return (
@@ -256,14 +269,6 @@ export default function App() {
               gender={userProfile.gender || 'male'}
               onGenderChange={handleGenderChange}
               onOpenIntro={() => setIsOnboardingOpen(true)}
-            />
-          )}
-
-          {currentTab === 'test' && (
-            <TestView
-              testType={testType}
-              onComplete={handleCompleteTest}
-              onCancel={() => setCurrentTab(currentResult ? 'dashboard' : 'landing')}
             />
           )}
 

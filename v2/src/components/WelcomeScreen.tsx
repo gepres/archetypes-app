@@ -1,14 +1,21 @@
 import React, { useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import { QUESTIONS_DATA, QUICK_QUESTION_IDS } from '../lib/domain';
+import type { TipoTest } from './TestScreen';
 import { decir, prepararVoz, vibrar } from '../lib/voice';
 
 /** Los mismos cinco colores que las franjas del test, de si a no. */
 const ESCALA = ['#86EFAC', '#4E8B69', '#8A968D', '#8B5A5A', '#E06B6B'];
 
 interface WelcomeScreenProps {
-  onEmpezar: () => void;
+  onEmpezar: (tipo: TipoTest) => void;
 }
+
+const CUANTAS = {
+  quick: QUICK_QUESTION_IDS.length,
+  full: QUESTIONS_DATA.length,
+};
 
 /**
  * Una pantalla, un boton. El toque hace tres cosas a la vez: empezar, desbloquear
@@ -18,6 +25,8 @@ interface WelcomeScreenProps {
 export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onEmpezar }) => {
   const prefersReducedMotion = useReducedMotion();
   const [arrancando, setArrancando] = useState(false);
+  // El corto por defecto: quien llega aqui viene de "no quiero leer".
+  const [tipo, setTipo] = useState<TipoTest>('quick');
 
   const empezar = async () => {
     if (arrancando) return;
@@ -28,7 +37,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onEmpezar }) => {
     decir('Arriba es sí, abajo es no. Cuanto más lejos del centro, más fuerte. Empezamos.', {
       rate: 1.02,
     });
-    window.setTimeout(onEmpezar, prefersReducedMotion ? 60 : 420);
+    window.setTimeout(() => onEmpezar(tipo), prefersReducedMotion ? 60 : 420);
   };
 
   return (
@@ -56,6 +65,39 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onEmpezar }) => {
             <br />
             Cuanto más lejos del centro, más fuerte.
           </p>
+        </div>
+
+        {/* Cuanto quieres darle. El corto responde a la promesa de dos minutos;
+            el completo mide mejor, y quien lo pide ya sabe lo que cuesta. */}
+        <div
+          role="group"
+          aria-label="Duración del test"
+          className="grid grid-cols-2 gap-1 p-1 rounded-2xl bg-[#101917] border border-[#1E2A25] max-w-xs mx-auto"
+        >
+          {([
+            { id: 'quick' as TipoTest, titulo: 'Rápido', detalle: `${CUANTAS.quick} frases · 2 min` },
+            { id: 'full' as TipoTest, titulo: 'Completo', detalle: `${CUANTAS.full} frases · 5 min` },
+          ]).map(op => {
+            const activo = tipo === op.id;
+            return (
+              <button
+                key={op.id}
+                type="button"
+                onClick={() => setTipo(op.id)}
+                aria-pressed={activo}
+                className={`rounded-xl px-3 py-2.5 transition-all min-h-[52px] ${
+                  activo
+                    ? 'bg-[#1C3529] border border-[#4E8B69] shadow-inner'
+                    : 'border border-transparent opacity-60 hover:opacity-100'
+                }`}
+              >
+                <span className={`block text-sm font-semibold ${activo ? 'text-[#F2EFE6]' : 'text-[#9DA79F]'}`}>
+                  {op.titulo}
+                </span>
+                <span className="block text-[10px] text-[#7B8880] mt-0.5">{op.detalle}</span>
+              </button>
+            );
+          })}
         </div>
 
         {/* El boton. Lo que late es el halo de detras, nunca el boton: un blanco

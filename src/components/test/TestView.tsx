@@ -173,15 +173,28 @@ export const TestView: React.FC<TestViewProps> = ({
   }
 
   return (
-    <div id="assessment-container" className="max-w-2xl mx-auto space-y-8 pb-16 pt-2">
-      {/* Test Mode Selector / Header Controls */}
-      <div className="flex items-center justify-between border-b border-[#1E2A25] pb-4">
+    <div
+      id="assessment-container"
+      className="fixed inset-0 z-40 flex flex-col bg-[#0B1110] text-[#F2EFE6]"
+      style={{ height: '100dvh' }}
+    >
+      {/* El aura de la dimension que se esta midiendo. Cambia con la pregunta,
+          asi que el fondo acompana en vez de ser un telon fijo. */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div
+          className="absolute -top-52 left-1/2 -translate-x-1/2 w-[760px] h-[760px] rounded-full blur-3xl transition-colors duration-700"
+          style={{ backgroundColor: `${dimensionInfo.color}1A` }}
+        />
+      </div>
+
+      {/* Barra superior fija */}
+      <div className="relative z-10 shrink-0 px-4 sm:px-6 py-3 flex items-center justify-between gap-3 border-b border-[#141E1B] bg-[#0B1110]/80 backdrop-blur">
         <button
           onClick={onCancel}
           className="inline-flex items-center gap-1.5 text-xs text-[#9DA79F] hover:text-[#F2EFE6] transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Volver</span>
+          <span className="hidden sm:inline">Salir</span>
         </button>
 
         <div className="inline-flex rounded-lg bg-[#121A17] p-1 border border-[#1E2A25] text-xs">
@@ -198,7 +211,7 @@ export const TestView: React.FC<TestViewProps> = ({
                 : 'text-[#9DA79F] hover:text-[#F2EFE6]'
             }`}
           >
-            Rápido (24)
+            <span className="hidden sm:inline">Rápido </span>24
           </button>
           <button
             onClick={() => {
@@ -213,7 +226,7 @@ export const TestView: React.FC<TestViewProps> = ({
                 : 'text-[#9DA79F] hover:text-[#F2EFE6]'
             }`}
           >
-            Completo (60)
+            <span className="hidden sm:inline">Completo </span>60
           </button>
         </div>
 
@@ -227,38 +240,26 @@ export const TestView: React.FC<TestViewProps> = ({
         </button>
       </div>
 
-      {/* Progress Section */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between text-xs">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-[#F2EFE6]">
-              Pregunta {currentIndex + 1} de {questions.length}
-            </span>
-            <span className="text-[#6B7A72]">·</span>
-            <span className="text-[#9DA79F]">
-              {answeredCount} respondidas
-            </span>
-          </div>
-          <span className="font-mono text-[#D6A84F] font-bold">{progressPercent}%</span>
-        </div>
-
-        {/* Bar */}
-        <div className="h-1.5 w-full bg-[#121A17] rounded-full overflow-hidden border border-[#1E2A25]">
-          <div
-            className="h-full bg-gradient-to-r from-[#315C45] to-[#D6A84F] transition-all duration-300"
-            style={{ width: `${progressPercent}%` }}
-          />
-        </div>
+      {/* El progreso, en una linea fina bajo la barra */}
+      <div className="relative z-10 shrink-0 h-1 bg-[#121A17]">
+        <div
+          className="h-full bg-gradient-to-r from-[#315C45] to-[#D6A84F] transition-all duration-300"
+          style={{ width: `${progressPercent}%` }}
+        />
       </div>
 
-      {/* Question Card */}
-      <div
-        id={`question-card-${currentQuestion.id}`}
-        className="p-6 sm:p-8 rounded-2xl bg-[#121A17] border border-[#23332D] shadow-xl space-y-8 min-h-[380px] flex flex-col justify-between transition-all"
-      >
+      {/* El cuerpo: la afirmacion manda, y ocupa lo que haga falta */}
+      <div className="relative z-10 flex-1 overflow-y-auto overscroll-contain flex flex-col">
+        <div
+          id={`question-card-${currentQuestion.id}`}
+          className="w-full max-w-2xl mx-auto px-4 sm:px-6 py-6 my-auto space-y-8"
+        >
         {/* Dimension & Category pill */}
-        <div className="flex items-center justify-between">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#1A2521] border border-[#23332D] text-xs text-[#C5CFC7]">
+        <div className="flex items-center justify-center">
+          <div
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#111A17] border text-xs text-[#C5CFC7] transition-colors"
+            style={{ borderColor: `${dimensionInfo.color}55` }}
+          >
             <DimensionIcon dim={currentQuestion.dimensionFocus} />
             <span className="capitalize">{dimensionInfo.name}</span>
             {currentQuestion.scenarioCategory && (
@@ -268,22 +269,20 @@ export const TestView: React.FC<TestViewProps> = ({
               </>
             )}
           </div>
-          <span className="text-[11px] text-[#6B7A72] font-mono">
-            #{currentQuestion.id}
-          </span>
         </div>
 
-        {/* Question Statement */}
-        <div className="py-2">
-          <h2 className="font-serif text-xl sm:text-2xl md:text-[26px] font-semibold text-[#F2EFE6] leading-snug">
-            "{currentQuestion.text}"
+        {/* La afirmacion. Sin caja alrededor: en una pantalla que solo tiene
+            esto, un marco no aporta nada y le quita presencia. */}
+        <div className="py-2 sm:py-4">
+          <h2 className="font-serif text-2xl sm:text-3xl md:text-[34px] font-semibold text-[#F2EFE6] leading-snug text-center">
+            {currentQuestion.text}
           </h2>
         </div>
 
         {/* Likert Scale Options (1 to 5) */}
         <div className="space-y-2.5">
           <p className="text-[11px] text-[#9DA79F] uppercase tracking-wider font-medium text-center mb-3">
-            Selecciona el grado de afinidad con tu forma de ser:
+            ¿Cuánto se parece a ti?
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
@@ -294,25 +293,30 @@ export const TestView: React.FC<TestViewProps> = ({
                   key={opt.value}
                   id={`likert-btn-${opt.value}`}
                   onClick={() => handleSelectOption(opt.value)}
-                  className={`p-3 rounded-xl border text-center transition-all flex sm:flex-col items-center sm:justify-center justify-between gap-1 active:scale-98 ${
+                  className={`p-3.5 sm:p-3 rounded-xl border transition-all flex sm:flex-col items-center justify-start sm:justify-center text-left sm:text-center gap-3 sm:gap-1 min-h-[52px] sm:min-h-0 active:scale-98 ${
                     isSelected
                       ? 'bg-[#315C45] border-[#D6A84F] text-[#F2EFE6] font-semibold shadow-md ring-1 ring-[#D6A84F]'
                       : 'bg-[#16201D] border-[#1E2A25] text-[#C5CFC7] hover:border-[#315C45] hover:bg-[#1A2521]'
                   }`}
                 >
-                  <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-mono font-bold bg-[#0B1110]/60 border border-[#23332D]">
+                  <span className="w-6 h-6 shrink-0 rounded-full flex items-center justify-center text-xs font-mono font-bold bg-[#0B1110]/60 border border-[#23332D]">
                     {opt.value}
                   </span>
-                  <span className="text-xs leading-tight sm:mt-1">{opt.label}</span>
+                  <span className="text-sm sm:text-xs leading-tight sm:mt-1">{opt.label}</span>
                 </button>
               );
             })}
           </div>
         </div>
+        </div>
       </div>
 
-      {/* Navigation Footer */}
-      <div className="flex items-center justify-between pt-2">
+      {/* Pie fijo: siempre alcanzable, tambien en pantallas cortas */}
+      <div
+        className="relative z-10 shrink-0 border-t border-[#141E1B] bg-[#0B1110]/90 backdrop-blur px-4 sm:px-6 py-3"
+        style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))' }}
+      >
+      <div className="max-w-2xl mx-auto flex items-center justify-between gap-3">
         <button
           onClick={handlePrevious}
           disabled={currentIndex === 0}
@@ -347,11 +351,10 @@ export const TestView: React.FC<TestViewProps> = ({
           )}
         </div>
       </div>
-
-      {/* Subtle Hint */}
-      <p className="text-[11px] text-[#6B7A72] text-center pt-2">
-        Consejo: Puedes presionar los números del 1 al 5 en tu teclado para responder rápidamente.
-      </p>
+        <p className="hidden sm:block text-[11px] text-[#4E5C55] text-center pt-2">
+          Pulsa las teclas 1 a 5 para responder, y las flechas para moverte
+        </p>
+      </div>
     </div>
   );
 };

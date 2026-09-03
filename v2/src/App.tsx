@@ -1,9 +1,10 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { calculateAssessmentResult } from './lib/domain';
 import type { AssessmentAnswer, AssessmentResult } from './lib/domain';
 import { callar } from './lib/voice';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import { TestScreen } from './components/TestScreen';
+import type { TipoTest } from './components/TestScreen';
 import { RevealScreen } from './components/RevealScreen';
 
 type Paso = 'bienvenida' | 'test' | 'revelacion';
@@ -12,6 +13,9 @@ const CLAVE_SILENCIO = 'arquetipos_v2_silencio';
 
 export const App: React.FC = () => {
   const [paso, setPaso] = useState<Paso>('bienvenida');
+  const [tipo, setTipo] = useState<TipoTest>('quick');
+  // Espejo del tipo para el cierre de terminarTest, que se quiere estable.
+  const tipoRef = useRef<TipoTest>('quick');
   const [resultado, setResultado] = useState<AssessmentResult | null>(null);
   const [silencio, setSilencio] = useState<boolean>(() => {
     try {
@@ -33,9 +37,9 @@ export const App: React.FC = () => {
   }, []);
 
   const terminarTest = useCallback((respuestas: AssessmentAnswer[]) => {
-    // El test rapido, en perspectiva universal: V2 no pregunta nada mas que las
-    // afirmaciones, asi que no puede haber elegido una perspectiva concreta.
-    const res = calculateAssessmentResult(respuestas, 'quick', 'universal');
+    // En perspectiva universal: la V2 no pregunta nada mas que las afirmaciones,
+    // asi que nadie ha podido elegir una perspectiva concreta.
+    const res = calculateAssessmentResult(respuestas, tipoRef.current, 'universal');
     setResultado(res);
     setPaso('revelacion');
     // Se guarda para que la version completa lo encuentre ya hecho.
@@ -53,12 +57,21 @@ export const App: React.FC = () => {
   }, []);
 
   if (paso === 'bienvenida') {
-    return <WelcomeScreen onEmpezar={() => setPaso('test')} />;
+    return (
+      <WelcomeScreen
+        onEmpezar={elegido => {
+          setTipo(elegido);
+          tipoRef.current = elegido;
+          setPaso('test');
+        }}
+      />
+    );
   }
 
   if (paso === 'test') {
     return (
       <TestScreen
+        tipo={tipo}
         silencio={silencio}
         onToggleSilencio={alternarSilencio}
         onTerminar={terminarTest}

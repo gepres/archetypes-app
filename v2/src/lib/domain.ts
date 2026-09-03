@@ -17,7 +17,7 @@ export {
   getArchetypeName,
 } from '@v1/data/archetypesData';
 
-export { QUESTIONS_DATA, QUICK_QUESTION_IDS } from '@v1/data/questionsData';
+export { LIKERT_OPTIONS, QUESTIONS_DATA, QUICK_QUESTION_IDS } from '@v1/data/questionsData';
 
 export { calculateAssessmentResult } from '@v1/services/scoringEngine';
 

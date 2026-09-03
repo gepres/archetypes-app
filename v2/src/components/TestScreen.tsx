@@ -1,28 +1,39 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { ChevronDown, ChevronUp, RotateCcw, Volume2, VolumeX } from 'lucide-react';
-import { QUESTIONS_DATA, QUICK_QUESTION_IDS } from '../lib/domain';
+import { LIKERT_OPTIONS, QUESTIONS_DATA, QUICK_QUESTION_IDS } from '../lib/domain';
 import type { AssessmentAnswer, Question } from '../lib/domain';
 import { callar, decir, vibrar } from '../lib/voice';
 
+export type TipoTest = 'quick' | 'full';
+
 interface TestScreenProps {
+  tipo: TipoTest;
   silencio: boolean;
   onToggleSilencio: () => void;
   onTerminar: (respuestas: AssessmentAnswer[]) => void;
 }
 
 /**
- * Los cinco grados de la escala, de arriba abajo en la pantalla. Sigue siendo un
- * solo gesto —tocar, o arrastrar la frase— y sigue siendo arriba o abajo: lo que
- * anade la franja es cuanto. Cuanto mas lejos del centro, mas fuerte.
+ * Los cinco grados de la escala, de arriba abajo en la pantalla.
+ *
+ * Las etiquetas NO se escriben aqui: salen de la misma lista que usa la V1. Dos
+ * versiones del mismo test que preguntan con palabras distintas no miden lo
+ * mismo, y comparar sus resultados dejaria de tener sentido. Lo unico propio de
+ * esta pantalla es la geometria: cuanto se aleja del centro y con que color.
  */
-const NIVELES = [
-  { valor: 5, etiqueta: 'Sí, totalmente', color: '#86EFAC', flechas: 2, dir: 'arriba' as const },
-  { valor: 4, etiqueta: 'Sí, me pasa', color: '#4E8B69', flechas: 1, dir: 'arriba' as const },
-  { valor: 3, etiqueta: 'A veces', color: '#8A968D', flechas: 0, dir: 'centro' as const },
-  { valor: 2, etiqueta: 'No, la verdad', color: '#8B5A5A', flechas: 1, dir: 'abajo' as const },
-  { valor: 1, etiqueta: 'No, para nada', color: '#E06B6B', flechas: 2, dir: 'abajo' as const },
-];
+const FORMA: Record<number, { color: string; flechas: number; dir: 'arriba' | 'centro' | 'abajo' }> = {
+  5: { color: '#86EFAC', flechas: 2, dir: 'arriba' },
+  4: { color: '#4E8B69', flechas: 1, dir: 'arriba' },
+  3: { color: '#8A968D', flechas: 0, dir: 'centro' },
+  2: { color: '#8B5A5A', flechas: 1, dir: 'abajo' },
+  1: { color: '#E06B6B', flechas: 2, dir: 'abajo' },
+};
+
+// De mayor acuerdo a menor, que es el orden en que se apilan en la pantalla.
+const NIVELES = [...LIKERT_OPTIONS]
+  .sort((a, b) => b.value - a.value)
+  .map(o => ({ valor: o.value, etiqueta: o.label, ...FORMA[o.value] }));
 
 const ARRIBA = NIVELES.filter(n => n.dir === 'arriba');
 const ABAJO = NIVELES.filter(n => n.dir === 'abajo');
@@ -33,6 +44,7 @@ const ARRASTRE_SUAVE = 55;
 const ARRASTRE_FUERTE = 135;
 
 export const TestScreen: React.FC<TestScreenProps> = ({
+  tipo,
   silencio,
   onToggleSilencio,
   onTerminar,
@@ -40,8 +52,8 @@ export const TestScreen: React.FC<TestScreenProps> = ({
   const prefersReducedMotion = useReducedMotion();
 
   const preguntas: Question[] = useMemo(
-    () => QUESTIONS_DATA.filter(q => QUICK_QUESTION_IDS.includes(q.id)),
-    []
+    () => (tipo === 'quick' ? QUESTIONS_DATA.filter(q => QUICK_QUESTION_IDS.includes(q.id)) : QUESTIONS_DATA),
+    [tipo]
   );
 
   const [indice, setIndice] = useState(0);
