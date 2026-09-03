@@ -47,7 +47,11 @@ export function soportaVoz(): boolean {
 function puntuar(v: SpeechSynthesisVoice): number {
   const lang = (v.lang || '').toLowerCase();
   const nombre = (v.name || '').toLowerCase();
-  if (!lang.startsWith('es')) return -1;
+  // Una voz que no es en espanol queda fuera del todo. Antes devolvia -1 y el
+  // filtro dejaba pasar cualquier cosa por encima de -50: en un aparato sin
+  // voz espanola acababa leyendo el texto una voz inglesa, que es peor que no
+  // tener voz. Sin candidata, el navegador elige por su cuenta segun `lang`.
+  if (!lang.startsWith('es')) return -Infinity;
 
   let p = 10;
 
@@ -74,7 +78,7 @@ function puntuar(v: SpeechSynthesisVoice): number {
   // America; el de Espana solo si no hay otra cosa.
   if (lang.startsWith('es-us')) p += 26;
   else if (lang.startsWith('es-mx') || lang.startsWith('es-419')) p += 12;
-  else if (lang.startsWith('es-419') || lang.startsWith('es-ar') || lang.startsWith('es-co')) p += 8;
+  else if (lang.startsWith('es-ar') || lang.startsWith('es-co') || lang.startsWith('es-cl')) p += 8;
   return p;
 }
 
@@ -83,9 +87,9 @@ function refrescarVoces() {
   vocesCache = window.speechSynthesis.getVoices();
   const candidatas = vocesCache
     .map(v => ({ v, p: puntuar(v) }))
-    // Se descartan las que no son en espanol; una masculina con puntuacion
-    // negativa sigue siendo mejor que quedarse sin voz.
-    .filter(x => x.p > -50)
+    // Fuera las que no son en espanol. Una masculina puntua negativo pero sigue
+    // siendo mejor que quedarse sin voz, asi que esa si entra.
+    .filter(x => Number.isFinite(x.p))
     .sort((a, b) => b.p - a.p);
 
   // Si hay una elegida a mano, manda sobre cualquier heuristica: quien la oye
@@ -121,30 +125,45 @@ export function nombreDeLaVoz(): string | null {
   return elegida ? elegida.name : null;
 }
 
+/** Como termino una narracion. Solo `fin` significa que la voz llego al final. */
+export type FinDeVoz = 'fin' | 'cortada' | 'tope' | 'omitida';
+
+// Quien esta hablando ahora mismo, para poder cerrar su promesa si lo callan.
+let cerrarActual: ((razon: FinDeVoz) => void) | null = null;
+
 export function callar() {
   if (!soportaVoz()) return;
+  // Primero se cierra la promesa en vuelo y despues se cancela: asi quien
+  // esperaba el final sabe que lo cortaron, y no lo confunde con haber acabado.
+  cerrarActual?.('cortada');
   try {
     window.speechSynthesis.cancel();
   } catch {}
 }
 
 /**
- * Dice un texto y resuelve cuando termina (o si no se puede decir).
+ * Dice un texto y resuelve cuando termina, diciendo COMO termino.
  * Nunca rechaza: quedarse sin voz no es un error del flujo, es un caso del flujo.
+ *
+ * Esa distincion no es un adorno. Quien encadena capitulos solos necesita saber
+ * si la voz llego al final o si solo se agoto un tope, porque avanzar en el
+ * segundo caso corta a la voz a media frase.
  */
 export function decir(
   texto: string,
   opciones: { rate?: number; pitch?: number; silencio?: boolean } = {}
-): Promise<void> {
+): Promise<FinDeVoz> {
   const { rate = 0.98, pitch = 1.08, silencio = false } = opciones;
 
   if (silencio || !soportaVoz() || !texto.trim()) {
-    return Promise.resolve();
+    return Promise.resolve('omitida');
   }
 
-  return new Promise<void>(resolve => {
+  return new Promise<FinDeVoz>(resolve => {
     try {
+      cerrarActual?.('cortada');
       window.speechSynthesis.cancel();
+
       const u = new SpeechSynthesisUtterance(texto);
       if (elegida) u.voice = elegida;
       u.lang = elegida?.lang || 'es-ES';
@@ -152,23 +171,67 @@ export function decir(
       u.pitch = pitch;
       u.volume = 1;
 
+      let vigilante = 0;
       let resuelto = false;
-      const terminar = () => {
+      let empezo = false;
+      const arranque = Date.now();
+      let ultimoEmpujon = arranque;
+
+      const cerrar = (razon: FinDeVoz) => {
         if (resuelto) return;
         resuelto = true;
-        resolve();
+        window.clearInterval(vigilante);
+        if (cerrarActual === cerrar) cerrarActual = null;
+        resolve(razon);
       };
-      u.onend = terminar;
-      u.onerror = terminar;
+      cerrarActual = cerrar;
 
-      // Chrome deja de disparar onend si la pestana pierde el foco: un tope
-      // proporcional al largo del texto evita que el recorrido se quede colgado.
-      const topeMs = Math.min(15000, 1200 + texto.length * 90);
-      window.setTimeout(terminar, topeMs);
+      u.onstart = () => {
+        empezo = true;
+      };
+      u.onend = () => cerrar('fin');
+      u.onerror = () => cerrar('tope');
+
+      // El vigilante, y por que no es un simple temporizador:
+      //
+      // Aqui habia un tope de quince segundos, y ningun capitulo se narra en
+      // menos de quince. Saltaba SIEMPRE antes de que la voz acabara, el
+      // recorrido avanzaba solo, y el propio avance manda callar: la voz se
+      // cortaba a media frase, cada vez. El largo del texto no sirve para
+      // adivinar cuanto dura una narracion —depende de la voz, del ritmo y del
+      // aparato—; lo unico que lo sabe es el motor. Asi que en vez de adivinar,
+      // se le pregunta: mientras `speaking` sea cierto, la voz sigue viva.
+      vigilante = window.setInterval(() => {
+        const s = window.speechSynthesis;
+
+        if (s.speaking || s.pending) {
+          empezo = true;
+          // Chrome corta por su cuenta las frases largas si nadie toca la cola;
+          // este empujon periodico es el remedio conocido.
+          if (Date.now() - ultimoEmpujon > 5000) {
+            ultimoEmpujon = Date.now();
+            try {
+              s.resume();
+            } catch {}
+          }
+          return;
+        }
+
+        // Ya no habla y si llego a hablar: termino de verdad, aunque `onend` no
+        // llegara (Chrome se lo traga si la pestana pierde el foco).
+        if (empezo) return cerrar('fin');
+
+        // Nunca arranco: no hay voz instalada, o el sistema la denego. Se deja
+        // un margen y se sigue, pero diciendo que no fue un final de verdad.
+        if (Date.now() - arranque > 2500) cerrar('tope');
+      }, 400);
+
+      // Techo absoluto, por si todo lo demas fallara.
+      window.setTimeout(() => cerrar('tope'), 5 * 60 * 1000);
 
       window.speechSynthesis.speak(u);
     } catch {
-      resolve();
+      resolve('omitida');
     }
   });
 }
@@ -188,7 +251,7 @@ export function vocesDisponibles(): { nombre: string; lang: string; deRed: boole
   if (!vocesCache.length) refrescarVoces();
   return vocesCache
     .map(v => ({ v, p: puntuar(v) }))
-    .filter(x => x.p > -50)
+    .filter(x => Number.isFinite(x.p))
     .sort((a, b) => b.p - a.p)
     .map(x => ({ nombre: x.v.name, lang: x.v.lang, deRed: !x.v.localService }));
 }

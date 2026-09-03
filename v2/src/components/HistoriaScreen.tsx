@@ -38,7 +38,6 @@ export const HistoriaScreen: React.FC<HistoriaScreenProps> = ({
   const dijoRef = useRef<string | null>(null);
   // Espejos para el cierre de la promesa de la voz, que se crea antes de que
   // existan el paso siguiente y la funcion de avanzar.
-  const pasoRef = useRef(0);
   const avanceRef = useRef<number | null>(null);
 
   const arquetipos: Archetype[] = useMemo(() => getArchetypeList('universal'), []);
@@ -59,26 +58,35 @@ export const HistoriaScreen: React.FC<HistoriaScreenProps> = ({
       ? `${actual.name}. ${actual.shortDescription}`
       : `${capitulo!.titulo}. ${capitulo!.texto}`;
 
-    const desde = paso;
     const t0 = Date.now();
+    // Este capitulo sigue siendo el de la pantalla. Sin esta marca, la promesa
+    // del capitulo anterior resuelve DESPUES de que el nuevo ya empezo a
+    // hablar, y le apaga el indicador de voz al que si esta sonando.
+    let vivo = true;
     setHablando(true);
 
-    decir(guion, { rate: enGaleria ? 1 : 0.96 }).then(() => {
+    decir(guion, { rate: enGaleria ? 1 : 0.96 }).then(fin => {
+      if (!vivo) return;
       setHablando(false);
 
-      // Si no había voz, `decir` vuelve al instante. Avanzar entonces seria
-      // pasar siete capitulos en un parpadeo sin que nadie haya oido nada.
+      // Solo se pasa de capitulo si la voz llego al FINAL. Las demas salidas no
+      // son finales: `tope` es que no arranco o que algo se atasco, `cortada`
+      // es que ya mandaste tu, y `omitida` es que no hay voz. Avanzar en esos
+      // casos era justo lo que cortaba la narracion a media frase.
+      if (fin !== 'fin') return;
+      // Cinturon: si el motor devolviera un final instantaneo, avanzar seria
+      // pasar siete capitulos en un parpadeo sin que nadie oyera nada.
       if (Date.now() - t0 < 1500) return;
       // De la galeria no se sale sola: ahi manda el desfile, y el final lleva
       // al test, que no es algo que deba empezar sin que lo pidas.
       if (enGaleria) return;
-      // Si mientras hablaba te moviste tú, mandas tú.
-      if (pasoRef.current !== desde) return;
 
+      // Un respiro antes de seguir, para que no se pisen las frases.
       avanceRef.current = window.setTimeout(() => avanzarRef.current(), 900);
     });
 
     return () => {
+      vivo = false;
       callar();
       if (avanceRef.current) window.clearTimeout(avanceRef.current);
     };
@@ -102,10 +110,6 @@ export const HistoriaScreen: React.FC<HistoriaScreenProps> = ({
     const t = window.setInterval(() => setGaleria(g => (g + 1) % arquetipos.length), 4600);
     return () => window.clearInterval(t);
   }, [enGaleria, desfilando, arquetipos.length, prefersReducedMotion]);
-
-  useEffect(() => {
-    pasoRef.current = paso;
-  }, [paso]);
 
   const avanzar = useCallback(() => {
     if (avanceRef.current) window.clearTimeout(avanceRef.current);
