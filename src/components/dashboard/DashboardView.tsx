@@ -251,6 +251,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             compareRanking={previousResult?.ranking}
             compareLabel="Evaluación previa"
             size="md"
+            gender={currentGender}
           />
         </div>
 

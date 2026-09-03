@@ -146,7 +146,7 @@ export const ResultView: React.FC<ResultViewProps> = ({
             <span className="text-[11px] text-[#9DA79F]">0 a 100% normalizado</span>
           </div>
 
-          <RadarChartComponent ranking={result.ranking} size="md" />
+          <RadarChartComponent ranking={result.ranking} size="md" gender={gender} />
 
           <p className="text-[11px] text-[#6B7A72] text-center italic">
             El polígono refleja la distribución energética actual entre Mente, Acción, Corazón y Construcción.

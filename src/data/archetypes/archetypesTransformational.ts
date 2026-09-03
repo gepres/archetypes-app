@@ -457,7 +457,7 @@ export const TRANSFORMATIONAL_ARCHETYPES: Record<'rebelde' | 'sanador' | 'constr
     universalName: 'Soberano / Soberana',
     masculineName: 'El Soberano',
     feminineName: 'La Soberana',
-    emoji: '👑',
+    emoji: '⚜️',
     dimension: 'construccion',
     concepts: ['autonomía interior', 'dignidad', 'autodeterminación', 'autoridad propia', 'centro inalienable', 'código de honor'],
     centralQuestion: '¿Cómo habito mi autoridad propia y gobierno mi vida desde mi propio centro?',
