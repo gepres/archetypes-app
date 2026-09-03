@@ -19,3 +19,7 @@ firestore-debug.log
 .DS_Store
 Thumbs.db
 *.log
+
+# Salidas de los paquetes compartidos
+packages/*/node_modules/
+packages/*/dist/
