@@ -26,7 +26,7 @@ export const InstallAppBanner: React.FC = () => {
   if (estaInstalada || bannerOculto || !hayAlgoQueOfrecer) return null;
 
   return (
-    <div className="fixed inset-x-3 bottom-20 md:inset-x-auto md:right-6 md:bottom-6 md:w-[380px] z-40 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="fixed inset-x-3 bottom-20 md:inset-x-auto md:right-6 md:bottom-6 md:w-[380px] z-40 animate-fadeInUp">
       <div className="rounded-2xl border border-[#315C45] bg-[#111A16]/95 backdrop-blur-md shadow-2xl shadow-black/60 overflow-hidden">
         <div className="p-3.5 flex items-start gap-3">
           <div className="w-10 h-10 rounded-xl bg-[#1A2C23] border border-[#315C45] flex items-center justify-center text-[#D6A84F] shrink-0">

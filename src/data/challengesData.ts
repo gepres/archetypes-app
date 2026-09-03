@@ -283,5 +283,142 @@ export const INITIAL_CHALLENGES: Challenge[] = [
     timeEstimate: '30 min',
     difficulty: 'profundo',
     completed: false,
+  },
+
+  // ==========================================
+  // Los seis que llegaron con la ampliacion a dieciocho.
+  // Sin estos, elegirlos en el filtro dejaba la pantalla vacia.
+  // ==========================================
+
+  // Sacerdote
+  {
+    id: 'c-sacerdote-1',
+    archetypeId: 'sacerdote',
+    title: 'Un umbral marcado a conciencia',
+    description: 'Convertir un momento cotidiano en rito: lo que se hace con intención deja de ser rutina.',
+    actionGuidance: 'Elige un tránsito de tu día —salir de casa, cerrar el portátil, sentarte a comer— y márcalo con un gesto deliberado y siempre el mismo. Hoy, una vez.',
+    timeEstimate: '5 min',
+    difficulty: 'accesible',
+    completed: false,
+  },
+  {
+    id: 'c-sacerdote-2',
+    archetypeId: 'sacerdote',
+    title: 'Media hora de silencio sin destino',
+    description: 'Escuchar lo que aparece cuando dejas de dirigir la conversación contigo mismo.',
+    actionGuidance: 'Media hora sin pantalla, sin música, sin libreta y sin propósito. No es meditar bien: es no llenar el hueco. Al terminar, anota una sola frase.',
+    timeEstimate: '30 min',
+    difficulty: 'profundo',
+    completed: false,
+  },
+
+  // Sanador
+  {
+    id: 'c-sanador-1',
+    archetypeId: 'sanador',
+    title: 'Escuchar sin arreglar',
+    description: 'La prisa por dar solución es lo que impide que alguien termine de contar lo que le duele.',
+    actionGuidance: 'En tu próxima conversación difícil, no propongas nada. Solo pregunta y devuelve lo que oíste. Aguanta el silencio incómodo hasta que la otra persona lo llene.',
+    timeEstimate: '20 min',
+    difficulty: 'intermedio',
+    completed: false,
+  },
+  {
+    id: 'c-sanador-2',
+    archetypeId: 'sanador',
+    title: 'La herida propia, escrita',
+    description: 'Quien repara a otros suele tener sin mirar lo suyo, y desde ahí se cuida peor.',
+    actionGuidance: 'Escribe qué te dolió esta semana, sin justificarlo ni convertirlo en lección. Solo el hecho y cómo se sintió. Guárdalo sin releerlo hoy.',
+    timeEstimate: '20 min',
+    difficulty: 'profundo',
+    completed: false,
+  },
+
+  // Constructor
+  {
+    id: 'c-constructor-1',
+    archetypeId: 'constructor',
+    title: 'Un cimiento antes que una fachada',
+    description: 'Levantar lo que sostiene, y no lo que se ve, es lo que separa una obra de un decorado.',
+    actionGuidance: 'Elige un proyecto tuyo a medias y dedica una hora a lo aburrido: ordenar, documentar, reparar la base. Nada que puedas enseñar después.',
+    timeEstimate: '60 min',
+    difficulty: 'intermedio',
+    completed: false,
+  },
+  {
+    id: 'c-constructor-2',
+    archetypeId: 'constructor',
+    title: 'La pieza más pequeña que ya funciona',
+    description: 'Terminar algo diminuto enseña más sobre construir que planear algo enorme.',
+    actionGuidance: 'Corta tu proyecto hasta la versión más pequeña que sirva para algo de verdad, y termínala hoy. Completa, no bonita.',
+    timeEstimate: '45 min',
+    difficulty: 'accesible',
+    completed: false,
+  },
+
+  // Soberano
+  {
+    id: 'c-soberano-1',
+    archetypeId: 'soberano',
+    title: 'Un no sin explicación',
+    description: 'La dignidad se sostiene en poder declinar sin montar una defensa.',
+    actionGuidance: 'Declina una petición razonable que no quieres atender. Sin excusas, sin justificar, sin adornar: "no puedo con eso". Y no añadas nada más.',
+    timeEstimate: '5 min',
+    difficulty: 'intermedio',
+    completed: false,
+  },
+  {
+    id: 'c-soberano-2',
+    archetypeId: 'soberano',
+    title: 'Un día sin buscar aprobación',
+    description: 'Notar cuánto de lo que haces está esperando que alguien lo valide.',
+    actionGuidance: 'Durante un día, no cuentes lo que has hecho ni pidas opinión sobre ello. Cada vez que sientas el impulso, anótalo. Al final del día, cuenta las marcas.',
+    timeEstimate: 'Un día',
+    difficulty: 'profundo',
+    completed: false,
+  },
+
+  // Mistico
+  {
+    id: 'c-mistico-1',
+    archetypeId: 'mistico',
+    title: 'Quedarte con la pregunta',
+    description: 'Resolver rápido una pregunta grande es la forma más común de no habitarla.',
+    actionGuidance: 'Escribe la pregunta que llevas rondando y prohíbete responderla durante tres días. Vuelve a leerla cada mañana sin añadir nada.',
+    timeEstimate: '10 min al día',
+    difficulty: 'profundo',
+    completed: false,
+  },
+  {
+    id: 'c-mistico-2',
+    archetypeId: 'mistico',
+    title: 'Mirar algo hasta que deje de ser obvio',
+    description: 'Lo cotidiano se vuelve misterioso cuando se le da más tiempo del que pide.',
+    actionGuidance: 'Elige algo que ves a diario —un árbol, tus manos, una grieta— y míralo diez minutos seguidos. Sin fotografiarlo. Anota lo que no habías visto nunca.',
+    timeEstimate: '10 min',
+    difficulty: 'accesible',
+    completed: false,
+  },
+
+  // Integrador
+  {
+    id: 'c-integrador-1',
+    archetypeId: 'integrador',
+    title: 'Defender la postura contraria',
+    description: 'Sostener las dos orillas es distinto de elegir una y tolerar la otra.',
+    actionGuidance: 'Toma una opinión firme tuya y escribe el mejor argumento en contra que se te ocurra, tan bien construido que te incomode. No lo rebatas.',
+    timeEstimate: '25 min',
+    difficulty: 'profundo',
+    completed: false,
+  },
+  {
+    id: 'c-integrador-2',
+    archetypeId: 'integrador',
+    title: 'Los dos que no se hablan',
+    description: 'Casi siempre hay dos partes tuyas que llevan tiempo sin coincidir en la misma frase.',
+    actionGuidance: 'Nombra dos facetas tuyas que se contradicen —el que cuida y el que huye, el disciplinado y el que se harta— y escribe qué le pediría cada una a la otra.',
+    timeEstimate: '20 min',
+    difficulty: 'intermedio',
+    completed: false,
   }
 ];

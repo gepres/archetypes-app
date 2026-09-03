@@ -14,13 +14,15 @@ import {
   Loader2,
   CheckCircle2,
 } from 'lucide-react';
-import { ARCHETYPES, DIMENSIONS } from '../../data/archetypesData';
+import { ARCHETYPES, DIMENSIONS, getArchetype } from '../../data/archetypesData';
 import { ARCHETYPE_VISUALS } from '../../data/archetypeImages';
-import { ArchetypeId, AssessmentResult } from '../../types';
+import { ArchetypeId, AssessmentResult, GenderMode } from '../../types';
 import { ArchetypeIllustratedArtwork } from '../archetypes/ArchetypeIllustratedArtwork';
 
 interface ShareResultImageModalProps {
   result: AssessmentResult;
+  /** Perspectiva activa: la imagen que se comparte lleva TU nombre, no el universal. */
+  gender?: GenderMode;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -30,6 +32,7 @@ type CardTheme = 'emerald-gold' | 'obsidian-cosmic' | 'crimson-amber';
 
 export const ShareResultImageModal: React.FC<ShareResultImageModalProps> = ({
   result,
+  gender = 'male',
   isOpen,
   onClose,
 }) => {
@@ -46,7 +49,7 @@ export const ShareResultImageModal: React.FC<ShareResultImageModalProps> = ({
 
   if (!isOpen) return null;
 
-  const dominant = ARCHETYPES[result.dominantArchetype.archetypeId];
+  const dominant = getArchetype(result.dominantArchetype.archetypeId, gender);
   const dominantVisual = ARCHETYPE_VISUALS[result.dominantArchetype.archetypeId];
   const { compositeProfile } = result;
 
@@ -188,7 +191,7 @@ export const ShareResultImageModal: React.FC<ShareResultImageModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/80 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/80 backdrop-blur-md overflow-y-auto animate-fadeIn">
       <div className="relative w-full max-w-4xl bg-[#121A17] border border-[#23332D] rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
         {/* Header Modal Bar */}
         <div className="flex items-center justify-between p-4 sm:p-5 border-b border-[#1E2A25] bg-[#0E1513]">
@@ -387,7 +390,7 @@ export const ShareResultImageModal: React.FC<ShareResultImageModalProps> = ({
               </div>
 
               {shareSuccess && (
-                <div className="p-2.5 rounded-xl bg-[#10B981]/15 border border-[#10B981]/30 text-[#86EFAC] text-xs flex items-center justify-center gap-1.5 animate-in fade-in">
+                <div className="p-2.5 rounded-xl bg-[#10B981]/15 border border-[#10B981]/30 text-[#86EFAC] text-xs flex items-center justify-center gap-1.5 animate-fadeIn">
                   <CheckCircle2 className="w-4 h-4" />
                   <span>¡Tarjeta compartida con éxito!</span>
                 </div>

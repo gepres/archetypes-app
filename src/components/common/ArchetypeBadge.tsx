@@ -1,9 +1,11 @@
 import React from 'react';
-import { ARCHETYPES, DIMENSIONS } from '../../data/archetypesData';
-import { ArchetypeId, DimensionId } from '../../types';
+import { ARCHETYPES, DIMENSIONS, getArchetypeName } from '../../data/archetypesData';
+import { ArchetypeId, DimensionId, GenderMode } from '../../types';
 
 interface ArchetypeBadgeProps {
   id: ArchetypeId;
+  /** Perspectiva activa. Sin ella la insignia dice el nombre universal siempre. */
+  gender?: GenderMode;
   size?: 'sm' | 'md' | 'lg';
   showDimension?: boolean;
   onClick?: () => void;
@@ -12,6 +14,7 @@ interface ArchetypeBadgeProps {
 
 export const ArchetypeBadge: React.FC<ArchetypeBadgeProps> = ({
   id,
+  gender = 'male',
   size = 'md',
   showDimension = false,
   onClick,
@@ -42,7 +45,7 @@ export const ArchetypeBadge: React.FC<ArchetypeBadgeProps> = ({
       } ${className}`}
     >
       <span className="select-none">{archetype.emoji}</span>
-      <span className="tracking-tight">{archetype.name}</span>
+      <span className="tracking-tight">{getArchetypeName(id, gender)}</span>
       {showDimension && (
         <span
           className="text-[10px] font-normal uppercase tracking-wider px-1.5 py-0.5 rounded ml-1 bg-[#1E2A25] text-[#9DA79F]"

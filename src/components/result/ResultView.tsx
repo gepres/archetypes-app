@@ -296,7 +296,7 @@ export const ResultView: React.FC<ResultViewProps> = ({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
           {compositeProfile.developmentArchetypes.map(dev => {
-            const arch = ARCHETYPES[dev.archetypeId];
+            const arch = getArchetype(dev.archetypeId, gender);
             return (
               <div
                 key={dev.archetypeId}
@@ -408,6 +408,7 @@ export const ResultView: React.FC<ResultViewProps> = ({
       {/* Social Image Share Modal */}
       <ShareResultImageModal
         result={result}
+        gender={gender}
         isOpen={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
       />

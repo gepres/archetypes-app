@@ -13,17 +13,20 @@ import {
 } from 'lucide-react';
 import { ARCHETYPES, ARCHETYPES_LIST } from '../../data/archetypesData';
 import { JOURNAL_PROMPTS } from '../../services/storageService';
-import { ArchetypeId, JournalEntry } from '../../types';
+import { ArchetypeId, JournalEntry, GenderMode } from '../../types';
 import { ArchetypeBadge } from '../common/ArchetypeBadge';
 
 interface JournalViewProps {
   entries: JournalEntry[];
   onAddEntry: (entry: Omit<JournalEntry, 'id' | 'date'>) => void;
   onDeleteEntry: (id: string) => void;
+  /** Perspectiva activa: las insignias de arquetipo tambien la siguen. */
+  gender?: GenderMode;
 }
 
 export const JournalView: React.FC<JournalViewProps> = ({
   entries,
+  gender = 'male',
   onAddEntry,
   onDeleteEntry,
 }) => {
@@ -363,7 +366,7 @@ export const JournalView: React.FC<JournalViewProps> = ({
                     Arquetipos:
                   </span>
                   {entry.relatedArchetypes.map(id => (
-                    <ArchetypeBadge key={id} id={id} size="sm" />
+                    <ArchetypeBadge key={id} id={id} size="sm" gender={gender} />
                   ))}
                 </div>
               )}

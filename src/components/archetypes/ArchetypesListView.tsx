@@ -444,7 +444,7 @@ export const ArchetypesListView: React.FC<ArchetypesListViewProps> = ({
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {selectedArchetype.synergies.map((syn, idx) => {
-                const partner = ARCHETYPES[syn.partnerId];
+                const partner = getArchetype(syn.partnerId, currentGender);
                 return (
                   <div
                     key={idx}

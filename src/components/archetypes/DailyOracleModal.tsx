@@ -11,13 +11,15 @@ import {
   Shield,
   Layers,
 } from 'lucide-react';
-import { ARCHETYPES } from '../../data/archetypesData';
+import { ARCHETYPES, getArchetype } from '../../data/archetypesData';
 import { ARCHETYPE_VISUALS } from '../../data/archetypeImages';
-import { DailyOracleCard, UserProfile } from '../../types';
+import { DailyOracleCard, GenderMode, UserProfile } from '../../types';
 import { ArchetypePortraitCard } from './ArchetypePortraitCard';
 
 interface DailyOracleModalProps {
   isOpen: boolean;
+  /** Perspectiva activa: la carta del dia tambien habla en ella. */
+  gender?: GenderMode;
   onClose: () => void;
   card: DailyOracleCard;
   onGoToJournalWithPrompt: (prompt: string, archetypeId: string) => void;
@@ -26,6 +28,7 @@ interface DailyOracleModalProps {
 
 export const DailyOracleModal: React.FC<DailyOracleModalProps> = ({
   isOpen,
+  gender = 'male',
   onClose,
   card,
   onGoToJournalWithPrompt,
@@ -33,7 +36,7 @@ export const DailyOracleModal: React.FC<DailyOracleModalProps> = ({
 }) => {
   if (!isOpen) return null;
 
-  const archetype = ARCHETYPES[card.archetypeId] || ARCHETYPES.rey;
+  const archetype = getArchetype(card.archetypeId, gender) || ARCHETYPES.rey;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fadeIn">
@@ -53,10 +56,10 @@ export const DailyOracleModal: React.FC<DailyOracleModalProps> = ({
         <div className="p-6 pb-4 border-b border-[#1E2A25] relative z-10 text-center">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#1A2521] border border-[#315C45] text-[#D6A84F] text-xs font-semibold uppercase tracking-widest mb-2">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Carta Simbólica del Día</span>
+            <span>Tu oráculo de hoy</span>
           </div>
           <h2 className="font-serif text-2xl font-bold text-[#F2EFE6]">
-            El Oráculo del {archetype.name}
+            {archetype.emoji} {archetype.name}
           </h2>
           <p className="text-xs text-[#9DA79F] mt-0.5">
             Energía arquetípica para orientar tus decisiones hoy ({card.date})
@@ -150,7 +153,7 @@ export const DailyOracleModal: React.FC<DailyOracleModalProps> = ({
             <button
               onClick={() => {
                 onGoToAiWithPrompt(
-                  `Como la voz de mi ${archetype.name} interior: ¿Cómo puedo encarar mi jornada hoy teniendo presente tu mantra: "${archetype.mantra}"?`,
+                  `Hoy me acompaña ${archetype.name}. ¿Cómo puedo encarar mi jornada teniendo presente su mantra: "${archetype.mantra}"?`,
                   archetype.id
                 );
                 onClose();

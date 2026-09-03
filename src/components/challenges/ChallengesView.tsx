@@ -167,6 +167,31 @@ export const ChallengesView: React.FC<ChallengesViewProps> = ({
         </div>
       </div>
 
+      {/* Un filtro sin resultados no puede dejar la pantalla en blanco: hay que
+          decir que no hay nada y ofrecer la salida. */}
+      {filteredChallenges.length === 0 && (
+        <div className="text-center py-12 px-6 space-y-3 rounded-2xl border border-dashed border-[#23332D] bg-[#101917]/50">
+          <span className="inline-flex w-11 h-11 rounded-xl bg-[#1A2521] border border-[#23332D] items-center justify-center text-[#D6A84F]">
+            <Flame className="w-5 h-5" />
+          </span>
+          <p className="text-sm text-[#C5CFC7] font-medium">
+            {selectedArchetypeFilter === 'todos'
+              ? 'No hay retos con ese estado todavía.'
+              : `Todavía no hay prácticas para ${getArchetype(selectedArchetypeFilter as ArchetypeId, currentGender).name}.`}
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedArchetypeFilter('todos');
+              setFilterStatus('todos');
+            }}
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-[#23332D] bg-[#121A17] text-xs text-[#C5CFC7] hover:text-[#F2EFE6] hover:border-[#315C45] transition-colors"
+          >
+            Ver todos los retos
+          </button>
+        </div>
+      )}
+
       {/* Challenges List */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {filteredChallenges.map(challenge => {

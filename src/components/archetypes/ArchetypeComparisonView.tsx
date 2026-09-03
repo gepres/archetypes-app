@@ -385,7 +385,7 @@ export const ArchetypeComparisonView: React.FC<ArchetypeComparisonViewProps> = (
               <button
                 onClick={() =>
                   onGoToAiWithPrompt(
-                    `Hablemos desde la energía del ${archetype.name}. ¿Cómo responderías al dilema de equilibrar tu fuerza con otros arquetipos?`,
+                    `Hablemos desde la energía de ${archetype.name}. ¿Cómo responderías al dilema de equilibrar tu fuerza con otros arquetipos?`,
                     archetype.id
                   )
                 }

@@ -331,6 +331,7 @@ export default function App() {
               entries={journalEntries}
               onAddEntry={handleAddJournalEntry}
               onDeleteEntry={handleDeleteJournalEntry}
+              gender={userProfile.gender || 'male'}
             />
           )}
 
@@ -405,6 +406,7 @@ export default function App() {
         isOpen={isDailyOracleOpen}
         onClose={() => setIsDailyOracleOpen(false)}
         card={dailyCard}
+        gender={userProfile.gender || 'male'}
         onGoToJournalWithPrompt={(prompt, archId) => {
           handleAddJournalEntry({
             title: `Reflexión: Carta del Día`,
