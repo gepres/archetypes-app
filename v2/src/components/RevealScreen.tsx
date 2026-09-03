@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
-import { ArrowRight, RotateCcw, Volume2, VolumeX } from 'lucide-react';
+import { ArrowRight, Check, RotateCcw, Share2, Volume2, VolumeX } from 'lucide-react';
 import { ArchetypeIllustratedArtwork, DIMENSIONS, getArchetype } from '../lib/domain';
 import type { AssessmentResult } from '../lib/domain';
 import { callar, decir, vibrar } from '../lib/voice';
@@ -20,6 +20,7 @@ export const RevealScreen: React.FC<RevealScreenProps> = ({
 }) => {
   const prefersReducedMotion = useReducedMotion();
   const [revelado, setRevelado] = useState(false);
+  const [copiado, setCopiado] = useState(false);
   const yaHabloRef = useRef(false);
 
   const dominante = getArchetype(resultado.dominantArchetype.archetypeId, 'universal');
@@ -32,6 +33,76 @@ export const RevealScreen: React.FC<RevealScreenProps> = ({
     const t = window.setTimeout(() => setRevelado(true), prefersReducedMotion ? 0 : 220);
     return () => window.clearTimeout(t);
   }, [prefersReducedMotion]);
+
+  const compartir = async () => {
+    const url = typeof window !== 'undefined' ? window.location.origin + '/v2/' : '';
+    const texto = `Mi arquetipo dominante es ${dominante.name}. «${dominante.mantra}»
+
+Descubre el tuyo escuchando, en dos minutos:`;
+    const completo = `${texto} ${url}`;
+    vibrar(12);
+
+    const avisarCopiado = () => {
+      setCopiado(true);
+      window.setTimeout(() => setCopiado(false), 2400);
+    };
+
+    // 1. La hoja de compartir del sistema, si la hay.
+    //
+    // Ojo: hay entornos donde `share` existe pero su promesa no se resuelve
+    // NUNCA -ni cumple ni falla-. Esperarla sin mas deja el boton muerto en
+    // silencio, que es lo peor que puede pasar aqui. Por eso se compite contra
+    // un plazo, y para no confundir "la hoja esta abierta y la persona esta
+    // eligiendo" con "esto no ha hecho nada", se mira si la pagina perdio el
+    // foco: si la hoja se abrio de verdad, lo perdio.
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      const desenlace = await new Promise<'ok' | 'cancelado' | 'abierta' | 'fallo'>(resolver => {
+        let resuelto = false;
+        const cerrar = (r: 'ok' | 'cancelado' | 'abierta' | 'fallo') => {
+          if (resuelto) return;
+          resuelto = true;
+          resolver(r);
+        };
+
+        navigator
+          .share({ title: `Mi arquetipo: ${dominante.name}`, text: texto, url })
+          .then(
+            () => cerrar('ok'),
+            (e: any) => cerrar(e?.name === 'AbortError' ? 'cancelado' : 'fallo')
+          );
+
+        window.setTimeout(() => {
+          const seAbrio = document.hidden || !document.hasFocus();
+          cerrar(seAbrio ? 'abierta' : 'fallo');
+        }, 900);
+      });
+
+      // Cancelar no es un fallo, y una hoja abierta tampoco: en los dos casos
+      // no se insiste. Solo se cae al portapapeles cuando no ha pasado nada.
+      if (desenlace !== 'fallo') return;
+    }
+
+    // 2. El portapapeles.
+    try {
+      await navigator.clipboard.writeText(completo);
+      avisarCopiado();
+      return;
+    } catch {}
+
+    // 3. Ultimo recurso, para navegadores sin permiso de portapapeles.
+    try {
+      const area = document.createElement('textarea');
+      area.value = completo;
+      area.setAttribute('readonly', '');
+      area.style.position = 'fixed';
+      area.style.opacity = '0';
+      document.body.appendChild(area);
+      area.select();
+      document.execCommand('copy');
+      document.body.removeChild(area);
+      avisarCopiado();
+    } catch {}
+  };
 
   // La revelacion se cuenta sola, una vez.
   useEffect(() => {
@@ -140,6 +211,24 @@ export const RevealScreen: React.FC<RevealScreenProps> = ({
             Ver mi mapa completo
             <ArrowRight className="w-4 h-4" />
           </a>
+
+          <button
+            type="button"
+            onClick={compartir}
+            className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl border border-[#23332D] bg-[#101917] hover:border-[#D6A84F]/50 text-[#C5CFC7] hover:text-[#F2EFE6] font-medium text-sm active:scale-95 transition-all"
+          >
+            {copiado ? (
+              <>
+                <Check className="w-4 h-4 text-[#86EFAC]" />
+                Copiado, ya puedes pegarlo
+              </>
+            ) : (
+              <>
+                <Share2 className="w-4 h-4" />
+                Compartir mi arquetipo
+              </>
+            )}
+          </button>
 
           <div className="flex items-center justify-center gap-4 text-[11px] text-[#4E5C55]">
             <button

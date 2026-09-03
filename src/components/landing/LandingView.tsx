@@ -13,6 +13,7 @@ import {
   ShieldAlert,
   BookOpen,
   Eye,
+  Headphones,
 } from 'lucide-react';
 import { getArchetype, getArchetypeName, getArchetypeList, DIMENSIONS } from '../../data/archetypesData';
 import { ARCHETYPE_VISUALS } from '../../data/archetypeImages';
@@ -130,6 +131,29 @@ export const LandingView: React.FC<LandingViewProps> = ({
             <span>Explorar los 18 arquetipos</span>
           </button>
         </div>
+
+        {/* Puente a la version en voz. No es otro boton mas: es otra forma de
+            hacer lo mismo, para quien no quiere leer. Por eso va aparte. */}
+        <a
+          href="/v2/"
+          id="landing-cta-voz"
+          className="group block max-w-2xl mx-auto text-left rounded-2xl border border-[#D6A84F]/30 bg-gradient-to-r from-[#141F1A] to-[#121A17] hover:border-[#D6A84F]/60 transition-colors p-4 sm:p-5 shadow-lg"
+        >
+          <div className="flex items-center gap-4">
+            <span className="w-11 h-11 shrink-0 rounded-xl bg-[#1A2521] border border-[#D6A84F]/40 flex items-center justify-center text-[#D6A84F]">
+              <Headphones className="w-5 h-5" />
+            </span>
+            <div className="flex-1 min-w-0">
+              <p className="font-serif text-base sm:text-lg font-bold text-[#F2EFE6] leading-tight">
+                ¿Prefieres no leer? Escúchalo.
+              </p>
+              <p className="text-xs text-[#9DA79F] leading-relaxed mt-0.5">
+                Una frase, un gesto, dos minutos. La misma evaluación, sin leer nada.
+              </p>
+            </div>
+            <ArrowRight className="w-4 h-4 shrink-0 text-[#D6A84F] group-hover:translate-x-0.5 transition-transform" />
+          </div>
+        </a>
 
         {/* Current Result banner if exists */}
         {currentResult && (

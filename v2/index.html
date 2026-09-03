@@ -10,6 +10,17 @@
     <meta name="color-scheme" content="dark" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 
+    <!-- Instalable por su cuenta, con su propio ambito. iOS ignora el
+         manifiesto y necesita estas meta. No lleva trabajador en segundo plano
+         a proposito: el de la V1 vive en la raiz y no conviene que peleen. -->
+    <link rel="manifest" href="/v2/manifest.webmanifest" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="En voz" />
+    <meta name="application-name" content="En voz" />
+
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Arquetipos en voz" />
     <meta property="og:title" content="Arquetipos en voz · Un gesto, tu arquetipo" />
