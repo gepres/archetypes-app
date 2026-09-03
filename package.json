@@ -6,9 +6,15 @@
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
     "build": "vite build",
+    "dev:v2": "vite --config v2/vite.config.ts",
+    "build:v2": "vite build --config v2/vite.config.ts",
+    "build:all": "npm run build && npm run build:v2",
+    "deploy": "npm run build:all && firebase deploy --only hosting",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "lint:v2": "tsc --noEmit -p v2/tsconfig.json",
+    "lint:all": "npm run lint && npm run lint:v2"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

@@ -80,8 +80,10 @@ export default defineConfig(({ mode }) => {
           // El bundle ronda los 2 MB y el tope por defecto de Workbox es justo 2 MB
           maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
           navigateFallback: '/index.html',
-          // Las APIs de IA y Firebase nunca deben servirse desde caché
-          navigateFallbackDenylist: [/^\/api/],
+          // Las APIs de IA y Firebase nunca deben servirse desde caché.
+          // /v2/ es otra aplicación dentro del mismo sitio: si el service worker
+          // de V1 responde a esas navegaciones con su propio index, V2 no carga.
+          navigateFallbackDenylist: [/^\/api/, /^\/v2(\/|$)/],
           runtimeCaching: [
             {
               urlPattern: ({ url }) =>
