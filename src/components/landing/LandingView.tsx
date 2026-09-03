@@ -53,20 +53,16 @@ export const LandingView: React.FC<LandingViewProps> = ({
     <div id="landing-view" className="space-y-12 pb-20 max-w-5xl mx-auto">
       {/* Top Interactive Perspective Bar */}
       {onGenderChange && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3.5 bg-[#121A17] border border-[#23332D] rounded-2xl shadow-sm">
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-[#D6A84F]">✦</span>
-            <span className="text-xs text-[#C5CFC7] font-medium">
-              Explora el mapa en tu perspectiva preferida:
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 p-3 sm:p-3.5 bg-[#121A17] border border-[#23332D] rounded-2xl shadow-sm">
+          {/* Etiqueta. En movil comparte fila con el acceso a la introduccion. */}
+          <div className="flex items-center justify-between gap-2 min-w-0">
+            <span className="flex items-center gap-2 min-w-0">
+              <span className="text-xs text-[#D6A84F] shrink-0">✦</span>
+              <span className="text-xs text-[#C5CFC7] font-medium">
+                <span className="sm:hidden">Tu perspectiva de exploración</span>
+                <span className="hidden sm:inline">Explora el mapa en tu perspectiva preferida:</span>
+              </span>
             </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <PerspectiveSwitcher
-              gender={currentGender}
-              onGenderChange={onGenderChange}
-              size="sm"
-              showLabel={true}
-            />
             {onOpenIntro && (
               <button
                 type="button"
@@ -79,6 +75,14 @@ export const LandingView: React.FC<LandingViewProps> = ({
               </button>
             )}
           </div>
+
+          <PerspectiveSwitcher
+            gender={currentGender}
+            onGenderChange={onGenderChange}
+            size="sm"
+            showLabel={true}
+            className="sm:shrink-0"
+          />
         </div>
       )}
 
