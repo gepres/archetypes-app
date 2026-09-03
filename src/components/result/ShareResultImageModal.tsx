@@ -105,6 +105,18 @@ export const ShareResultImageModal: React.FC<ShareResultImageModalProps> = ({
     }
   };
 
+const SITIO = 'https://archetypes-mystical.web.app/';
+
+/** Un nombre de fichero valido a partir del nombre del arquetipo. */
+function comoNombreDeFichero(texto: string): string {
+  return texto
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'arquetipo';
+}
+
   const handleDownload = async () => {
     if (!cardRef.current) return;
     try {
@@ -115,7 +127,7 @@ export const ShareResultImageModal: React.FC<ShareResultImageModalProps> = ({
         quality: 0.95,
       });
       const link = document.createElement('a');
-      link.download = `mapa-arquetipico-${dominant.name.toLowerCase()}-${format}.png`;
+      link.download = `mapa-arquetipico-${comoNombreDeFichero(dominant.name)}-${format}.png`;
       link.href = dataUrl;
       link.click();
     } catch (err) {
@@ -159,7 +171,7 @@ export const ShareResultImageModal: React.FC<ShareResultImageModalProps> = ({
 
       const file = new File(
         [blob],
-        `mapa-arquetipico-${dominant.name.toLowerCase()}.png`,
+        `mapa-arquetipico-${comoNombreDeFichero(dominant.name)}.png`,
         { type: 'image/png' }
       );
 
@@ -171,7 +183,7 @@ export const ShareResultImageModal: React.FC<ShareResultImageModalProps> = ({
         await navigator.share({
           files: [file],
           title: `Mi Mapa Arquetípico: ${compositeProfile.title}`,
-          text: `Descubrí mi arquetipo dominante: ${dominant.name} (${result.dominantArchetype.normalizedScore}%). Conócete con Los 18 Arquetipos.`,
+          text: `Descubrí mi arquetipo dominante: ${dominant.name} (${result.dominantArchetype.normalizedScore}%). Descubre el tuyo: ${SITIO}`,
         });
         setShareSuccess(true);
         setTimeout(() => setShareSuccess(false), 3000);
@@ -219,7 +231,7 @@ export const ShareResultImageModal: React.FC<ShareResultImageModalProps> = ({
         {/* Modal Body: Controls Left / Preview Right */}
         <div className="p-4 sm:p-6 overflow-y-auto flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* Controls Column */}
-          <div className="lg:col-span-5 space-y-5 text-left">
+          <div className="lg:col-span-5 space-y-5 text-left order-2 lg:order-1">
             {/* Format Selector */}
             <div className="space-y-2">
               <label className="text-xs font-bold uppercase tracking-wider text-[#D6A84F] flex items-center gap-1.5">
@@ -399,7 +411,7 @@ export const ShareResultImageModal: React.FC<ShareResultImageModalProps> = ({
           </div>
 
           {/* Card Preview Column */}
-          <div className="lg:col-span-7 flex flex-col items-center justify-center bg-[#0B100E] p-2 sm:p-6 rounded-3xl border border-[#1E2A25] w-full overflow-hidden">
+          <div className="lg:col-span-7 order-1 lg:order-2 flex flex-col items-center justify-center bg-[#0B100E] p-2 sm:p-6 rounded-3xl border border-[#1E2A25] w-full overflow-hidden">
             <div className="text-center mb-3">
               <span className="text-[11px] text-[#9DA79F] inline-flex items-center gap-1">
                 <Eye className="w-3 h-3 text-[#D6A84F]" />
@@ -463,7 +475,9 @@ export const ShareResultImageModal: React.FC<ShareResultImageModalProps> = ({
                   <div className="inline-flex items-center gap-1 text-[10px] uppercase font-bold tracking-wider text-[#A6B2A8]">
                     <span>Arquetipo Dominante</span>
                     <span>·</span>
-                    <span className="capitalize">{dominant.dimension}</span>
+                    {/* El nombre de la dimension, no su identificador: "corazon"
+                        con capitalize salia "Corazon", sin tilde. */}
+                    <span>{DIMENSIONS[dominant.dimension].name.split(' & ')[0]}</span>
                   </div>
                   <h3 className="font-serif text-2xl sm:text-3xl font-bold text-[#F2EFE6] tracking-tight">
                     {dominant.name}
@@ -475,16 +489,16 @@ export const ShareResultImageModal: React.FC<ShareResultImageModalProps> = ({
 
                 {/* Composite Title & Synthesis */}
                 <div className={`w-full p-3 rounded-2xl border text-left space-y-1.5 ${themeStyles.subtleBox}`}>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[9px] uppercase tracking-widest font-bold text-[#9DA79F]">
-                      Perfil Compuesto
-                    </span>
-                    <span className="text-[9px] font-semibold px-2 py-0.5 rounded bg-black/40 text-[#D6A84F]">
-                      {compositeProfile.archetypeCombination}
-                    </span>
-                  </div>
-                  <p className="font-serif font-bold text-sm text-[#F2EFE6]">
+                  {/* La combinacion son tres nombres completos: al lado del titulo
+                      del bloque no cabe y se pisan. Va debajo, en su linea. */}
+                  <span className="block text-[9px] uppercase tracking-widest font-bold text-[#9DA79F]">
+                    Perfil Compuesto
+                  </span>
+                  <p className="font-serif font-bold text-sm text-[#F2EFE6] leading-tight">
                     {compositeProfile.title}
+                  </p>
+                  <p className="text-[9px] font-semibold text-[#D6A84F] leading-tight">
+                    {compositeProfile.archetypeCombination}
                   </p>
                   <p className="text-[10px] text-[#C5CFC7] leading-relaxed italic font-serif">
                     "{dominant.mantra}"
@@ -498,25 +512,32 @@ export const ShareResultImageModal: React.FC<ShareResultImageModalProps> = ({
                   <div className="flex items-center justify-between text-[9px] font-bold text-[#9DA79F] uppercase tracking-wider">
                     <span>Balance de las 4 Dimensiones</span>
                   </div>
-                  <div className="grid grid-cols-4 gap-1.5 text-center">
+                  {/* En filas, no en cuatro columnas: en una tarjeta de 360 px de
+                      ancho, "Construcción & Soberanía" en un cuarto del ancho no
+                      cabe de ninguna manera. Alineadas, se leen de un vistazo y
+                      las barras se comparan entre si, que es de lo que trata. */}
+                  <div className="space-y-1">
                     {(['mente', 'accion', 'corazon', 'construccion'] as const).map((dimId) => {
                       const score = result.dimensionScores[dimId] || 0;
                       const dimInfo = DIMENSIONS[dimId];
                       return (
-                        <div key={dimId} className="space-y-0.5">
-                          <div className="flex items-center justify-between text-[8px] text-[#A6B2A8] capitalize">
-                            <span>{dimInfo.name}</span>
-                            <span className="font-mono font-bold text-[#F2EFE6]">{score}%</span>
-                          </div>
-                          <div className="w-full h-1.5 bg-[#0E1513] rounded-full overflow-hidden">
-                            <div
-                              className="h-full rounded-full transition-all"
-                              style={{
-                                width: `${score}%`,
-                                backgroundColor: dimInfo.color,
-                              }}
+                        <div key={dimId} className="flex items-center gap-1.5">
+                          <span
+                            className="w-1.5 h-1.5 rounded-full shrink-0"
+                            style={{ backgroundColor: dimInfo.color }}
+                          />
+                          <span className="w-[76px] shrink-0 text-[8px] text-[#A6B2A8] truncate">
+                            {dimInfo.name.split(' & ')[0]}
+                          </span>
+                          <span className="flex-1 h-1.5 bg-[#0E1513] rounded-full overflow-hidden">
+                            <span
+                              className="block h-full rounded-full"
+                              style={{ width: `${score}%`, backgroundColor: dimInfo.color }}
                             />
-                          </div>
+                          </span>
+                          <span className="w-[26px] shrink-0 text-right text-[8px] font-mono font-bold text-[#F2EFE6]">
+                            {score}%
+                          </span>
                         </div>
                       );
                     })}
@@ -530,21 +551,34 @@ export const ShareResultImageModal: React.FC<ShareResultImageModalProps> = ({
                   <div className="text-[9px] font-bold text-[#9DA79F] uppercase tracking-wider mb-1 text-center">
                     Top 3 Fuerzas Arquetípicas
                   </div>
-                  <div className="grid grid-cols-3 gap-1.5">
+                  {/* Un podio se lee mejor en vertical: los nombres caben enteros
+                      -"Constructor / Constructora" no entra en un tercio de 360 px-
+                      y las tres barras quedan alineadas para compararse. */}
+                  <div className="space-y-1">
                     {result.ranking.slice(0, 3).map((item, idx) => (
                       <div
                         key={item.archetypeId}
-                        className="p-1.5 rounded-lg bg-black/40 border border-white/5 flex items-center gap-1.5"
+                        className="flex items-center gap-1.5 px-1.5 py-1 rounded-lg bg-black/40 border border-white/5"
                       >
-                        <span className="text-xs">{item.emoji}</span>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-[10px] font-serif font-bold text-[#F2EFE6] truncate leading-tight">
-                            {item.name}
-                          </p>
-                          <p className="text-[8px] font-mono text-[#D6A84F] leading-tight">
-                            #{idx + 1} · {item.normalizedScore}%
-                          </p>
-                        </div>
+                        <span className="w-3.5 shrink-0 text-[8px] font-mono font-bold text-[#D6A84F]">
+                          {idx + 1}
+                        </span>
+                        <span className="text-[11px] shrink-0 leading-none">{item.emoji}</span>
+                        <span className="flex-1 min-w-0 text-[10px] font-serif font-bold text-[#F2EFE6] truncate leading-tight">
+                          {item.name}
+                        </span>
+                        <span className="w-9 shrink-0 h-1 bg-[#0E1513] rounded-full overflow-hidden">
+                          <span
+                            className="block h-full rounded-full"
+                            style={{
+                              width: `${item.normalizedScore}%`,
+                              backgroundColor: themeStyles.accentColor,
+                            }}
+                          />
+                        </span>
+                        <span className="w-[26px] shrink-0 text-right text-[8px] font-mono font-bold text-[#D6A84F]">
+                          {item.normalizedScore}%
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -554,7 +588,7 @@ export const ShareResultImageModal: React.FC<ShareResultImageModalProps> = ({
               {/* Watermark & Footer */}
               <div className="relative z-10 pt-2 border-t border-white/10 flex items-center justify-between text-[8px] text-[#7A8880]">
                 <span>Descubre tu mapa interior</span>
-                <span className="font-semibold text-[#A6B2A8]">los12arquetipos.app</span>
+                <span className="font-semibold text-[#A6B2A8]">archetypes-mystical.web.app</span>
               </div>
             </div>
           </div>
