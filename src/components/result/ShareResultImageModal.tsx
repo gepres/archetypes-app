@@ -229,9 +229,9 @@ function comoNombreDeFichero(texto: string): string {
         </div>
 
         {/* Modal Body: Controls Left / Preview Right */}
-        <div className="p-4 sm:p-6 overflow-y-auto flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <div className="p-4 sm:p-6 overflow-y-auto flex-1 flex flex-col lg:grid lg:grid-cols-12 gap-6 lg:items-start">
           {/* Controls Column */}
-          <div className="lg:col-span-5 space-y-5 text-left order-2 lg:order-1">
+          <div className="lg:col-span-5 shrink-0 space-y-5 text-left">
             {/* Format Selector */}
             <div className="space-y-2">
               <label className="text-xs font-bold uppercase tracking-wider text-[#D6A84F] flex items-center gap-1.5">
@@ -411,7 +411,7 @@ function comoNombreDeFichero(texto: string): string {
           </div>
 
           {/* Card Preview Column */}
-          <div className="lg:col-span-7 order-1 lg:order-2 flex flex-col items-center justify-center bg-[#0B100E] p-2 sm:p-6 rounded-3xl border border-[#1E2A25] w-full overflow-hidden">
+          <div className="lg:col-span-7 shrink-0 flex flex-col items-center justify-center bg-[#0B100E] p-2 sm:p-6 rounded-3xl border border-[#1E2A25] w-full overflow-hidden">
             <div className="text-center mb-3">
               <span className="text-[11px] text-[#9DA79F] inline-flex items-center gap-1">
                 <Eye className="w-3 h-3 text-[#D6A84F]" />
