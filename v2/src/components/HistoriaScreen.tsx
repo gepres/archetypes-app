@@ -36,6 +36,10 @@ export const HistoriaScreen: React.FC<HistoriaScreenProps> = ({
   const [galeria, setGaleria] = useState(0);
   const [desfilando, setDesfilando] = useState(true);
   const dijoRef = useRef<string | null>(null);
+  // Espejos para el cierre de la promesa de la voz, que se crea antes de que
+  // existan el paso siguiente y la funcion de avanzar.
+  const pasoRef = useRef(0);
+  const avanceRef = useRef<number | null>(null);
 
   const arquetipos: Archetype[] = useMemo(() => getArchetypeList('universal'), []);
   const enGaleria = paso === CAPITULOS.length;
@@ -43,6 +47,9 @@ export const HistoriaScreen: React.FC<HistoriaScreenProps> = ({
   const actual = arquetipos[galeria];
 
   // ── La voz: cada capítulo se cuenta solo al entrar, una vez ───────────────
+  //
+  // Y al terminar de contarlo, pasa solo al siguiente: si te lo están contando,
+  // no deberías tener que pedir permiso para seguir escuchando.
   useEffect(() => {
     const clave = enGaleria ? `galeria-${actual?.id}` : capitulo?.id;
     if (!clave || silencio || dijoRef.current === clave) return;
@@ -52,9 +59,29 @@ export const HistoriaScreen: React.FC<HistoriaScreenProps> = ({
       ? `${actual.name}. ${actual.shortDescription}`
       : `${capitulo!.titulo}. ${capitulo!.texto}`;
 
+    const desde = paso;
+    const t0 = Date.now();
     setHablando(true);
-    decir(guion, { rate: enGaleria ? 1 : 0.96 }).then(() => setHablando(false));
-    return () => callar();
+
+    decir(guion, { rate: enGaleria ? 1 : 0.96 }).then(() => {
+      setHablando(false);
+
+      // Si no había voz, `decir` vuelve al instante. Avanzar entonces seria
+      // pasar siete capitulos en un parpadeo sin que nadie haya oido nada.
+      if (Date.now() - t0 < 1500) return;
+      // De la galeria no se sale sola: ahi manda el desfile, y el final lleva
+      // al test, que no es algo que deba empezar sin que lo pidas.
+      if (enGaleria) return;
+      // Si mientras hablaba te moviste tú, mandas tú.
+      if (pasoRef.current !== desde) return;
+
+      avanceRef.current = window.setTimeout(() => avanzarRef.current(), 900);
+    });
+
+    return () => {
+      callar();
+      if (avanceRef.current) window.clearTimeout(avanceRef.current);
+    };
   }, [paso, enGaleria, capitulo, actual, silencio]);
 
   // ── Los rostros del capítulo se van turnando ─────────────────────────────
@@ -76,13 +103,23 @@ export const HistoriaScreen: React.FC<HistoriaScreenProps> = ({
     return () => window.clearInterval(t);
   }, [enGaleria, desfilando, arquetipos.length, prefersReducedMotion]);
 
+  useEffect(() => {
+    pasoRef.current = paso;
+  }, [paso]);
+
   const avanzar = useCallback(() => {
+    if (avanceRef.current) window.clearTimeout(avanceRef.current);
     callar();
     setHablando(false);
     vibrar(10);
     if (paso < TOTAL - 1) setPaso(p => p + 1);
     else onEmpezarTest();
   }, [paso, onEmpezarTest]);
+
+  const avanzarRef = useRef(avanzar);
+  useEffect(() => {
+    avanzarRef.current = avanzar;
+  }, [avanzar]);
 
   const retroceder = useCallback(() => {
     if (paso === 0) return;
@@ -210,7 +247,6 @@ export const HistoriaScreen: React.FC<HistoriaScreenProps> = ({
                     archetypeId={rostroActual}
                     dimension={arquetipos.find(a => a.id === rostroActual)?.dimension ?? 'mente'}
                     color={acento}
-                    emoji={arquetipos.find(a => a.id === rostroActual)?.emoji}
                     className="absolute inset-0"
                   />
                 </motion.div>

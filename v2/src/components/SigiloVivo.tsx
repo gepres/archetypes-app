@@ -2,13 +2,14 @@ import React, { useMemo } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import { SIGIL_VIEWBOX, sigilLayers } from '@sigils';
 import type { SigilArchetypeId, SigilDimensionId } from '@sigils';
+import { glifoDe } from '../lib/glifos';
 
 interface SigiloVivoProps {
   archetypeId: string;
   dimension: string;
   color: string;
-  /** Emblema del arquetipo, al centro del sigilo. */
-  emoji?: string;
+  /** Dibuja el glifo del arquetipo en el centro. */
+  conGlifo?: boolean;
   className?: string;
 }
 
@@ -31,7 +32,7 @@ export const SigiloVivo: React.FC<SigiloVivoProps> = ({
   archetypeId,
   dimension,
   color,
-  emoji,
+  conGlifo = true,
   className = 'w-full h-full',
 }) => {
   const reducido = useReducedMotion();
@@ -118,38 +119,61 @@ export const SigiloVivo: React.FC<SigiloVivoProps> = ({
           );
         })}
 
-        {/* El punto del centro, que late */}
-        <motion.circle
-          cx="50"
-          cy="50"
-          r="2.8"
-          fill={color}
-          initial={{ scale: 0, opacity: 0 }}
-          animate={
-            reducido
-              ? { scale: 1, opacity: 1 }
-              : { scale: [1, 1.5, 1], opacity: [0.75, 1, 0.75] }
-          }
-          transition={
-            reducido
-              ? { duration: 0.2 }
-              : { duration: 3.2, repeat: Infinity, ease: 'easeInOut', delay: capas.length * RETRASO }
-          }
-          style={{ transformBox: 'fill-box', transformOrigin: 'center' }}
-        />
+        {/* El glifo del arquetipo: se traza el ultimo, cuando el sigilo ya esta
+            hecho, como si el dibujo terminara por dentro. Antes aqui iba un
+            emoji, que es un dibujo de otro sistema -a color y con relleno- sobre
+            una geometria de linea: nunca iban a parecer la misma pieza. */}
+        {conGlifo && (
+          <motion.g
+            initial={reducido ? { opacity: 1 } : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: reducido ? 0 : capas.length * RETRASO }}
+          >
+            {/* Un medallon limpio: la estrella cruza el centro y sin este disco
+                el glifo se pierde entre sus lineas. */}
+            <motion.circle
+              cx="50"
+              cy="50"
+              r="16.5"
+              fill="#0B1110"
+              initial={reducido ? { opacity: 0.9 } : { opacity: 0, scale: 0.7 }}
+              animate={{ opacity: 0.92, scale: 1 }}
+              transition={{ duration: 0.5, delay: reducido ? 0 : capas.length * RETRASO }}
+              style={{ transformBox: 'fill-box', transformOrigin: 'center' }}
+            />
+            <circle cx="50" cy="50" r="16.5" fill="none" stroke={color} strokeWidth={0.5} opacity={0.35} />
+            <motion.path
+              d={glifoDe(archetypeId)}
+              transform="translate(50 50) scale(0.72) translate(-50 -50)"
+              stroke={color}
+              strokeWidth={3}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+              opacity={0.2}
+            />
+            <motion.path
+              d={glifoDe(archetypeId)}
+              transform="translate(50 50) scale(0.72) translate(-50 -50)"
+              stroke={color}
+              strokeWidth={1.8}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+              initial={reducido ? { pathLength: 1 } : { pathLength: 0 }}
+              animate={{ pathLength: 1 }}
+              transition={{
+                duration: reducido ? 0.01 : 1.4,
+                delay: reducido ? 0 : capas.length * RETRASO,
+                ease: 'easeInOut',
+              }}
+            />
+          </motion.g>
+        )}
+
       </svg>
 
-      {emoji && (
-        <motion.span
-          aria-hidden="true"
-          className="absolute inset-0 flex items-center justify-center text-2xl sm:text-3xl"
-          initial={reducido ? { opacity: 1 } : { opacity: 0, scale: 0.6 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.7, delay: reducido ? 0 : capas.length * RETRASO, ease: [0.22, 1, 0.36, 1] }}
-        >
-          {emoji}
-        </motion.span>
-      )}
+
     </div>
   );
 };

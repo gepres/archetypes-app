@@ -69,8 +69,12 @@ function puntuar(v: SpeechSynthesisVoice): number {
   // La red se paga con latencia, pero `decir` ya tiene su tope de tiempo.
   if (!v.localService) p += 14;
 
-  // El castellano de America suena mas cercano al publico de la app.
-  if (lang.startsWith('es-mx') || lang.startsWith('es-us') || lang.startsWith('es-419')) p += 3;
+  // Espanol de Estados Unidos por defecto: es el acento neutro de America, el
+  // que menos suena "de fuera" para el publico de la app. Despues, el resto de
+  // America; el de Espana solo si no hay otra cosa.
+  if (lang.startsWith('es-us')) p += 26;
+  else if (lang.startsWith('es-mx') || lang.startsWith('es-419')) p += 12;
+  else if (lang.startsWith('es-419') || lang.startsWith('es-ar') || lang.startsWith('es-co')) p += 8;
   return p;
 }
 
