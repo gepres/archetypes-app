@@ -13,6 +13,8 @@ interface ArchetypePickerModalProps {
   title?: string;
   subtitle?: string;
   allowNone?: boolean;
+  /** Que dice la opcion "ninguno". Cada pantalla la usa para algo distinto. */
+  noneLabel?: string;
   disabledIds?: ArchetypeId[];
   gender?: GenderMode;
 }
@@ -25,6 +27,7 @@ export const ArchetypePickerModal: React.FC<ArchetypePickerModalProps> = ({
   title = 'Seleccionar Arquetipo',
   subtitle = 'Explora la galería arquetípica y elige la energía para comparar.',
   allowNone = false,
+  noneLabel = 'Desactivar 3er Arquetipo',
   disabledIds = [],
   gender = 'male',
 }) => {
@@ -152,7 +155,7 @@ export const ArchetypePickerModal: React.FC<ArchetypePickerModalProps> = ({
                 }`}
               >
                 <Ban className="w-3.5 h-3.5 text-[#F87171]" />
-                <span>Desactivar 3er Arquetipo</span>
+                <span>{noneLabel}</span>
               </button>
             )}
           </div>

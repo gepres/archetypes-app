@@ -223,8 +223,16 @@ export default function App() {
     );
   }
 
+  // El asistente es un chat: se le da altura definida y desplaza por dentro, en
+  // vez de crecer hacia abajo y dejar el compositor al final del documento.
+  const esChat = currentTab === 'ai';
+
   return (
-    <div className="min-h-screen bg-[#0B1110] text-[#F2EFE6] font-sans antialiased flex flex-col md:flex-row selection:bg-[#315C45] selection:text-[#F2EFE6]">
+    <div
+      className={`bg-[#0B1110] text-[#F2EFE6] font-sans antialiased flex flex-col md:flex-row selection:bg-[#315C45] selection:text-[#F2EFE6] ${
+        esChat ? 'h-[100dvh] overflow-hidden' : 'min-h-screen'
+      }`}
+    >
       {/* Desktop Sidebar */}
       <Sidebar
         currentTab={currentTab}
@@ -242,7 +250,11 @@ export default function App() {
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-screen">
+      <div
+        className={`flex-1 flex flex-col min-w-0 ${
+          esChat ? 'min-h-0 overflow-hidden' : 'min-h-screen'
+        }`}
+      >
         {/* Mobile Header */}
         <Header
           currentTab={currentTab}
@@ -259,7 +271,13 @@ export default function App() {
         />
 
         {/* Dynamic Page Views */}
-        <main className="flex-1 p-4 sm:p-6 md:p-8 lg:p-10 pb-28 md:pb-10 max-w-7xl mx-auto w-full">
+        <main
+          className={
+            esChat
+              ? 'flex-1 min-h-0 w-full max-w-5xl mx-auto flex flex-col pb-16 md:pb-0'
+              : 'flex-1 p-4 sm:p-6 md:p-8 lg:p-10 pb-28 md:pb-10 max-w-7xl mx-auto w-full'
+          }
+        >
           {currentTab === 'landing' && (
             <LandingView
               onStartTest={handleStartTest}
