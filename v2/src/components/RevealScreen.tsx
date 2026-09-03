@@ -205,7 +205,7 @@ Descubre el tuyo escuchando, en dos minutos:`;
           className="space-y-3 pt-1"
         >
           <a
-            href="/"
+            href="/?ver=mapa"
             className="w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-2xl bg-gradient-to-r from-[#315C45] to-[#254836] border border-[#4E8B69] text-[#F2EFE6] font-semibold shadow-xl active:scale-95 transition-transform"
           >
             Ver mi mapa completo

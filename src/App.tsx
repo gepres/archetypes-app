@@ -67,6 +67,19 @@ export default function App() {
     StorageService.getDailyOracleCard()
   );
 
+  // Quien llega desde la V2 acaba de hacer el test: tiene que aterrizar en su
+  // mapa, no en la portada. Sin esto el resultado queda guardado pero invisible,
+  // que para quien lo acaba de ganar es lo mismo que perderlo.
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('ver') !== 'mapa') return;
+      // La direccion se limpia para que recargar no vuelva a forzar la pestana.
+      window.history.replaceState({}, '', window.location.pathname);
+      setCurrentTab(StorageService.getCurrentResult() ? 'result' : 'landing');
+    } catch {}
+  }, []);
+
   // Sync state helpers
   const handleStartTest = (type: 'full' | 'quick' = 'full') => {
     setTestType(type);
