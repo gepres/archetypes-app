@@ -17,6 +17,8 @@ import {
   LogOut,
   Flame,
   Cpu,
+  ChevronDown,
+  Edit3,
   Settings,
   Zap,
   Infinity,
@@ -31,7 +33,6 @@ import { AccountRecord, AssessmentResult, GenderMode, UserProfile } from '../../
 import { NavTab } from '../layout/Sidebar';
 import { AiSettingsModal } from '../ai/AiSettingsModal';
 import { InstallAppCard } from '../pwa/InstallAppCard';
-
 interface ProfileViewProps {
   userProfile: UserProfile;
   history: AssessmentResult[];
@@ -41,8 +42,48 @@ interface ProfileViewProps {
   onResetAllData: () => void;
   onOpenAuthModal: () => void;
 }
-
 const AVATARS = ['👑', '⚔️', '🔮', '🔥', '🏛️', '🛡️', '🃏', '🧭', '🎨', '📜', '⚡', '🦅', '🦁', '🐺', '🌿'];
+/**
+ * Una seccion plegable.
+ *
+ * La pantalla eran siete tarjetas grandes en lista plana: tres pantallas y media
+ * de desplazamiento para encontrar cualquier cosa. Plegadas, todo cabe de un
+ * vistazo y se abre solo lo que se busca, que es como funciona cualquier pantalla
+ * de ajustes. La cabecera es el objetivo tactil: cincuenta y seis pixeles.
+ */
+const Seccion: React.FC<{
+  id: string;
+  titulo: string;
+  resumen: string;
+  icono: React.ElementType;
+  abierta: string | null;
+  onToggle: (id: string) => void;
+  children: React.ReactNode;
+}> = ({ id, titulo, resumen, icono: Icono, abierta, onToggle, children }) => {
+  const esta = abierta === id;
+  return (
+    <div className="rounded-2xl bg-[#121A17] border border-[#23332D] overflow-hidden shadow-lg">
+      <button
+        type="button"
+        onClick={() => onToggle(id)}
+        aria-expanded={esta}
+        className="w-full min-h-[56px] px-4 py-3 flex items-center gap-3 text-left hover:bg-[#16201D] transition-colors"
+      >
+        <span className="w-9 h-9 shrink-0 rounded-xl bg-[#1A2521] border border-[#23332D] flex items-center justify-center text-[#D6A84F]">
+          <Icono className="w-4 h-4" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block font-serif font-bold text-[#F2EFE6] leading-tight">{titulo}</span>
+          <span className="block text-[11px] text-[#7B8880] truncate">{resumen}</span>
+        </span>
+        <ChevronDown
+          className={`w-4 h-4 shrink-0 text-[#6B7A72] transition-transform ${esta ? 'rotate-180' : ''}`}
+        />
+      </button>
+      {esta && <div className="px-4 pb-4 pt-1 border-t border-[#1A2521]">{children}</div>}
+    </div>
+  );
+};
 
 export const ProfileView: React.FC<ProfileViewProps> = ({
   userProfile,
@@ -59,13 +100,16 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   const [avatarEmoji, setAvatarEmoji] = useState(userProfile.avatarEmoji || '👑');
   const [bio, setBio] = useState(userProfile.bio || '');
   const [savedSuccess, setSavedSuccess] = useState(false);
+  // Una sola seccion abierta a la vez, y ninguna al entrar: lo primero que se ve
+  // es el indice completo, no un formulario.
+  const [abierta, setAbierta] = useState<string | null>(null);
+  const alternar = (id: string) => setAbierta(a => (a === id ? null : id));
   const [isAiSettingsOpen, setIsAiSettingsOpen] = useState(false);
   const [aiUsage, setAiUsage] = useState(() => AIProviderService.getUsageStatus());
   const [syncLoading, setSyncLoading] = useState(false);
   const [syncResultMsg, setSyncResultMsg] = useState<string | null>(null);
   const [testCloudLoading, setTestCloudLoading] = useState(false);
   const [testCloudMsg, setTestCloudMsg] = useState<{ success: boolean; message: string } | null>(null);
-
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
     const updated: UserProfile = {
@@ -81,7 +125,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
     setSavedSuccess(true);
     setTimeout(() => setSavedSuccess(false), 2000);
   };
-
   const handleManualCloudSync = async () => {
     setSyncLoading(true);
     setSyncResultMsg(null);
@@ -111,7 +154,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
       setTimeout(() => setSyncResultMsg(null), 4000);
     }
   };
-
   const handleTestCloudConnection = async () => {
     setTestCloudLoading(true);
     setTestCloudMsg(null);
@@ -127,7 +169,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
       setTestCloudLoading(false);
     }
   };
-
   const handleExportData = () => {
     const data = {
       profile: StorageService.getUserProfile(),
@@ -138,7 +179,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
       chatMessages: StorageService.getChatMessages(),
       exportedAt: new Date().toISOString(),
     };
-
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -147,11 +187,9 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
     a.click();
     URL.revokeObjectURL(url);
   };
-
   const handleImportData = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onload = event => {
       try {
@@ -169,22 +207,19 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
     };
     reader.readAsText(file);
   };
-
   return (
-    <div id="profile-view" className="max-w-4xl mx-auto space-y-8 pb-24 pt-2 animate-fadeIn">
+    <div id="profile-view" className="max-w-4xl mx-auto space-y-4 pb-24 pt-1 animate-fadeIn">
       {/* Header */}
-      <div className="border-b border-[#1E2A25] pb-4 space-y-1">
-        <div className="flex items-center gap-2 text-xs text-[#D6A84F] font-semibold uppercase tracking-widest">
+      <div className="flex items-center gap-2.5">
+        <span className="w-9 h-9 shrink-0 rounded-xl bg-[#1A2521] border border-[#23332D] flex items-center justify-center text-[#D6A84F]">
           <User className="w-4 h-4" />
-          <span>Configuración & Datos de Usuario</span>
-        </div>
-        <h1 className="font-serif text-3xl sm:text-4xl font-bold text-[#F2EFE6]">
-          Perfil, Cuenta e Historial
+        </span>
+        <h1 className="font-serif text-xl sm:text-3xl font-bold text-[#F2EFE6] leading-tight">
+          Perfil y cuenta
         </h1>
       </div>
-
       {/* Account Status Card */}
-      <div className="p-6 sm:p-7 rounded-3xl bg-gradient-to-r from-[#121A17] to-[#16221E] border border-[#23332D] shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
+      <div className="p-4 sm:p-6 rounded-2xl bg-gradient-to-r from-[#121A17] to-[#16221E] border border-[#23332D] shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 rounded-2xl bg-[#0E1513] border-2 border-[#315C45] flex items-center justify-center text-3xl shadow-md">
             {userProfile.avatarEmoji || '👑'}
@@ -211,18 +246,16 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             </p>
           </div>
         </div>
-
         <button
           onClick={onOpenAuthModal}
-          className="w-full sm:w-auto px-4 py-2.5 bg-[#315C45] hover:bg-[#3D7055] text-[#F2EFE6] rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-md active:scale-95 shrink-0"
+          className="w-full sm:w-auto min-h-[44px] px-5 py-3 bg-[#315C45] hover:bg-[#3D7055] text-[#F2EFE6] rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-md active:scale-95 shrink-0"
         >
           <LogIn className="w-4 h-4" />
           <span>{userProfile.isGuest ? 'Iniciar Sesión / Registrar' : 'Cambiar de Cuenta'}</span>
         </button>
       </div>
-
-      {/* Firebase Cloud Sync Card */}
-      <div className="p-6 sm:p-7 rounded-3xl bg-gradient-to-br from-[#121A17] to-[#182420] border border-[#23332D] space-y-4 shadow-xl">
+      <Seccion id="nube" titulo="Sincronización en la nube" resumen="Respaldo automático de tus datos" icono={Cloud} abierta={abierta} onToggle={alternar}>
+        <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-2xl bg-[#D6A84F]/10 border border-[#D6A84F]/30 flex items-center justify-center text-[#D6A84F] shrink-0 shadow-inner">
@@ -230,9 +263,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-serif text-base font-bold text-[#F2EFE6]">
-                  Sincronización en la Nube (Firebase Firestore)
-                </h3>
                 <span className="text-[10px] bg-emerald-950/80 text-emerald-300 border border-emerald-700/50 px-2 py-0.5 rounded-full font-bold">
                   En Línea
                 </span>
@@ -242,7 +272,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               </p>
             </div>
           </div>
-
           <div className="flex items-center gap-2.5 shrink-0">
             <button
               onClick={handleManualCloudSync}
@@ -252,25 +281,22 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               <RefreshCw className={`w-3.5 h-3.5 ${syncLoading ? 'animate-spin' : ''}`} />
               <span>{syncLoading ? 'Sincronizando...' : 'Sincronizar a la Nube'}</span>
             </button>
-
             <button
               onClick={handleTestCloudConnection}
               disabled={testCloudLoading}
               className="px-3.5 py-2 bg-[#1A2521] hover:bg-[#23332D] text-[#D6A84F] border border-[#315C45] rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all"
             >
               <ShieldCheck className="w-3.5 h-3.5" />
-              <span>{testCloudLoading ? 'Probando...' : 'Probar Firestore'}</span>
+              <span>{testCloudLoading ? 'Probando...' : 'Probar conexión'}</span>
             </button>
           </div>
         </div>
-
         {syncResultMsg && (
           <div className="p-3 bg-emerald-950/40 border border-emerald-800/60 rounded-xl text-xs text-emerald-200 flex items-center gap-2 animate-fadeIn">
             <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
             <span>{syncResultMsg}</span>
           </div>
         )}
-
         {testCloudMsg && (
           <div
             className={`p-3 rounded-xl border text-xs flex items-center gap-2 animate-fadeIn ${
@@ -287,14 +313,11 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             <span>{testCloudMsg.message}</span>
           </div>
         )}
-      </div>
-
-      {/* Profile Form */}
-      <div className="p-6 sm:p-7 rounded-3xl bg-[#121A17] border border-[#23332D] space-y-6 shadow-xl">
+        </div>
+      </Seccion>
+      <Seccion id="perfil" titulo="Editar perfil" resumen="Nombre, correo, perspectiva y foco" icono={Edit3} abierta={abierta} onToggle={alternar}>
+        <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h3 className="font-serif text-lg font-bold text-[#F2EFE6]">
-            Editar Datos del Perfil
-          </h3>
           {savedSuccess && (
             <span className="text-xs text-[#86EFAC] flex items-center gap-1">
               <CheckCircle2 className="w-3.5 h-3.5" />
@@ -302,7 +325,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             </span>
           )}
         </div>
-
         <form onSubmit={handleSaveProfile} className="space-y-4 max-w-xl">
           <div className="space-y-1.5">
             <label className="text-xs uppercase font-bold tracking-wider text-[#9DA79F] block">
@@ -315,7 +337,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               className="w-full p-3 rounded-xl bg-[#0E1513] border border-[#23332D] text-sm text-[#F2EFE6] focus:outline-none focus:border-[#D6A84F]"
             />
           </div>
-
           <div className="space-y-1.5">
             <label className="text-xs uppercase font-bold tracking-wider text-[#9DA79F] block">
               Correo Electrónico
@@ -328,7 +349,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               className="w-full p-3 rounded-xl bg-[#0E1513] border border-[#23332D] text-sm text-[#F2EFE6] focus:outline-none focus:border-[#D6A84F]"
             />
           </div>
-
           {/* Gender Perspective / Archetypal Focus */}
           <div className="space-y-2 pt-1 pb-1">
             <div className="flex items-center justify-between">
@@ -361,7 +381,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                   El Rey, El Guerrero, El Mago, El Sabio, El Padre, El Amante...
                 </p>
               </button>
-
               {/* Feminine */}
               <button
                 type="button"
@@ -383,7 +402,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                   La Reina, La Guerrera, La Maga, La Sabia, La Madre, La Amante...
                 </p>
               </button>
-
               {/* Universal */}
               <button
                 type="button"
@@ -407,7 +425,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               </button>
             </div>
           </div>
-
           <div className="space-y-2">
             <label className="text-xs uppercase font-bold tracking-wider text-[#9DA79F] block">
               Símbolo / Avatar
@@ -418,7 +435,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                   type="button"
                   key={av}
                   onClick={() => setAvatarEmoji(av)}
-                  className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg transition-all ${
+                  className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl transition-all ${
                     avatarEmoji === av
                       ? 'bg-[#315C45] border-2 border-[#D6A84F] scale-110 shadow-md'
                       : 'bg-[#0E1513] border border-[#23332D] hover:border-[#315C45]'
@@ -429,7 +446,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               ))}
             </div>
           </div>
-
           <div className="space-y-1.5">
             <label className="text-xs uppercase font-bold tracking-wider text-[#9DA79F] block">
               Nota o Intención de Crecimiento Personal
@@ -442,23 +458,18 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               className="w-full p-3 rounded-xl bg-[#0E1513] border border-[#23332D] text-sm text-[#F2EFE6] focus:outline-none focus:border-[#D6A84F] resize-none"
             />
           </div>
-
           <button
             type="submit"
-            className="py-2.5 px-5 bg-[#315C45] hover:bg-[#3D7055] text-[#F2EFE6] font-semibold text-xs rounded-xl transition-all shadow-md active:scale-98"
+            className="min-h-[44px] py-3 px-6 bg-[#315C45] hover:bg-[#3D7055] text-[#F2EFE6] font-semibold text-sm rounded-xl transition-all shadow-md active:scale-98"
           >
             Actualizar Perfil
           </button>
         </form>
-      </div>
-
-      {/* Assessment History */}
-      <div className="p-6 sm:p-7 rounded-3xl bg-[#121A17] border border-[#23332D] space-y-5 shadow-xl">
+        </div>
+      </Seccion>
+      <Seccion id="historial" titulo="Historial" resumen="Evaluaciones realizadas" icono={History} abierta={abierta} onToggle={alternar}>
+        <div className="space-y-5">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm font-serif font-bold text-[#F2EFE6]">
-            <History className="w-4 h-4 text-[#D6A84F]" />
-            <span>Historial de Evaluaciones Realizadas ({history.length})</span>
-          </div>
           <button
             onClick={() => onSelectTab('test')}
             className="text-xs text-[#D6A84F] hover:underline font-semibold"
@@ -466,7 +477,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             + Nueva Evaluación
           </button>
         </div>
-
         {history.length === 0 ? (
           <div className="p-6 bg-[#0E1513] rounded-2xl border border-[#1E2A25] text-center space-y-2">
             <p className="text-xs text-[#9DA79F]">
@@ -509,7 +519,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                     </div>
                   </div>
                 </div>
-
                 <span className="text-xs text-[#9DA79F] group-hover:text-[#D6A84F] font-semibold">
                   Ver Mapa →
                 </span>
@@ -517,13 +526,12 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             ))}
           </div>
         )}
-      </div>
-
+        </div>
+      </Seccion>
       {/* Instalación como app: sigue accesible aunque se cierre el banner flotante */}
       <InstallAppCard />
-
-      {/* AI Provider & Engine Settings Card */}
-      <div className="p-6 sm:p-7 rounded-3xl bg-[#121A17] border border-[#23332D] space-y-4 shadow-xl">
+      <Seccion id="ia" titulo="Asistente de IA" resumen="Proveedor, modelo y cupo" icono={Cpu} abierta={abierta} onToggle={alternar}>
+        <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
@@ -549,7 +557,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               </p>
             </div>
           </div>
-
           <button
             id="profile-open-ai-settings-btn"
             onClick={() => setIsAiSettingsOpen(true)}
@@ -559,10 +566,10 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             <span>Configurar Proveedores & API Keys</span>
           </button>
         </div>
-      </div>
-
-      {/* Backup and Data Export/Import */}
-      <div className="p-6 rounded-3xl bg-[#121A17] border border-[#23332D] space-y-4 shadow-xl">
+        </div>
+      </Seccion>
+      <Seccion id="copia" titulo="Copia de seguridad" resumen="Exportar o importar tus datos" icono={Download} abierta={abierta} onToggle={alternar}>
+        <div className="space-y-4">
         <h3 className="font-serif text-base font-bold text-[#F2EFE6] flex items-center gap-2">
           <Download className="w-4 h-4 text-[#D6A84F]" />
           <span>Copia de Seguridad & Portabilidad de Datos</span>
@@ -570,7 +577,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
         <p className="text-xs text-[#9DA79F] leading-relaxed">
           Descarga un archivo JSON con todas tus evaluaciones, entradas del diario, retos y mensajes de chat para respaldarlos o transferirlos a otro navegador.
         </p>
-
         <div className="flex flex-wrap gap-3 pt-2">
           <button
             onClick={handleExportData}
@@ -579,7 +585,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             <Download className="w-4 h-4" />
             <span>Exportar Copia de Seguridad (.json)</span>
           </button>
-
           <label className="px-4 py-2.5 bg-[#1A2521] hover:bg-[#23332D] text-[#C5CFC7] border border-[#23332D] rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer">
             <Upload className="w-4 h-4" />
             <span>Importar Copia de Seguridad</span>
@@ -590,7 +595,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
               className="hidden"
             />
           </label>
-
           <button
             onClick={onResetAllData}
             className="px-4 py-2.5 bg-red-950/40 hover:bg-red-950/70 text-red-300 border border-red-800/40 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all ml-auto"
@@ -599,8 +603,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             <span>Restablecer Datos Locales</span>
           </button>
         </div>
-      </div>
-
+        </div>
+      </Seccion>
       {/* AI Settings Modal */}
       <AiSettingsModal
         isOpen={isAiSettingsOpen}
