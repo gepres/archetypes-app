@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
 import { QUESTIONS_DATA, QUICK_QUESTION_IDS } from '../lib/domain';
 import type { TipoTest } from './TestScreen';
 import { decir, prepararVoz, vibrar } from '../lib/voice';
@@ -10,6 +10,8 @@ const ESCALA = ['#86EFAC', '#4E8B69', '#8A968D', '#8B5A5A', '#E06B6B'];
 
 interface WelcomeScreenProps {
   onEmpezar: (tipo: TipoTest) => void;
+  /** Para quien prefiere saber de que va antes de empezar a responder. */
+  onConocerlos: () => void;
 }
 
 const CUANTAS = {
@@ -22,7 +24,7 @@ const CUANTAS = {
  * la voz -los navegadores moviles exigen un gesto antes de dejar hablar- y dar
  * la unica instruccion que hace falta, que ademas se dice en voz alta.
  */
-export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onEmpezar }) => {
+export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onEmpezar, onConocerlos }) => {
   const prefersReducedMotion = useReducedMotion();
   const [arrancando, setArrancando] = useState(false);
   // El corto por defecto: quien llega aqui viene de "no quiero leer".
@@ -145,12 +147,24 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onEmpezar }) => {
         </div>
       </div>
 
-      <a
-        href="/"
-        className="absolute bottom-6 z-10 text-[11px] text-[#4E5C55] hover:text-[#8A968D] transition-colors"
-      >
-        Ir a la versión completa
-      </a>
+      <div className="absolute bottom-5 z-10 flex flex-col items-center gap-3">
+        {/* Antes de responder nada, hay quien quiere saber de que va. Se cuenta
+            en voz, con los rostros, y termina llevando al test igualmente. */}
+        <button
+          type="button"
+          onClick={onConocerlos}
+          className="inline-flex items-center gap-2 min-h-[44px] px-4 rounded-2xl border border-[#23332D] bg-[#101917]/70 text-xs text-[#C5CFC7] hover:text-[#F2EFE6] hover:border-[#D6A84F]/50 transition-colors"
+        >
+          <BookOpen className="w-4 h-4 text-[#D6A84F]" />
+          ¿Qué es un arquetipo? Te lo cuento
+        </button>
+        <a
+          href="/"
+          className="text-[11px] text-[#4E5C55] hover:text-[#8A968D] transition-colors"
+        >
+          Ir a la versión completa
+        </a>
+      </div>
     </div>
   );
 };

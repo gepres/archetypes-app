@@ -6,8 +6,9 @@ import { WelcomeScreen } from './components/WelcomeScreen';
 import { TestScreen } from './components/TestScreen';
 import type { TipoTest } from './components/TestScreen';
 import { RevealScreen } from './components/RevealScreen';
+import { HistoriaScreen } from './components/HistoriaScreen';
 
-type Paso = 'bienvenida' | 'test' | 'revelacion';
+type Paso = 'bienvenida' | 'historia' | 'test' | 'revelacion';
 
 const CLAVE_SILENCIO = 'arquetipos_v2_silencio';
 
@@ -56,14 +57,28 @@ export const App: React.FC = () => {
     setPaso('bienvenida');
   }, []);
 
+  const arrancarTest = (elegido: TipoTest) => {
+    setTipo(elegido);
+    tipoRef.current = elegido;
+    setPaso('test');
+  };
+
   if (paso === 'bienvenida') {
     return (
       <WelcomeScreen
-        onEmpezar={elegido => {
-          setTipo(elegido);
-          tipoRef.current = elegido;
-          setPaso('test');
-        }}
+        onEmpezar={arrancarTest}
+        onConocerlos={() => setPaso('historia')}
+      />
+    );
+  }
+
+  if (paso === 'historia') {
+    return (
+      <HistoriaScreen
+        silencio={silencio}
+        onToggleSilencio={alternarSilencio}
+        onCerrar={() => setPaso('bienvenida')}
+        onEmpezarTest={() => arrancarTest(tipoRef.current)}
       />
     );
   }
