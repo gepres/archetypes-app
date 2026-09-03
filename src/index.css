@@ -1,5 +1,65 @@
 @import "tailwindcss";
 
+/* Animaciones del proyecto. Tailwind v4 no trae fadeIn de serie y el codigo
+   ya la usaba en 14 sitios: sin esta declaracion no ocurria nada. */
+@theme {
+  --animate-fadeIn: fadeIn 0.45s ease-out both;
+  --animate-fadeInUp: fadeInUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-riseIn: riseIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-floatSoft: floatSoft 7s ease-in-out infinite;
+  --animate-auraPulse: auraPulse 4.5s ease-in-out infinite;
+  --animate-sigilDraw: sigilDraw 2.2s ease-out both;
+  --animate-shimmerLine: shimmerLine 2.8s ease-in-out infinite;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(26px) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes floatSoft {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes auraPulse {
+  0%, 100% { opacity: 0.35; transform: scale(1); }
+  50% { opacity: 0.75; transform: scale(1.06); }
+}
+
+@keyframes sigilDraw {
+  from { stroke-dashoffset: 1200; opacity: 0; }
+  20% { opacity: 1; }
+  to { stroke-dashoffset: 0; opacity: 1; }
+}
+
+@keyframes shimmerLine {
+  0% { background-position: -160% 0; }
+  100% { background-position: 260% 0; }
+}
+
+/* Quien pide menos movimiento ve estados finales, no recorridos. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 @layer base {
   :root {
     --font-serif: 'Cormorant Garamond', Georgia, serif;

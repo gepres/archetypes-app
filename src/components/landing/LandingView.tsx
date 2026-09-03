@@ -29,6 +29,8 @@ interface LandingViewProps {
   currentResult: AssessmentResult | null;
   gender?: GenderMode;
   onGenderChange?: (gender: GenderMode) => void;
+  /** Vuelve a abrir la bienvenida con la introducción a los arquetipos. */
+  onOpenIntro?: () => void;
 }
 
 export const LandingView: React.FC<LandingViewProps> = ({
@@ -38,6 +40,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
   currentResult,
   gender = 'male',
   onGenderChange,
+  onOpenIntro,
 }) => {
   const [activeSpotlight, setActiveSpotlight] = useState<ArchetypeId>('rey');
 
@@ -57,12 +60,25 @@ export const LandingView: React.FC<LandingViewProps> = ({
               Explora el mapa en tu perspectiva preferida:
             </span>
           </div>
-          <PerspectiveSwitcher
-            gender={currentGender}
-            onGenderChange={onGenderChange}
-            size="sm"
-            showLabel={true}
-          />
+          <div className="flex items-center gap-2">
+            <PerspectiveSwitcher
+              gender={currentGender}
+              onGenderChange={onGenderChange}
+              size="sm"
+              showLabel={true}
+            />
+            {onOpenIntro && (
+              <button
+                type="button"
+                onClick={onOpenIntro}
+                title="Ver de nuevo la introducción a los arquetipos"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-[#23332D] bg-[#0E1513] text-[11px] text-[#8A968D] hover:text-[#D6A84F] hover:border-[#315C45] transition-colors shrink-0"
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Ver introducción</span>
+              </button>
+            )}
+          </div>
         </div>
       )}
 

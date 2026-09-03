@@ -25,7 +25,7 @@ import { AuthModal } from './components/auth/AuthModal';
 import { DailyOracleModal } from './components/archetypes/DailyOracleModal';
 import { AiSettingsModal } from './components/ai/AiSettingsModal';
 import { InstallAppBanner } from './components/pwa/InstallAppBanner';
-import { WelcomePerspectiveModal } from './components/common/WelcomePerspectiveModal';
+import { OnboardingView } from './components/onboarding/OnboardingView';
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState<NavTab>('landing');
@@ -38,10 +38,10 @@ export default function App() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isDailyOracleOpen, setIsDailyOracleOpen] = useState(false);
   const [isAiSettingsOpen, setIsAiSettingsOpen] = useState(false);
-  const [isWelcomePerspectiveOpen, setIsWelcomePerspectiveOpen] = useState<boolean>(() => {
+  // Bienvenida a pantalla completa: se muestra hasta que se elige perspectiva.
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState<boolean>(() => {
     try {
-      const alreadyChosen = localStorage.getItem('archetype_perspective_selected');
-      return !alreadyChosen;
+      return !localStorage.getItem('archetype_perspective_selected');
     } catch {
       return false;
     }
@@ -180,6 +180,23 @@ export default function App() {
     }
   };
 
+  const handleFinishOnboarding = (gender: GenderMode) => {
+    handleGenderChange(gender);
+    setIsOnboardingOpen(false);
+    setCurrentTab('landing');
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  };
+
+  // La bienvenida es una página completa, no una ventana sobre la app.
+  if (isOnboardingOpen) {
+    return (
+      <OnboardingView
+        initialGender={userProfile.gender || 'universal'}
+        onComplete={handleFinishOnboarding}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#0B1110] text-[#F2EFE6] font-sans antialiased flex flex-col md:flex-row selection:bg-[#315C45] selection:text-[#F2EFE6]">
       {/* Desktop Sidebar */}
@@ -225,6 +242,7 @@ export default function App() {
               currentResult={currentResult}
               gender={userProfile.gender || 'male'}
               onGenderChange={handleGenderChange}
+              onOpenIntro={() => setIsOnboardingOpen(true)}
             />
           )}
 
@@ -353,13 +371,6 @@ export default function App() {
       <InstallAppBanner />
 
       {/* Global Modals */}
-      <WelcomePerspectiveModal
-        isOpen={isWelcomePerspectiveOpen}
-        onClose={() => setIsWelcomePerspectiveOpen(false)}
-        currentGender={userProfile.gender || 'male'}
-        onSelectPerspective={handleGenderChange}
-      />
-
       <AiSettingsModal
         isOpen={isAiSettingsOpen}
         onClose={() => setIsAiSettingsOpen(false)}
