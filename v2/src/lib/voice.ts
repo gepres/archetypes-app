@@ -9,13 +9,22 @@
 
 export type VoiceState = 'no-soportada' | 'lista' | 'hablando';
 
-const PREFERIDAS = [
+// Voces femeninas en espanol, por plataforma. El orden es la preferencia.
+const FEMENINAS = [
   // iOS y macOS
-  'monica', 'paulina', 'jorge', 'juan',
-  // Android / Google
-  'google espanol', 'google español', 'es-es', 'es-us', 'es-mx',
-  // Windows
-  'helena', 'laura', 'sabina', 'pablo',
+  'monica', 'mónica', 'paulina', 'marisol', 'soledad', 'isabela', 'esperanza',
+  // Android y Chrome
+  'google español', 'google espanol', 'es-es-standard-a', 'es-us-standard-a',
+  // Windows y Edge
+  'helena', 'laura', 'sabina', 'elvira', 'dalia', 'salome', 'salomé', 'ximena',
+  'lupe', 'paloma', 'tania', 'camila', 'lia', 'lía', 'abril', 'triana',
+];
+
+// Voces masculinas conocidas: se descartan salvo que no quede ninguna otra.
+const MASCULINAS = [
+  'jorge', 'juan', 'diego', 'pablo', 'carlos', 'raul', 'raúl', 'alvaro', 'álvaro',
+  'gonzalo', 'enrique', 'miguel', 'javier', 'andres', 'andrés', 'liberto', 'yannick',
+  'male',
 ];
 
 let vocesCache: SpeechSynthesisVoice[] = [];
@@ -31,10 +40,17 @@ function puntuar(v: SpeechSynthesisVoice): number {
   if (!lang.startsWith('es')) return -1;
 
   let p = 10;
+
+  // Lo que manda es que sea de mujer.
+  const iFem = FEMENINAS.findIndex(n => nombre.includes(n));
+  if (iFem >= 0) p += 60 - iFem;
+  if (MASCULINAS.some(n => nombre.includes(n))) p -= 50;
+  // Algunos sistemas no ponen el nombre, pero si marcan el genero en el id.
+  if (/female|femenin/.test(nombre)) p += 40;
+  else if (/(^|[^a-z])male([^a-z]|$)|masculin/.test(nombre)) p -= 40;
+
   // Una voz local no depende de la red ni se corta a mitad de frase.
   if (v.localService) p += 6;
-  const idx = PREFERIDAS.findIndex(n => nombre.includes(n) || lang.includes(n));
-  if (idx >= 0) p += 12 - idx;
   // El castellano de America suena mas cercano al publico de la app.
   if (lang.startsWith('es-mx') || lang.startsWith('es-us') || lang.startsWith('es-419')) p += 3;
   return p;
@@ -45,7 +61,9 @@ function refrescarVoces() {
   vocesCache = window.speechSynthesis.getVoices();
   const candidatas = vocesCache
     .map(v => ({ v, p: puntuar(v) }))
-    .filter(x => x.p >= 0)
+    // Se descartan las que no son en espanol; una masculina con puntuacion
+    // negativa sigue siendo mejor que quedarse sin voz.
+    .filter(x => x.p > -50)
     .sort((a, b) => b.p - a.p);
   elegida = candidatas.length ? candidatas[0].v : null;
 }
@@ -91,7 +109,7 @@ export function decir(
   texto: string,
   opciones: { rate?: number; pitch?: number; silencio?: boolean } = {}
 ): Promise<void> {
-  const { rate = 0.98, pitch = 1, silencio = false } = opciones;
+  const { rate = 0.98, pitch = 1.08, silencio = false } = opciones;
 
   if (silencio || !soportaVoz() || !texto.trim()) {
     return Promise.resolve();

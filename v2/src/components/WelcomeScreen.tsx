@@ -3,6 +3,9 @@ import { motion, useReducedMotion } from 'motion/react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { decir, prepararVoz, vibrar } from '../lib/voice';
 
+/** Los mismos cinco colores que las franjas del test, de si a no. */
+const ESCALA = ['#86EFAC', '#4E8B69', '#8A968D', '#8B5A5A', '#E06B6B'];
+
 interface WelcomeScreenProps {
   onEmpezar: () => void;
 }
@@ -22,7 +25,9 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onEmpezar }) => {
     vibrar(18);
     await prepararVoz();
     // Se dice dentro del gesto: es lo que desbloquea la voz en iOS.
-    decir('Arriba es sí. Abajo es no. Empezamos.', { rate: 1.02 });
+    decir('Arriba es sí, abajo es no. Cuanto más lejos del centro, más fuerte. Empezamos.', {
+      rate: 1.02,
+    });
     window.setTimeout(onEmpezar, prefersReducedMotion ? 60 : 420);
   };
 
@@ -47,9 +52,9 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onEmpezar }) => {
             Escúchalo.
           </h1>
           <p className="text-sm text-[#8A968D] leading-relaxed">
-            Te digo una frase. Si te pasa, arriba. Si no, abajo.
+            Te digo una frase. Arriba si te pasa, abajo si no.
             <br />
-            Dos minutos y sabes cuál es tu arquetipo.
+            Cuanto más lejos del centro, más fuerte.
           </p>
         </div>
 
@@ -79,17 +84,22 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onEmpezar }) => {
           </button>
         </div>
 
-        {/* La instruccion, dibujada en vez de explicada */}
-        <div className="flex items-center justify-center gap-8 text-[11px] font-semibold uppercase tracking-widest animate-riseIn">
-          <span className="flex flex-col items-center gap-1 text-[#4E8B69]">
-            <ChevronUp className="w-5 h-5" strokeWidth={2.5} />
-            Sí
-          </span>
-          <span className="text-[#2B3833]">·</span>
-          <span className="flex flex-col items-center gap-1 text-[#8B5A5A]">
-            No
-            <ChevronDown className="w-5 h-5" strokeWidth={2.5} />
-          </span>
+        {/* La escala, dibujada en vez de explicada: cinco pasos, un solo gesto */}
+        <div className="flex flex-col items-center gap-1 animate-riseIn">
+          <ChevronUp className="w-4 h-4 text-[#86EFAC]" strokeWidth={2.5} />
+          <div className="flex items-center gap-1.5">
+            {ESCALA.map(c => (
+              <span
+                key={c}
+                className="w-7 h-1.5 rounded-full"
+                style={{ backgroundColor: c }}
+              />
+            ))}
+          </div>
+          <ChevronDown className="w-4 h-4 text-[#E06B6B]" strokeWidth={2.5} />
+          <p className="text-[10px] uppercase tracking-[0.18em] text-[#4E5C55] pt-1">
+            Cinco grados · un solo toque
+          </p>
         </div>
       </div>
 
