@@ -10,9 +10,11 @@ import {
   HelpCircle,
   Check,
   Smile,
+  Cloud,
+  Lock,
 } from 'lucide-react';
 import { ARCHETYPES, ARCHETYPES_LIST } from '../../data/archetypesData';
-import { JOURNAL_PROMPTS } from '../../services/storageService';
+import { JOURNAL_PROMPTS, StorageService } from '../../services/storageService';
 import { ArchetypeId, JournalEntry, GenderMode } from '../../types';
 import { ArchetypeBadge } from '../common/ArchetypeBadge';
 
@@ -132,11 +134,22 @@ export const JournalView: React.FC<JournalViewProps> = ({
           onSubmit={handleSubmit}
           className="p-6 sm:p-8 rounded-2xl bg-[#121A17] border border-[#315C45] space-y-6 shadow-xl animate-fadeIn"
         >
-          <div className="flex items-center justify-between border-b border-[#1E2A25] pb-3">
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5 border-b border-[#1E2A25] pb-3">
             <h3 className="font-serif text-lg font-bold text-[#F2EFE6]">
               Escribir Nueva Entrada
             </h3>
-            <span className="text-xs text-[#9DA79F]">Privado en tu navegador</span>
+            {/* Se dice antes de escribir, y tiene que ser verdad: con cuenta en la nube, el diario sube. */}
+            {StorageService.isSyncingToCloud() ? (
+              <span className="inline-flex items-center gap-1.5 text-xs text-[#9DA79F]">
+                <Cloud className="w-3.5 h-3.5 shrink-0" />
+                Se guarda en este navegador y se sincroniza con tu cuenta
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 text-xs text-[#9DA79F]">
+                <Lock className="w-3.5 h-3.5 shrink-0" />
+                Se guarda solo en este navegador
+              </span>
+            )}
           </div>
 
           {/* Guided Prompt Selector */}

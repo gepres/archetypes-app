@@ -390,6 +390,17 @@ export const StorageService = {
     return guestProfile;
   },
 
+  /**
+   * ¿Lo que se guarda ahora acaba también en la nube? Solo si la cuenta tiene sesión abierta en
+   * Firebase con el mismo id: `syncActiveAccountData` lo intenta con cualquier cuenta registrada,
+   * pero las reglas de Firestore rechazan a quien no es dueño, así que una cuenta local no sube nada.
+   */
+  isSyncingToCloud(): boolean {
+    const profile = this.getUserProfile();
+    if (!profile || profile.isGuest || !profile.email) return false;
+    return FirebaseService.getCurrentAuthUser()?.uid === profile.id;
+  },
+
   syncActiveAccountData(): void {
     try {
       const profile = this.getUserProfile();
