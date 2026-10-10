@@ -32,6 +32,8 @@ function welcomeMessage(): ChatMessage {
 const STORAGE_KEYS = {
   CURRENT_USER_ID: 'archetypes_active_user_id',
   ACCOUNTS_VAULT: 'archetypes_accounts_vault',
+  // Lo del invitado, aparcado mientras hay una cuenta abierta (ver enterAccount).
+  GUEST_DATA: 'archetypes_guest_data',
   CURRENT_RESULT: 'archetypes_current_result',
   ASSESSMENT_HISTORY: 'archetypes_history',
   JOURNAL_ENTRIES: 'archetypes_journal_entries',
@@ -63,6 +65,63 @@ export function mergeChallengeProgress(catalog: Challenge[], stored: Challenge[]
   const catalogIds = new Set(catalog.map(c => c.id));
   const retired = stored.filter(c => !catalogIds.has(c.id) && c.completed);
   return [...current, ...retired];
+}
+
+type AccountData = AccountRecord['data'];
+
+/** Una cuenta sin nada: lo que recibe quien entra en una cuenta nueva o sale a invitado. */
+export function emptyAccountData(): AccountData {
+  return { currentResult: null, history: [], journalEntries: [], challenges: [], chatMessages: [] };
+}
+
+const SAMPLE_JOURNAL_ID = 'journal-init-1';
+
+/** ¿Hay algo que sea de la persona, más allá de los textos de bienvenida? */
+export function hasOwnData(d: AccountData): boolean {
+  return (
+    !!d.currentResult ||
+    d.history.length > 0 ||
+    d.journalEntries.some(e => e.id !== SAMPLE_JOURNAL_ID) ||
+    d.chatMessages.some(m => m.role === 'user') ||
+    d.challenges.some(c => c.completed)
+  );
+}
+
+const instante = (fecha?: string) => (fecha ? Date.parse(fecha) || 0 : 0);
+
+function unirPorId<T extends { id: string }>(a: T[], b: T[], quedarse: (x: T, y: T) => T): T[] {
+  const porId = new Map<string, T>();
+  for (const item of [...a, ...b]) {
+    const previo = porId.get(item.id);
+    porId.set(item.id, previo ? quedarse(previo, item) : item);
+  }
+  return [...porId.values()];
+}
+
+/**
+ * Combina dos copias de los datos de la MISMA persona (la del navegador y la de la nube, o la
+ * guardada y la activa) sin perder nada de ninguna: une por id y, si un registro está en las
+ * dos, se queda la versión más reciente. Un reto completado en cualquiera de las dos queda
+ * completado. Nunca se usa para mezclar cuentas distintas.
+ */
+export function mergeAccountData(a: AccountData, b: AccountData): AccountData {
+  const actuales = [a.currentResult, b.currentResult].filter(Boolean) as AssessmentResult[];
+  const currentResult = actuales.sort((x, y) => instante(y.date) - instante(x.date))[0] ?? null;
+  const history = unirPorId(a.history ?? [], b.history ?? [], (x, y) => (instante(y.date) >= instante(x.date) ? y : x))
+    .sort((x, y) => instante(y.date) - instante(x.date));
+  const journalEntries = unirPorId(a.journalEntries ?? [], b.journalEntries ?? [], (x, y) =>
+    instante(y.updatedAt ?? y.date) >= instante(x.updatedAt ?? x.date) ? y : x
+  ).sort((x, y) => instante(y.date) - instante(x.date));
+  const challenges = unirPorId(a.challenges ?? [], b.challenges ?? [], (x, y) => {
+    const { completedAt: _x, ...base } = y;
+    const hecho = !!(x.completed || y.completed);
+    const fecha = [x.completedAt, y.completedAt].filter(Boolean).sort().pop();
+    return hecho && fecha ? { ...base, completed: true, completedAt: fecha } : { ...base, completed: hecho };
+  });
+  const chatMessages = unirPorId(a.chatMessages ?? [], b.chatMessages ?? [], (_x, y) => y).sort(
+    (x, y) => instante(x.timestamp) - instante(y.timestamp)
+  );
+  return { currentResult, history, journalEntries, challenges, chatMessages };
 }
 
 /**
@@ -194,7 +253,8 @@ export const StorageService = {
         mood: 'Reflexivo y sereno',
         promptUsed: '¿Qué parte de mí necesita más espacio de silencio y reflexión filosófica?',
       };
-      this.saveJournalEntries([initialEntry]);
+      // Leer no sube nada a la nube: el valor inicial se guarda solo en local.
+      localStorage.setItem(STORAGE_KEYS.JOURNAL_ENTRIES, JSON.stringify([initialEntry]));
       return [initialEntry];
     } catch (e) {
       console.error("Error reading journal entries:", e);
@@ -380,6 +440,12 @@ export const StorageService = {
     }
   },
 
+  /**
+   * Crea o encuentra una cuenta local (la que se usa cuando no hay Firebase) y devuelve su
+   * perfil. No toca los datos activos: entrar en ella, con lo suyo y solo lo suyo, es cosa de
+   * `enterAccount`. Antes este método volcaba aquí los datos y, al crear una cuenta nueva desde
+   * otra cuenta abierta, le copiaba los datos de esa otra.
+   */
   loginOrCreateAccount(accountData: { name: string; email: string; avatarEmoji?: string; pinCode?: string; gender?: GenderMode }): UserProfile {
     const accounts = this.getSavedAccounts();
     const existingIndex = accounts.findIndex(
@@ -390,53 +456,27 @@ export const StorageService = {
     let targetAccount: AccountRecord;
 
     if (existingIndex >= 0) {
-      // Existing registered user: load their saved data
       targetAccount = accounts[existingIndex];
       targetAccount.lastActive = now;
       if (accountData.name) targetAccount.name = accountData.name;
       if (accountData.avatarEmoji) targetAccount.avatarEmoji = accountData.avatarEmoji;
       accounts[existingIndex] = targetAccount;
-      this.saveAccountsVault(accounts);
-
-      // Restore their data to active storage
-      if (targetAccount.data) {
-        localStorage.setItem(STORAGE_KEYS.CURRENT_RESULT, JSON.stringify(targetAccount.data.currentResult));
-        localStorage.setItem(STORAGE_KEYS.ASSESSMENT_HISTORY, JSON.stringify(targetAccount.data.history || []));
-        localStorage.setItem(STORAGE_KEYS.JOURNAL_ENTRIES, JSON.stringify(targetAccount.data.journalEntries || []));
-        localStorage.setItem(STORAGE_KEYS.CHALLENGES, JSON.stringify(targetAccount.data.challenges || INITIAL_CHALLENGES));
-        localStorage.setItem(STORAGE_KEYS.CHAT_MESSAGES, JSON.stringify(targetAccount.data.chatMessages || []));
-      }
     } else {
-      // New registered user: create fresh record or import current guest session data
-      const newId = `user-${Date.now()}`;
-      const currentRes = this.getCurrentResult();
-      const history = this.getAssessmentHistory();
-      const journal = this.getJournalEntries();
-      const challenges = this.getChallenges();
-      const chat = this.getChatMessages();
-
       targetAccount = {
-        id: newId,
+        id: `user-${Date.now()}`,
         name: accountData.name.trim() || 'Caminante Arquetípico',
         email: accountData.email.trim().toLowerCase(),
         avatarEmoji: accountData.avatarEmoji || '👑',
         createdAt: now,
         lastActive: now,
-        data: {
-          currentResult: currentRes,
-          history: history,
-          journalEntries: journal,
-          challenges: challenges,
-          chatMessages: chat,
-        }
+        data: emptyAccountData(),
       };
-
       accounts.push(targetAccount);
-      this.saveAccountsVault(accounts);
     }
+    this.saveAccountsVault(accounts);
 
     const currentSaved = this.getUserProfile();
-    const newProfile: UserProfile = {
+    return {
       id: targetAccount.id,
       name: targetAccount.name,
       email: targetAccount.email,
@@ -447,27 +487,136 @@ export const StorageService = {
       createdAt: targetAccount.createdAt,
       lastActive: now,
     };
-
-    localStorage.setItem(STORAGE_KEYS.USER_PROFILE, JSON.stringify(newProfile));
-    return newProfile;
   },
 
-  switchToGuestMode(): UserProfile {
-    // Save active user's state first
+  /** Los datos de quien está ahora en el navegador. */
+  readActiveData(): AccountData {
+    return {
+      currentResult: this.getCurrentResult(),
+      history: this.getAssessmentHistory(),
+      journalEntries: this.getJournalEntries(),
+      challenges: this.getChallenges(),
+      chatMessages: this.getChatMessages(),
+    };
+  },
+
+  /** Pone en el navegador los datos de una persona, sin subir nada. */
+  writeActiveData(d: AccountData): void {
+    if (d.currentResult) localStorage.setItem(STORAGE_KEYS.CURRENT_RESULT, JSON.stringify(d.currentResult));
+    else localStorage.removeItem(STORAGE_KEYS.CURRENT_RESULT);
+    localStorage.setItem(STORAGE_KEYS.ASSESSMENT_HISTORY, JSON.stringify(d.history ?? []));
+    localStorage.setItem(STORAGE_KEYS.JOURNAL_ENTRIES, JSON.stringify(d.journalEntries ?? []));
+    localStorage.setItem(STORAGE_KEYS.CHALLENGES, JSON.stringify(d.challenges ?? []));
+    localStorage.setItem(
+      STORAGE_KEYS.CHAT_MESSAGES,
+      JSON.stringify(d.chatMessages?.length ? d.chatMessages : [welcomeMessage()])
+    );
+  },
+
+  /** Guarda la copia local de los datos de una cuenta registrada (nunca del invitado). */
+  vaultUpsert(profile: UserProfile, data: AccountData): void {
+    if (profile.isGuest) return;
+    const accounts = this.getSavedAccounts();
+    const now = new Date().toISOString();
+    const i = accounts.findIndex(
+      a => a.id === profile.id || (!!profile.email && a.email.toLowerCase() === profile.email.toLowerCase())
+    );
+    if (i >= 0) {
+      accounts[i] = { ...accounts[i], data, lastActive: now };
+    } else {
+      accounts.push({
+        id: profile.id,
+        name: profile.name,
+        email: profile.email,
+        avatarEmoji: profile.avatarEmoji || '🧭',
+        createdAt: profile.createdAt || now,
+        lastActive: now,
+        data,
+      });
+    }
+    this.saveAccountsVault(accounts);
+  },
+
+  /**
+   * Entrar en una cuenta. Cada cuenta ve y sube solo lo suyo:
+   *
+   * - Lo de quien sale se aparca: lo de una cuenta, en su copia local; lo del invitado, en su
+   *   hueco, salvo que la persona elija llevarlo a la cuenta (`bringGuestData`).
+   * - Lo de quien entra se compone con su copia local y lo de la nube, combinados por id: no se
+   *   pierde nada de ningún lado. Si es la misma cuenta que ya estaba abierta, lo que había en el
+   *   navegador también cuenta.
+   * - Mientras tanto no se sube nada; al final se sube una sola vez, a la cuenta que entra.
+   */
+  enterAccount(incoming: UserProfile, cloud: Partial<AccountData> | null, opts: { bringGuestData?: boolean } = {}): void {
+    const outgoing = this.getUserProfile();
+    const active = this.readActiveData();
+    const mismaCuenta =
+      !outgoing.isGuest &&
+      (outgoing.id === incoming.id ||
+        (!!outgoing.email && outgoing.email.toLowerCase() === (incoming.email || '').toLowerCase()));
+
+    syncPaused = true;
+    try {
+      if (!mismaCuenta) {
+        if (outgoing.isGuest) {
+          if (opts.bringGuestData) localStorage.removeItem(STORAGE_KEYS.GUEST_DATA);
+          else if (hasOwnData(active)) localStorage.setItem(STORAGE_KEYS.GUEST_DATA, JSON.stringify(active));
+        } else {
+          this.vaultUpsert(outgoing, active);
+        }
+        // Un test a medias es de quien lo estaba haciendo.
+        localStorage.removeItem(STORAGE_KEYS.ACTIVE_TEST_PROGRESS);
+      }
+
+      let data = mismaCuenta ? active : emptyAccountData();
+      const guardada = this.getSavedAccounts().find(
+        a => a.id === incoming.id || (!!incoming.email && a.email.toLowerCase() === incoming.email.toLowerCase())
+      );
+      if (guardada?.data) data = mergeAccountData(data, { ...emptyAccountData(), ...guardada.data });
+      if (!mismaCuenta && outgoing.isGuest && opts.bringGuestData) data = mergeAccountData(data, active);
+      if (cloud) data = mergeAccountData(data, { ...emptyAccountData(), ...cloud });
+
+      this.writeActiveData(data);
+      this.saveUserProfile(incoming);
+      this.vaultUpsert(incoming, data);
+    } finally {
+      syncPaused = false;
+    }
     this.syncActiveAccountData();
+  },
+
+  /**
+   * Cerrar sesión. Lo de la cuenta se sube y se aparca en su copia local, y en el navegador
+   * queda lo del invitado (si lo había), nunca lo de la cuenta: antes, quien usara el
+   * navegador después veía el mapa, el diario y el chat de la cuenta que acababa de salir.
+   */
+  switchToGuestMode(): UserProfile {
+    this.syncActiveAccountData();
+    const outgoing = this.getUserProfile();
 
     const guestProfile: UserProfile = {
       id: 'user-guest',
       name: 'Explorador Invitado',
       email: '',
       isGuest: true,
+      gender: outgoing.gender,
       avatarEmoji: '🧭',
       bio: 'Modo invitado activo. Crea o inicia sesión en cualquier momento para resguardar tus evaluaciones y notas.',
       createdAt: new Date().toISOString(),
       lastActive: new Date().toISOString(),
     };
 
-    localStorage.setItem(STORAGE_KEYS.USER_PROFILE, JSON.stringify(guestProfile));
+    syncPaused = true;
+    try {
+      if (!outgoing.isGuest) this.vaultUpsert(outgoing, this.readActiveData());
+      const aparcada = localStorage.getItem(STORAGE_KEYS.GUEST_DATA);
+      this.writeActiveData(aparcada ? { ...emptyAccountData(), ...JSON.parse(aparcada) } : emptyAccountData());
+      localStorage.removeItem(STORAGE_KEYS.GUEST_DATA);
+      localStorage.removeItem(STORAGE_KEYS.ACTIVE_TEST_PROGRESS);
+      localStorage.setItem(STORAGE_KEYS.USER_PROFILE, JSON.stringify(guestProfile));
+    } finally {
+      syncPaused = false;
+    }
     return guestProfile;
   },
 
@@ -489,21 +638,14 @@ export const StorageService = {
   },
 
   /**
-   * Aplica de una vez los datos de una cuenta (de la nube o de una copia importada): resultado,
-   * historial, diario, retos y chat, y el perfil si viene. Mientras se aplican no se sube nada:
-   * cada `save…` dispara una subida, y a medio restaurar subía un estado a medias que pisaba en
-   * la nube lo que aún no se había bajado (el historial, que además nunca se aplicaba). Al final
-   * se sube una sola vez el estado completo.
+   * Importa una copia de los datos de la persona (un archivo de respaldo) en la cuenta abierta:
+   * se combina por id con lo que ya hay, sin pisarlo, y se sube una sola vez al final.
    */
-  applyAccountData(data: Partial<AccountRecord['data']> | null, profile?: UserProfile): void {
+  applyAccountData(data: Partial<AccountData> | null): void {
+    if (!data) return;
     syncPaused = true;
     try {
-      if (profile) this.saveUserProfile(profile);
-      if (data?.currentResult) this.saveCurrentResult(data.currentResult);
-      if (data?.history?.length) this.saveAssessmentHistory(data.history);
-      if (data?.journalEntries?.length) this.saveJournalEntries(data.journalEntries);
-      if (data?.challenges?.length) this.saveChallenges(data.challenges);
-      if (data?.chatMessages?.length) this.saveChatMessages(data.chatMessages);
+      this.writeActiveData(mergeAccountData(this.readActiveData(), { ...emptyAccountData(), ...data }));
     } finally {
       syncPaused = false;
     }

@@ -14,7 +14,7 @@ import {
   Cloud,
   Loader2,
 } from 'lucide-react';
-import { StorageService } from '../../services/storageService';
+import { StorageService, hasOwnData } from '../../services/storageService';
 import { FirebaseService } from '../../services/firebaseService';
 import { AccountRecord, UserProfile } from '../../types';
 
@@ -43,6 +43,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [savedAccounts, setSavedAccounts] = useState<AccountRecord[]>(() =>
     StorageService.getSavedAccounts()
   );
+  // Lo que se hizo sin cuenta solo pasa a una cuenta si la persona lo elige. Se pregunta solo
+  // si quien entra es el invitado y tiene algo suyo (un mapa, notas, conversación…).
+  const [guestHasData] = useState(() => {
+    try {
+      return StorageService.getUserProfile().isGuest && hasOwnData(StorageService.readActiveData());
+    } catch {
+      return false;
+    }
+  });
+  const [bringGuestData, setBringGuestData] = useState(true);
 
   if (!isOpen) return null;
 
@@ -100,10 +110,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         }
       }
 
-      // Los datos de la nube (todos, también el historial) se aplican de una vez y se sube una
-      // sola vez el estado completo; si no hay nada en la nube, se sube la sesión actual.
+      // Se entra en la cuenta con lo suyo y solo lo suyo (ver enterAccount).
       const cloudData = profile.id ? await FirebaseService.loadFullDataFromCloud(profile.id) : null;
-      StorageService.applyAccountData(cloudData, profile);
+      StorageService.enterAccount(profile, cloudData, { bringGuestData });
       setSavedAccounts(StorageService.getSavedAccounts());
       onUserChange(profile);
       onClose();
@@ -120,9 +129,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     try {
       const profile = await FirebaseService.loginWithGoogle();
       
-      // Los datos de la nube se aplican de una vez (ver applyAccountData).
+      // Se entra en la cuenta con lo suyo y solo lo suyo (ver enterAccount).
       const cloudData = await FirebaseService.loadFullDataFromCloud(profile.id);
-      StorageService.applyAccountData(cloudData, profile);
+      StorageService.enterAccount(profile, cloudData, { bringGuestData });
       setSavedAccounts(StorageService.getSavedAccounts());
       onUserChange(profile);
       onClose();
@@ -139,6 +148,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       email: account.email,
       avatarEmoji: account.avatarEmoji,
     });
+    StorageService.enterAccount(updatedProfile, null, { bringGuestData });
     setSavedAccounts(StorageService.getSavedAccounts());
     onUserChange(updatedProfile);
     onClose();
@@ -230,6 +240,23 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <div className="p-3 bg-red-950/40 border border-red-800/60 rounded-xl text-xs text-red-200">
               {errorMsg}
             </div>
+          )}
+
+          {guestHasData && (
+            <label className="flex items-start gap-3 p-3 rounded-xl bg-[#121A17] border border-[#23332D] cursor-pointer">
+              <input
+                type="checkbox"
+                checked={bringGuestData}
+                onChange={e => setBringGuestData(e.target.checked)}
+                className="mt-0.5 accent-[#315C45]"
+              />
+              <span className="text-xs text-[#C5CFC7] leading-relaxed">
+                Guardar en esta cuenta lo que hiciste sin cuenta: tu mapa, tu diario y tu conversación.
+                <span className="block text-[11px] text-[#7B8880] mt-0.5">
+                  Si lo desmarcas, se queda en este navegador para cuando vuelvas a entrar sin cuenta.
+                </span>
+              </span>
+            </label>
           )}
 
           {tab === 'switch' && savedAccounts.length > 0 ? (
