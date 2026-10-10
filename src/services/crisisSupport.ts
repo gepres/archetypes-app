@@ -116,7 +116,7 @@ const SENALES: RegExp[] = [
   // sentir» cuenta salvo que lo siga algo físico: «para no sentir dolor» es un analgésico; «para
   // no sentir», «para no sentir nada» o «para no sentir y no sé cómo parar», no. Lo cosmético
   // sigue fuera («me corté el pelo para sentirme mejor»).
-  new RegExp(`${SIN_NEGAR}\\b${ACTO_DANO}.{0,40}\\b(para|sino|solo para) (sentir algo|sentir dolor|no sentir(?! (nada de |el |las? )?(dolor|molestias?|frio|calor|picor|escozor|golpe|herida|agujetas)\\b)|castigarme|desahogarme|(calmar|aliviar|controlar|soltar|sacar)(me)? (la ansiedad|el dolor emocional|la angustia|la rabia|la tristeza|el vacio|el agobio|lo que siento))\\b`),
+  new RegExp(`${SIN_NEGAR}\\b${ACTO_DANO}.{0,40}\\b(para|sino|solo para) (sentir algo|sentir dolor|no sentir(?! (\\w+ ){0,2}(dolor|molestias?|frio|calor|picor|escozor|golpe|herida|agujetas)\\b(?! (emocional|por dentro|del alma|interior)))|castigarme|desahogarme|(calmar|aliviar|controlar|soltar|sacar)(me)? (la ansiedad|el dolor emocional|la angustia|la rabia|la tristeza|el vacio|el agobio|lo que siento))\\b`),
   // Violencia y peligro, también mientras ocurre
   /\bme (pega|golpea|maltrata|amenaza|viola|pegan|golpean|maltratan|amenazan)\b/,
   /\bme (esta|estan) (pegando|golpeando|maltratando|amenazando|violando|haciendo dano)\b/,

@@ -147,6 +147,8 @@ describe('detectCrisis', () => {
     // Decimocuarta revisión de Codex: «no sentir» seguido de otra cláusula
     'Me corto para no sentir y no sé cómo parar',
     'Me corto para no sentir…',
+    'Me corto para no sentir el dolor emocional',
+    'Me corto para no sentir tanto dolor por dentro',
   ];
 
   for (const frase of crisis) {
@@ -215,6 +217,10 @@ describe('detectCrisis', () => {
     'No estoy haciéndome daño en las muñecas',
     'Me lastimé entrenando y tomé ibuprofeno para no sentir dolor',
     'Me hice daño en la rodilla y me puse hielo para no sentir nada de dolor',
+    // Decimoquinta revisión de Codex: cuantificadores del dolor físico
+    'Me lastimé entrenando y tomé ibuprofeno para no sentir tanto dolor',
+    'Me corté cocinando y me puse hielo para no sentir más dolor',
+    'Me hice daño y tomé algo para no sentir ningún dolor',
   ];
 
   for (const frase of sinCrisis) {
