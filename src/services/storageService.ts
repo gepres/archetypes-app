@@ -365,7 +365,7 @@ export const StorageService = {
   closeCrisis(): ChatMessage[] {
     const messages = [
       ...this.getChatMessages(),
-      { id: `msg-safe-${Date.now()}`, role: 'model' as const, content: CRISIS_CLOSED_NOTE, timestamp: new Date().toISOString() },
+      { id: `msg-safe-${Date.now()}`, role: 'model' as const, content: CRISIS_CLOSED_NOTE, timestamp: new Date().toISOString(), crisisClosed: true },
     ];
     this.saveChatMessages(messages);
     return messages;

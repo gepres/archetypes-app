@@ -42,7 +42,7 @@ const MODELS_TO_TRY = [
 
 export async function handleGeminiChat(body: {
   message: string;
-  history?: Array<{ role: 'user' | 'model'; parts: string }>;
+  history?: Array<{ role: 'user' | 'model'; parts: string; crisisClosed?: boolean }>;
   archetypePersona?: string; // Optional: 'rey', 'guerrero', 'mago', etc.
   archetypeContext?: {
     dominant: string;
@@ -61,7 +61,7 @@ export async function handleGeminiChat(body: {
 
   // Con la señal en un mensaje anterior la crisis sigue abierta: el modelo acompaña con el aviso
   // en el prompt, y sin modelo no se vuelve a interpretar ningún arquetipo.
-  const crisisAbierta = crisisInConversation(history.map(h => ({ role: h.role, content: h.parts })));
+  const crisisAbierta = crisisInConversation(history.map(h => ({ role: h.role, content: h.parts, crisisClosed: h.crisisClosed })));
 
   const ai = getAiClient();
   if (!ai) {

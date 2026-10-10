@@ -43,9 +43,13 @@ const MODISMOS: RegExp[] = [
 
 // Hacerse daño, en presente, pasado, imperfecto o pretérito perfecto: "me hice daño", "me he
 // cortado", "me lastimaba"…
+// Cortarse con objeto ("me he cortado el pelo", "me corté las uñas") no es hacerse daño: tras
+// los verbos de cortar no puede venir un artículo.
 const ACTO_DANO =
-  '(me (hice|hago|hacia|he hecho) dano|me (lastime|lastimo|lastimaba|he lastimado|corte|corto|cortaba|he cortado|golpee|golpeo|he golpeado|queme|quemo|he quemado))';
+  '(me (hice|hago|hacia|he hecho) dano|me (lastime|lastimo|lastimaba|he lastimado|golpee|golpeo|he golpeado|queme|quemo|he quemado)|me (corte|corto|cortaba|he cortado)(?! (el|la|los|las|un|una|mi|mis) ))';
 const INTENCION = '(a proposito|adrede|aposta|queriendo|intencionadamente)';
+// "No me he cortado a propósito" o "nunca me hice daño adrede" niegan el acto.
+const SIN_NEGAR = '(?<!\\b(no|nunca|jamas) )';
 
 const SENALES: RegExp[] = [
   // Suicidio y deseo de morir
@@ -73,8 +77,12 @@ const SENALES: RegExp[] = [
   // hice daño a propósito" es una señal en cualquier tiempo, diga dónde, y vaya la intención
   // antes o después del acto ("a propósito me hice daño").
   /\bautolesi/,
-  new RegExp(`\\b${ACTO_DANO}\\b.{0,40}\\b${INTENCION}\\b`),
-  new RegExp(`\\b${INTENCION}\\b.{0,40}\\b${ACTO_DANO}\\b`),
+  new RegExp(`${SIN_NEGAR}\\b${ACTO_DANO}.{0,40}\\b${INTENCION}\\b`),
+  new RegExp(`\\b${INTENCION}\\b.{0,40}${SIN_NEGAR}\\b${ACTO_DANO}`),
+  // La intención de no despertar, aunque no diga cantidades: "tomarme las pastillas para no
+  // despertar".
+  /\bpara no (despertar|volver a despertar|seguir aqui)\b/,
+  /\bdormir(me)? para siempre\b/,
   // Lo accidental ("me hice daño en la rodilla", "me lastimé entrenando") no cuenta.
   /\bme hago dano\b(?! (en|al|entrenando|jugando|corriendo|haciendo))/,
   /\bme (hago|hice|he hecho) dano en (los brazos|las munecas)\b/,
@@ -96,7 +104,9 @@ function normalizar(texto: string): string {
   return texto
     .toLowerCase()
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '');
+    .replace(/[̀-ͯ]/g, '')
+    // Saltos de línea y espacios repetidos cuentan como un espacio: "me voy a\nmatar".
+    .replace(/\s+/g, ' ');
 }
 
 /** ¿El mensaje trae una señal de crisis? Se mira el texto tal cual, sin el contexto del mapa. */
@@ -106,9 +116,8 @@ export function detectCrisis(mensaje: string): boolean {
 }
 
 /**
- * Lo que queda en la conversación cuando la persona dice que está a salvo. Es a la vez un
- * mensaje visible y la marca que cierra la crisis: se reconoce por su texto exacto, así que
- * funciona igual en el navegador y en el servidor, que solo reciben el historial.
+ * El mensaje visible que queda en la conversación cuando la persona dice que está a salvo. Lo
+ * que cierra la crisis no es este texto, sino la marca `crisisClosed` que pone el botón.
  */
 export const CRISIS_CLOSED_NOTE =
   'Gracias por contármelo. Me alegra que estés a salvo. Si en algún momento vuelve a ponerse difícil, el número de emergencias de tu país y findahelpline.com siguen ahí. Cuando quieras, seguimos con tu mapa.';
@@ -121,11 +130,13 @@ export const CRISIS_CLOSED_NOTE =
  * salvo (la marca CRISIS_CLOSED_NOTE), sin tener que borrar el historial. Una señal posterior
  * la vuelve a abrir.
  */
-export function crisisInConversation(mensajes: { role: string; content: string }[]): boolean {
+export function crisisInConversation(mensajes: { role: string; content: string; crisisClosed?: boolean }[]): boolean {
   let abierta = false;
   for (const m of mensajes) {
     if (m.role === 'user' && detectCrisis(m.content)) abierta = true;
-    else if (m.role !== 'user' && m.content === CRISIS_CLOSED_NOTE) abierta = false;
+    // Solo cierra la marca que pone el botón. Un texto, aunque coincida con la nota de cierre
+    // (una respuesta del modelo que la cite, o el usuario que la pegue), no cierra nada.
+    else if (m.role !== 'user' && m.crisisClosed === true) abierta = false;
   }
   return abierta;
 }

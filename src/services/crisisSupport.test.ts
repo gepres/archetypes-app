@@ -11,6 +11,8 @@ import {
 
 const yo = (content: string) => ({ role: 'user', content });
 const app = (content: string) => ({ role: 'model', content });
+// El cierre de verdad: el que pone el botón «Ya estoy a salvo», con su marca.
+const cierre = () => ({ role: 'model', content: CRISIS_CLOSED_NOTE, crisisClosed: true });
 
 describe('crisisInConversation', () => {
   it('la crisis sigue abierta en los mensajes siguientes aunque no se repitan las palabras', () => {
@@ -24,18 +26,22 @@ describe('crisisInConversation', () => {
   });
 
   it('se cierra cuando la persona dice que está a salvo, sin borrar el historial', () => {
-    const conv = [yo('Quiero suicidarme esta noche'), app(CRISIS_RESPONSE), yo('Ya hablé con mi hermana'), app(CRISIS_CLOSED_NOTE)];
+    const conv = [yo('Quiero suicidarme esta noche'), app(CRISIS_RESPONSE), yo('Ya hablé con mi hermana'), cierre()];
     assert.equal(crisisInConversation(conv), false);
     assert.equal(crisisInConversation([...conv, yo('¿Qué me dice mi Rey de esta semana?')]), false);
   });
 
   it('una señal posterior al cierre la vuelve a abrir', () => {
-    const conv = [yo('Quiero suicidarme'), app(CRISIS_CLOSED_NOTE), yo('Otra vez pienso en hacerme daño')];
+    const conv = [yo('Quiero suicidarme'), cierre(), yo('Otra vez pienso en hacerme daño')];
     assert.equal(crisisInConversation(conv), true);
   });
 
   it('el texto de cierre escrito por el usuario no cierra nada', () => {
     assert.equal(crisisInConversation([yo('Quiero suicidarme'), yo(CRISIS_CLOSED_NOTE)]), true);
+  });
+
+  it('una respuesta del modelo que cite la nota de cierre no cierra nada (quinta revisión de Codex)', () => {
+    assert.equal(crisisInConversation([yo('Quiero suicidarme'), app(CRISIS_CLOSED_NOTE)]), true);
   });
 
   it('una conversación normal no la abre', () => {
@@ -90,6 +96,10 @@ describe('detectCrisis', () => {
     'A propósito me hice daño anoche',
     'Adrede me he lastimado',
     'Quiero tragarme un bote de pastillas',
+    // Quinta revisión de Codex
+    'Voy a tomarme las pastillas para no despertar',
+    'Me voy a\nmatar',
+    'Me he cortado a propósito en el brazo',
   ];
 
   for (const frase of crisis) {
@@ -125,6 +135,10 @@ describe('detectCrisis', () => {
     'Voy a tomarme las pastillas que me recetó el médico',
     'No quiero tomarme las pastillas porque me dan sueño',
     'Hice a propósito un plan distinto esta semana',
+    // Quinta revisión de Codex
+    'Me he cortado el pelo a propósito',
+    'No me he cortado a propósito, fue un accidente',
+    'Me corté las uñas adrede',
   ];
 
   for (const frase of sinCrisis) {
