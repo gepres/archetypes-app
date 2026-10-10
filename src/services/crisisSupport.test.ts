@@ -1,6 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  CRISIS_CLOSED_NOTE,
   CRISIS_FOLLOWUP,
   CRISIS_PROTOCOL,
   CRISIS_RESPONSE,
@@ -8,19 +9,37 @@ import {
   detectCrisis,
 } from './crisisSupport';
 
+const yo = (content: string) => ({ role: 'user', content });
+const app = (content: string) => ({ role: 'model', content });
+
 describe('crisisInConversation', () => {
   it('la crisis sigue abierta en los mensajes siguientes aunque no se repitan las palabras', () => {
-    assert.equal(crisisInConversation(['Quiero suicidarme esta noche', 'Estoy en casa, a oscuras']), true);
+    assert.equal(crisisInConversation([yo('Quiero suicidarme esta noche'), app(CRISIS_RESPONSE), yo('Estoy en casa, a oscuras')]), true);
   });
 
   it('no caduca: sigue abierta aunque pasen muchos mensajes sin repetir la señal', () => {
     // El caso de Codex: con una ventana de tres mensajes, el quinto volvía a recibir arquetipos.
-    const despues = ['Estoy solo', 'Tengo miedo', 'No sé qué hacer', 'Sigo aquí', 'No puedo dormir', 'Es tarde'];
-    assert.equal(crisisInConversation(['Quiero suicidarme esta noche', ...despues]), true);
+    const despues = ['Estoy solo', 'Tengo miedo', 'No sé qué hacer', 'Sigo aquí', 'No puedo dormir', 'Es tarde'].flatMap(t => [yo(t), app(CRISIS_FOLLOWUP)]);
+    assert.equal(crisisInConversation([yo('Quiero suicidarme esta noche'), app(CRISIS_RESPONSE), ...despues]), true);
+  });
+
+  it('se cierra cuando la persona dice que está a salvo, sin borrar el historial', () => {
+    const conv = [yo('Quiero suicidarme esta noche'), app(CRISIS_RESPONSE), yo('Ya hablé con mi hermana'), app(CRISIS_CLOSED_NOTE)];
+    assert.equal(crisisInConversation(conv), false);
+    assert.equal(crisisInConversation([...conv, yo('¿Qué me dice mi Rey de esta semana?')]), false);
+  });
+
+  it('una señal posterior al cierre la vuelve a abrir', () => {
+    const conv = [yo('Quiero suicidarme'), app(CRISIS_CLOSED_NOTE), yo('Otra vez pienso en hacerme daño')];
+    assert.equal(crisisInConversation(conv), true);
+  });
+
+  it('el texto de cierre escrito por el usuario no cierra nada', () => {
+    assert.equal(crisisInConversation([yo('Quiero suicidarme'), yo(CRISIS_CLOSED_NOTE)]), true);
   });
 
   it('una conversación normal no la abre', () => {
-    assert.equal(crisisInConversation(['¿Cómo equilibro mi Guerrero?', 'Gracias, me sirve']), false);
+    assert.equal(crisisInConversation([yo('¿Cómo equilibro mi Guerrero?'), app('…'), yo('Gracias, me sirve')]), false);
   });
 
   it('el seguimiento tampoco inventa teléfonos ni habla del mapa', () => {
@@ -66,6 +85,11 @@ describe('detectCrisis', () => {
     'Me corté adrede',
     'Me hago daño en los brazos cuando me agobio',
     'Pienso en tomarme todas las pastillas',
+    // Tercera revisión de Codex: tiempos compuestos e intención antes del acto
+    'Me he cortado a propósito anoche',
+    'A propósito me hice daño anoche',
+    'Adrede me he lastimado',
+    'Quiero tragarme un bote de pastillas',
   ];
 
   for (const frase of crisis) {
@@ -97,6 +121,10 @@ describe('detectCrisis', () => {
     'Tengo las pastillas que me recetó el médico y quiero organizar mis rutinas',
     'No me quiero hacer daño, quiero poner límites',
     'No me voy a rendir aunque cueste',
+    // Tercera revisión de Codex: la medicación habitual no es una crisis
+    'Voy a tomarme las pastillas que me recetó el médico',
+    'No quiero tomarme las pastillas porque me dan sueño',
+    'Hice a propósito un plan distinto esta semana',
   ];
 
   for (const frase of sinCrisis) {

@@ -395,7 +395,7 @@ ${resultContext}
     // Si la señal llegó en un mensaje anterior, la crisis sigue abierta: un modelo puede
     // acompañar (con el aviso en el prompt), pero ni el motor local, ni el cupo agotado, ni un
     // fallo de red vuelven a interpretar arquetipos.
-    const crisisAbierta = crisisInConversation(history.filter(m => m.role === 'user').map(m => m.content));
+    const crisisAbierta = crisisInConversation(history);
     const seguimientoDeCrisis = { text: CRISIS_FOLLOWUP, modelUsed: 'Protocolo de cuidado', provider: 'local' as AIProviderId };
 
     const settings = this.getSettings();

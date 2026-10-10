@@ -41,6 +41,12 @@ const MODISMOS: RegExp[] = [
   /\b(me mato|matarme|me voy a matar)\s+(trabajando|estudiando|entrenando|a trabajar|a estudiar|a entrenar)\b/g,
 ];
 
+// Hacerse daño, en presente, pasado, imperfecto o pretérito perfecto: "me hice daño", "me he
+// cortado", "me lastimaba"…
+const ACTO_DANO =
+  '(me (hice|hago|hacia|he hecho) dano|me (lastime|lastimo|lastimaba|he lastimado|corte|corto|cortaba|he cortado|golpee|golpeo|he golpeado|queme|quemo|he quemado))';
+const INTENCION = '(a proposito|adrede|aposta|queriendo|intencionadamente)';
+
 const SENALES: RegExp[] = [
   // Suicidio y deseo de morir
   /\bsuicid/,
@@ -58,14 +64,17 @@ const SENALES: RegExp[] = [
   /\bojala (no despertar|no despertara|estar muert[oa]|morirme)\b/,
   // Las pastillas solo cuentan con señal de riesgo: "tengo las pastillas que me recetó el
   // médico" no lo es; "tomarme todas" o "ya las tengo en la mano", sí.
+  // "Tomarme las pastillas que me recetó el médico" o "no quiero tomarme las pastillas" no lo
+  // son: hace falta la señal de cantidad o de riesgo.
   /\bsobredosis\b/,
-  /\btomarme (todas )?las pastillas\b/,
+  /\b(tomarme|tragarme) (todas las|un bote de|una caja de|un monton de) (pastillas|pildoras)\b/,
   /\b(ya )?tengo las pastillas (en la mano|preparadas|listas|aqui)\b/,
   // Autolesión. La intención deliberada manda sobre cualquier filtro de lo accidental: "me
-  // hice daño a propósito" es una señal aunque esté en pasado o diga dónde.
+  // hice daño a propósito" es una señal en cualquier tiempo, diga dónde, y vaya la intención
+  // antes o después del acto ("a propósito me hice daño").
   /\bautolesi/,
-  /\bme (hice|hago|hacia|he hecho) dano\b.{0,40}\b(a proposito|adrede|aposta|queriendo|intencionadamente)\b/,
-  /\bme (lastime|lastimo|lastimaba|he lastimado|corte|corto|cortaba|golpee|golpeo|queme|quemo)\b.{0,40}\b(a proposito|adrede|aposta|queriendo|intencionadamente)\b/,
+  new RegExp(`\\b${ACTO_DANO}\\b.{0,40}\\b${INTENCION}\\b`),
+  new RegExp(`\\b${INTENCION}\\b.{0,40}\\b${ACTO_DANO}\\b`),
   // Lo accidental ("me hice daño en la rodilla", "me lastimé entrenando") no cuenta.
   /\bme hago dano\b(?! (en|al|entrenando|jugando|corriendo|haciendo))/,
   /\bme (hago|hice|he hecho) dano en (los brazos|las munecas)\b/,
@@ -97,12 +106,26 @@ export function detectCrisis(mensaje: string): boolean {
 }
 
 /**
- * ¿Hubo una señal de crisis en esta conversación? Tras una señal, quien sigue escribiendo
- * («estoy sola», «tengo miedo») no repite las palabras que la activaron, y volver a interpretar
- * arquetipos al cabo de unos mensajes sería abandonarle sin que nadie haya dicho que está a
- * salvo. Por eso no caduca: dura lo que dura la conversación, también al recuperarla del
- * almacenamiento, y se cierra solo al reiniciarla.
+ * Lo que queda en la conversación cuando la persona dice que está a salvo. Es a la vez un
+ * mensaje visible y la marca que cierra la crisis: se reconoce por su texto exacto, así que
+ * funciona igual en el navegador y en el servidor, que solo reciben el historial.
  */
-export function crisisInConversation(mensajesDelUsuario: string[]): boolean {
-  return mensajesDelUsuario.some(detectCrisis);
+export const CRISIS_CLOSED_NOTE =
+  'Gracias por contármelo. Me alegra que estés a salvo. Si en algún momento vuelve a ponerse difícil, el número de emergencias de tu país y findahelpline.com siguen ahí. Cuando quieras, seguimos con tu mapa.';
+
+/**
+ * ¿Sigue abierta una crisis en esta conversación? Tras una señal, quien sigue escribiendo
+ * («estoy sola», «tengo miedo») no repite las palabras que la activaron, y volver a interpretar
+ * arquetipos al cabo de unos mensajes sería abandonarle. Por eso no caduca: sigue abierta,
+ * también al recuperar la conversación, hasta que la persona dice explícitamente que está a
+ * salvo (la marca CRISIS_CLOSED_NOTE), sin tener que borrar el historial. Una señal posterior
+ * la vuelve a abrir.
+ */
+export function crisisInConversation(mensajes: { role: string; content: string }[]): boolean {
+  let abierta = false;
+  for (const m of mensajes) {
+    if (m.role === 'user' && detectCrisis(m.content)) abierta = true;
+    else if (m.role !== 'user' && m.content === CRISIS_CLOSED_NOTE) abierta = false;
+  }
+  return abierta;
 }

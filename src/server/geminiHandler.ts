@@ -61,7 +61,7 @@ export async function handleGeminiChat(body: {
 
   // Con la señal en un mensaje anterior la crisis sigue abierta: el modelo acompaña con el aviso
   // en el prompt, y sin modelo no se vuelve a interpretar ningún arquetipo.
-  const crisisAbierta = crisisInConversation(history.filter(h => h.role === 'user').map(h => h.parts));
+  const crisisAbierta = crisisInConversation(history.map(h => ({ role: h.role, content: h.parts })));
 
   const ai = getAiClient();
   if (!ai) {

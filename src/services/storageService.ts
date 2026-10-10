@@ -14,10 +14,20 @@ import {
 } from '../types';
 import { FirebaseService } from './firebaseService';
 import { adaptAssessmentResultToGender } from './scoringEngine';
+import { CRISIS_CLOSED_NOTE } from './crisisSupport';
 
 // Mientras se aplican de golpe los datos de una cuenta no se sube nada a la nube (ver
 // `applyAccountData`).
 let syncPaused = false;
+
+function welcomeMessage(): ChatMessage {
+  return {
+    id: 'msg-welcome-1',
+    role: 'model',
+    content: 'Bienvenido al espacio de reflexión arquetípica. Estoy aquí para acompañarte a explorar tu mapa personal desde una mirada filosófica y simbólica. Puedes compartirme cualquier situación actual, conflicto decisional o solicitar hablar con la voz directa de un arquetipo específico.',
+    timestamp: new Date().toISOString(),
+  };
+}
 
 const STORAGE_KEYS = {
   CURRENT_USER_ID: 'archetypes_active_user_id',
@@ -262,12 +272,7 @@ export const StorageService = {
       const data = localStorage.getItem(STORAGE_KEYS.CHAT_MESSAGES);
       if (data) return JSON.parse(data);
 
-      const initialMessage: ChatMessage = {
-        id: 'msg-welcome-1',
-        role: 'model',
-        content: 'Bienvenido al espacio de reflexión arquetípica. Estoy aquí para acompañarte a explorar tu mapa personal desde una mirada filosófica y simbólica. Puedes compartirme cualquier situación actual, conflicto decisional o solicitar hablar con la voz directa de un arquetipo específico.',
-        timestamp: new Date().toISOString(),
-      };
+      const initialMessage = welcomeMessage();
       // Como en los retos: el valor inicial se guarda solo en local, sin subir nada al leer.
       localStorage.setItem(STORAGE_KEYS.CHAT_MESSAGES, JSON.stringify([initialMessage]));
       return [initialMessage];
@@ -286,8 +291,24 @@ export const StorageService = {
     }
   },
 
-  clearChatMessages(): void {
-    localStorage.removeItem(STORAGE_KEYS.CHAT_MESSAGES);
+  /**
+   * Reiniciar la conversación es un cambio deliberado: se guarda y se sube, para que la
+   * conversación borrada no vuelva desde la nube en otro dispositivo (ni reabra una crisis).
+   */
+  clearChatMessages(): ChatMessage[] {
+    const vacia = [welcomeMessage()];
+    this.saveChatMessages(vacia);
+    return vacia;
+  },
+
+  /** La persona dice que está a salvo: se cierra la crisis sin borrar el historial. */
+  closeCrisis(): ChatMessage[] {
+    const messages = [
+      ...this.getChatMessages(),
+      { id: `msg-safe-${Date.now()}`, role: 'model' as const, content: CRISIS_CLOSED_NOTE, timestamp: new Date().toISOString() },
+    ];
+    this.saveChatMessages(messages);
+    return messages;
   },
 
   // User Profile & Account Management

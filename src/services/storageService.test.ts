@@ -6,6 +6,55 @@ import { calculateAssessmentResult } from './scoringEngine';
 import { QUESTIONS_DATA } from '../data/questionsData';
 import { AssessmentResult, Challenge, UserProfile } from '../types';
 
+describe('chat: reiniciar y cerrar una crisis', () => {
+  const montar = () => {
+    const mem = new Map<string, string>();
+    (globalThis as any).localStorage = {
+      getItem: (k: string) => mem.get(k) ?? null,
+      setItem: (k: string, v: string) => void mem.set(k, String(v)),
+      removeItem: (k: string) => void mem.delete(k),
+      clear: () => mem.clear(),
+    };
+    const perfil: UserProfile = { id: 'uidX', name: 'Ana', email: 'ana@ejemplo.com', isGuest: false, createdAt: '', lastActive: '' };
+    mem.set('archetypes_user_profile', JSON.stringify(perfil));
+    const subidas: any[] = [];
+    const original = FirebaseService.syncFullDataToCloud;
+    FirebaseService.syncFullDataToCloud = async (_id, data) => {
+      subidas.push(JSON.parse(JSON.stringify(data)));
+      return true;
+    };
+    return { subidas, restaurar: () => { FirebaseService.syncFullDataToCloud = original; } };
+  };
+
+  it('reiniciar la conversación se sube, para que no vuelva desde la nube', () => {
+    const { subidas, restaurar } = montar();
+    try {
+      StorageService.saveChatMessages([{ id: 'm1', role: 'user', content: 'Quiero suicidarme', timestamp: '' }]);
+      subidas.length = 0;
+      const vacia = StorageService.clearChatMessages();
+      assert.equal(subidas.length, 1);
+      assert.deepEqual(subidas[0].chatMessages.map((m: any) => m.id), ['msg-welcome-1']);
+      assert.deepEqual(vacia.map(m => m.id), ['msg-welcome-1']);
+    } finally {
+      restaurar();
+    }
+  });
+
+  it('cerrar la crisis la cierra sin borrar el historial', async () => {
+    const { restaurar } = montar();
+    try {
+      const { crisisInConversation } = await import('./crisisSupport');
+      StorageService.saveChatMessages([{ id: 'm1', role: 'user', content: 'Quiero suicidarme', timestamp: '' }]);
+      assert.equal(crisisInConversation(StorageService.getChatMessages()), true);
+      const despues = StorageService.closeCrisis();
+      assert.equal(crisisInConversation(despues), false);
+      assert.equal(despues[0].content, 'Quiero suicidarme', 'el historial se conserva');
+    } finally {
+      restaurar();
+    }
+  });
+});
+
 describe('applyAccountData: restaurar una cuenta sin pisar la nube', () => {
   it('aplica el historial de la nube y sube una sola vez el estado completo', () => {
     // El caso de Codex: cuenta activa, historial local [A] y en la nube [B, C, D].

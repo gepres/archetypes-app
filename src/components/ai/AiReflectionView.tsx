@@ -17,6 +17,7 @@ import {
 import { ARCHETYPE_VISUALS } from '../../data/archetypeImages';
 import { getArchetypeList, getArchetypeName, getArchetypeNarrative, withDe } from '../../data/archetypesData';
 import { getMapLead } from '../../services/scoringEngine';
+import { crisisInConversation } from '../../services/crisisSupport';
 import { GeminiService } from '../../services/geminiService';
 import { AIProviderService, PROVIDER_OPTIONS } from '../../services/aiProviderService';
 import { StorageService } from '../../services/storageService';
@@ -221,10 +222,13 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
 
   const handleClearHistory = () => {
     if (window.confirm('¿Deseas reiniciar la conversación de reflexión?')) {
-      StorageService.clearChatMessages();
-      setMessages(StorageService.getChatMessages());
+      setMessages(StorageService.clearChatMessages());
     }
   };
+
+  // Mientras una crisis sigue abierta, la persona puede cerrarla diciendo que está a salvo, sin
+  // tener que borrar la conversación.
+  const crisisAbierta = crisisInConversation(messages);
 
   // Cómo se nombra la cabeza del mapa en la cabecera: sin inventar un dominante si no lo hay.
   const lead = currentResult ? getMapLead(currentResult, currentGender) : null;
@@ -474,8 +478,24 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
         <div ref={messagesEndRef} />
       </div>
 
+      {/* ── Crisis abierta: una salida explícita que no obliga a borrar nada ─ */}
+      {crisisAbierta && !isLoading && (
+        <div className="shrink-0 mx-3 sm:mx-4 mb-2 flex flex-col sm:flex-row sm:items-center gap-2 px-3.5 py-3 rounded-2xl bg-[#121A17] border border-[#315C45]">
+          <p className="flex-1 text-[11px] text-[#9DA79F] leading-relaxed">
+            Mientras lo necesites, aquí no se habla del mapa. Cuando estés a salvo, puedes volver a él.
+          </p>
+          <button
+            type="button"
+            onClick={() => setMessages(StorageService.closeCrisis())}
+            className="shrink-0 px-3.5 py-2 rounded-xl bg-[#315C45] hover:bg-[#3D7055] text-xs font-semibold text-[#F2EFE6] transition-colors"
+          >
+            Ya estoy a salvo, volver al mapa
+          </button>
+        </div>
+      )}
+
       {/* ── Sugerencias en fila, solo mientras la conversación es corta ──── */}
-      {!sinMensajes && messages.length < 5 && !isLoading && (
+      {!sinMensajes && !crisisAbierta && messages.length < 5 && !isLoading && (
         <div className="shrink-0 flex gap-2 overflow-x-auto touch-scroll-x scrollbar-persona px-3 sm:px-4 pb-2">
           {currentSamplePrompts.slice(0, 3).map((q, i) => (
             <button
