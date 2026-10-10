@@ -682,12 +682,19 @@ export const QUESTIONS_DATA: Question[] = [
   }
 ];
 
-// Quick test selection (24 representative questions across all 18 archetypes)
+// Test rápido: 24 de las 60, elegidas para que mida a los 18 de forma pareja.
+//
+// La selección anterior medía al Bufón con una sola afirmación y al Sanador con siete: con
+// respuestas al azar, el Bufón salía dominante el 23,8 % de las veces y el Sabio o el Sanador
+// el 0,8 % (lo justo sería 5,6 %). Esta se buscó optimizando ese reparto, con tres condiciones:
+// cada arquetipo en 3 a 5 afirmaciones, principal (peso 3) en al menos una, y ninguna
+// dimensión con menos de cinco. Con respuestas al azar, ahora cada uno sale entre el 3,5 % y
+// el 8,4 %, y el parecido con el test completo para una misma persona no empeora.
 export const QUICK_QUESTION_IDS: number[] = [
-  1, 2, 8, 9, 13, // Mente & Trascendencia (Mago, Sabio, Sacerdote, Místico)
-  16, 17, 18, 19, 20, 21, // Acción & Coraje (Guerrero, Héroe, Rebelde, Explorador)
-  31, 32, 33, 34, 35, 36, // Corazón & Conexión (Amante, Cuidador, Bufón, Sanador)
-  46, 47, 48, 49, 50, 51, 57 // Construcción & Soberanía (Rey, Padre, Creador, Constructor, Soberano, Integrador)
+  1, 2, 8, 9, 15, // Mente & Trascendencia
+  16, 18, 19, 20, 24, // Acción & Coraje
+  35, 37, 40, 41, 42, 44, 45, // Corazón & Conexión
+  46, 47, 49, 52, 54, 55, 57, // Construcción & Soberanía
 ];
 
 export interface LikertOption {

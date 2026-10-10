@@ -64,7 +64,9 @@ export const TestView: React.FC<TestViewProps> = ({
   const currentQuestion = questions[currentIndex] || questions[0];
   const currentAnswerValue = answers[currentQuestion.id];
   const progressPercent = Math.round(((currentIndex + 1) / questions.length) * 100);
-  const answeredCount = Object.keys(answers).length;
+  // Solo cuentan las respuestas a preguntas de este test: un progreso guardado puede traer
+  // respuestas a preguntas que ya no están en el rápido, y no deben darlo por terminado.
+  const answeredCount = questions.filter(q => answers[q.id] !== undefined).length;
   const isFinished = answeredCount === questions.length;
 
   const handleSelectOption = (value: number) => {

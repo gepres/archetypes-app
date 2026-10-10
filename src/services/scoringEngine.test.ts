@@ -24,6 +24,22 @@ function azar(semilla: number) {
 }
 const respuestasAlAzar = (r: () => number) => QUESTIONS_DATA.map(q => ({ questionId: q.id, value: 1 + Math.floor(r() * 5) }));
 
+/**
+ * Un resultado con Amante, Cuidador y Bufón empatados en cabeza. Se fabrica sobre el ranking,
+ * y se recompone el perfil con la lógica real, para no depender de qué afirmaciones lleve el
+ * test rápido en cada momento.
+ */
+function conEmpateDeTres(gender: GenderMode): AssessmentResult {
+  const base = calculateAssessmentResult(respuestasAlAzar(azar(17)), 'full', gender);
+  const arriba = ['amante', 'cuidador', 'bufon'];
+  const resto = base.ranking.filter(s => !arriba.includes(s.archetypeId));
+  const ranking = [
+    ...arriba.map((id, i) => ({ ...base.ranking.find(s => s.archetypeId === id)!, normalizedScore: 90, rank: i + 1 })),
+    ...resto.map((s, i) => ({ ...s, normalizedScore: 70 - i * 2, rank: i + 4 })),
+  ];
+  return adaptAssessmentResultToGender({ ...base, ranking, dominantArchetype: ranking[0], top3: ranking.slice(0, 3) }, gender);
+}
+
 describe('mapa sin polo claro', () => {
   for (const valor of [1, 3, 5]) {
     it(`todo a ${valor}: no se inventa un dominante`, () => {
@@ -94,8 +110,8 @@ describe('perfil por pareja', () => {
   });
 
   it('un empate de tres no se reduce a una pareja con el tercero «detrás»', () => {
-    // Corazón a 5 y todo lo demás a 1: Amante, Cuidador y Bufón empatan arriba.
-    const res = calculateAssessmentResult(rapidas.map(q => ({ questionId: q.id, value: q.dimensionFocus === 'corazon' ? 5 : 1 })), 'quick', 'male');
+    // Amante, Cuidador y Bufón empatados arriba, como en el caso de Codex.
+    const res = conEmpateDeTres('male');
     const p = res.compositeProfile;
     const grupo = lideres(res);
     assert.ok(grupo.length >= 3, `solo ${grupo.length} en cabeza`);
@@ -190,11 +206,10 @@ describe('getMapLead: ninguna pantalla proclama un dominante que no hay', () => 
   });
 
   it('empate de tres: los nombra a los tres', () => {
-    const res = calculateAssessmentResult(rapidas.map(q => ({ questionId: q.id, value: q.dimensionFocus === 'corazon' ? 5 : 1 })), 'quick', 'female');
-    const lead = getMapLead(res, 'female');
+    const lead = getMapLead(conEmpateDeTres('female'), 'female');
     assert.equal(lead.kind, 'tie');
-    assert.ok(lead.ids.length >= 3);
-    if (lead.ids.length === 3) assert.match(lead.label, /, a la par$/);
+    assert.deepEqual(lead.ids, ['amante', 'cuidador', 'bufon']);
+    assert.equal(lead.label, 'La Amante, La Cuidadora y La Bufona, a la par');
   });
 
   it('un dominante claro se nombra solo', () => {
