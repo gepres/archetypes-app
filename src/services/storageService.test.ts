@@ -572,6 +572,23 @@ describe('perspectiva de quien llega por primera vez', () => {
     assert.equal(B.gender, 'universal');
   });
 
+  it('cerrar sesión no deja la perspectiva de la cuenta al invitado ni a la siguiente cuenta (Codex)', () => {
+    vacio();
+    StorageService.enterAccount({ id: 'uidA', name: 'A', email: 'a@x.com', isGuest: false, createdAt: '', lastActive: '', gender: 'male' }, null);
+    StorageService.switchToGuestMode();
+    assert.equal(StorageService.getUserProfile().gender, 'universal');
+    StorageService.enterAccount({ id: 'uidB', name: 'B', email: 'b@x.com', isGuest: false, createdAt: '', lastActive: '' }, null);
+    assert.equal(StorageService.getUserProfile().gender, 'universal');
+  });
+
+  it('el invitado recupera la suya al cerrar sesión', () => {
+    vacio();
+    StorageService.saveUserProfile({ ...StorageService.getUserProfile(), gender: 'female' });
+    StorageService.enterAccount({ id: 'uidA', name: 'A', email: 'a@x.com', isGuest: false, createdAt: '', lastActive: '', gender: 'male' }, null);
+    StorageService.switchToGuestMode();
+    assert.equal(StorageService.getUserProfile().gender, 'female');
+  });
+
   it('quien ya eligió una perspectiva la conserva', () => {
     const mem = vacio();
     mem.set('archetypes_user_profile', JSON.stringify({ id: 'u', name: 'A', email: '', isGuest: true, gender: 'male', createdAt: '', lastActive: '' }));

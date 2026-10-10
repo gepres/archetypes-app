@@ -21,6 +21,12 @@ import { CRISIS_CLOSED_NOTE } from './crisisSupport';
 // `applyAccountData`).
 let syncPaused = false;
 
+/** La perspectiva que eligió el invitado antes de entrar en una cuenta, o la de por defecto. */
+function perspectivaDelInvitado(): GenderMode {
+  const guardada = localStorage.getItem(STORAGE_KEYS.GUEST_GENDER);
+  return guardada === 'male' || guardada === 'female' || guardada === 'universal' ? guardada : DEFAULT_GENDER;
+}
+
 function welcomeMessage(): ChatMessage {
   return {
     id: 'msg-welcome-1',
@@ -35,6 +41,9 @@ const STORAGE_KEYS = {
   ACCOUNTS_VAULT: 'archetypes_accounts_vault',
   // Lo del invitado, aparcado mientras hay una cuenta abierta (ver enterAccount).
   GUEST_DATA: 'archetypes_guest_data',
+  // La perspectiva del invitado, aparcada mientras hay una cuenta abierta: al cerrar sesión
+  // vuelve la suya, no la de la cuenta que sale.
+  GUEST_GENDER: 'archetypes_guest_gender',
   CURRENT_RESULT: 'archetypes_current_result',
   ASSESSMENT_HISTORY: 'archetypes_history',
   JOURNAL_ENTRIES: 'archetypes_journal_entries',
@@ -668,6 +677,7 @@ export const StorageService = {
         if (outgoing.isGuest) {
           if (opts.bringGuestData) localStorage.removeItem(STORAGE_KEYS.GUEST_DATA);
           else if (hasOwnData(active)) localStorage.setItem(STORAGE_KEYS.GUEST_DATA, JSON.stringify(active));
+          if (outgoing.gender) localStorage.setItem(STORAGE_KEYS.GUEST_GENDER, outgoing.gender);
         } else {
           this.vaultUpsert(outgoing, active);
         }
@@ -721,7 +731,9 @@ export const StorageService = {
       name: 'Explorador Invitado',
       email: '',
       isGuest: true,
-      gender: outgoing.gender,
+      // La del invitado que había antes de entrar en la cuenta, no la de la cuenta que sale: si
+      // no, la heredaría la siguiente cuenta que entre en este navegador.
+      gender: outgoing.isGuest ? outgoing.gender : perspectivaDelInvitado(),
       avatarEmoji: '🧭',
       bio: 'Modo invitado activo. Crea o inicia sesión en cualquier momento para resguardar tus evaluaciones y notas.',
       createdAt: new Date().toISOString(),
@@ -734,6 +746,7 @@ export const StorageService = {
       const aparcada = localStorage.getItem(STORAGE_KEYS.GUEST_DATA);
       this.writeActiveData(aparcada ? { ...emptyAccountData(), ...JSON.parse(aparcada) } : emptyAccountData());
       localStorage.removeItem(STORAGE_KEYS.GUEST_DATA);
+      localStorage.removeItem(STORAGE_KEYS.GUEST_GENDER);
       localStorage.removeItem(STORAGE_KEYS.ACTIVE_TEST_PROGRESS);
       localStorage.setItem(STORAGE_KEYS.USER_PROFILE, JSON.stringify(guestProfile));
     } finally {
