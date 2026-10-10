@@ -185,7 +185,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
               </div>
               <div className="p-2">
                 <p className="text-[11px] font-semibold text-[#F2EFE6] leading-tight line-clamp-2">
-                  {arch.emoji} {arch.name}
+                  <span aria-hidden="true">{arch.emoji}</span> {arch.name}
                 </p>
               </div>
             </button>
@@ -212,8 +212,10 @@ export const LandingView: React.FC<LandingViewProps> = ({
                 <h3 className="font-serif text-sm font-bold text-[#F2EFE6] leading-tight">{nombre}</h3>
               </div>
               <p className="text-[11px] text-[#9DA79F] leading-snug">{DIMENSIONS[id].subtitle}</p>
-              <p className="text-base leading-none tracking-wide" aria-label={DIMENSIONS[id].archetypes.map(a => getArchetype(a, currentGender).name).join(', ')}>
-                {DIMENSIONS[id].archetypes.map(a => getArchetype(a, currentGender).emoji).join(' ')}
+              {/* Los emojis, a la vista; los nombres, para quien usa un lector de pantalla. */}
+              <p className="text-base leading-none tracking-wide">
+                <span aria-hidden="true">{DIMENSIONS[id].archetypes.map(a => getArchetype(a, currentGender).emoji).join(' ')}</span>
+                <span className="sr-only">{DIMENSIONS[id].archetypes.map(a => getArchetype(a, currentGender).name).join(', ')}</span>
               </p>
             </div>
           ))}
