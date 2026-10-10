@@ -142,6 +142,8 @@ describe('detectCrisis', () => {
     'Me estoy haciendo daño en los brazos',
     'Me estoy haciendo daño y no sé cómo parar',
     'Estoy haciéndome daño otra vez',
+    'Estoy haciéndome daño en las muñecas',
+    'Me corto para no sentir nada',
   ];
 
   for (const frase of crisis) {
@@ -205,6 +207,10 @@ describe('detectCrisis', () => {
     'Me estoy cortando el pelo a propósito',
     'No me hago daño, solo estoy cansada',
     'Me estoy haciendo daño en la espalda entrenando',
+    // Decimotercera revisión de Codex: la mejoría negada y el analgésico tras un accidente
+    'Ya no me estoy haciendo daño en los brazos',
+    'No estoy haciéndome daño en las muñecas',
+    'Me lastimé entrenando y tomé ibuprofeno para no sentir dolor',
   ];
 
   for (const frase of sinCrisis) {
