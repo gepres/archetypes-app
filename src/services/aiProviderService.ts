@@ -8,7 +8,14 @@ import {
   GenderMode,
   UserProfile,
 } from '../types';
-import { CRISIS_PROTOCOL, CRISIS_RESPONSE, detectCrisis } from './crisisSupport';
+import {
+  CRISIS_ACTIVE_NOTE,
+  CRISIS_FOLLOWUP,
+  CRISIS_PROTOCOL,
+  CRISIS_RESPONSE,
+  crisisInRecentMessages,
+  detectCrisis,
+} from './crisisSupport';
 
 // Cómo se llama cada perspectiva en el prompt. Es una preferencia de lenguaje para nombrar los
 // arquetipos, no un dato sobre el género de quien usa la app.
@@ -369,12 +376,19 @@ ${resultContext}
       return { text: CRISIS_RESPONSE, modelUsed: 'Protocolo de cuidado', provider: 'local' };
     }
 
+    // Si la señal llegó en un mensaje anterior, la crisis sigue abierta: un modelo puede
+    // acompañar (con el aviso en el prompt), pero ni el motor local, ni el cupo agotado, ni un
+    // fallo de red vuelven a interpretar arquetipos.
+    const crisisAbierta = crisisInRecentMessages(history.filter(m => m.role === 'user').map(m => m.content));
+    const seguimientoDeCrisis = { text: CRISIS_FOLLOWUP, modelUsed: 'Protocolo de cuidado', provider: 'local' as AIProviderId };
+
     const settings = this.getSettings();
     const status = this.getUsageStatus();
     const effectiveGender = userProfile?.gender || gender;
 
     // Sin ninguna clave disponible: responde el motor local
     if (status.activeKeySource === 'none') {
+      if (crisisAbierta) return seguimientoDeCrisis;
       return {
         text:
           this.getLocalArchetypeReflection(message, currentResult, archetypePersona, effectiveGender) +
@@ -386,6 +400,7 @@ ${resultContext}
 
     // Cupo diario agotado
     if (status.activeKeySource === 'app' && status.remainingCourtesy <= 0) {
+      if (crisisAbierta) return seguimientoDeCrisis;
       return {
         text:
           `⏳ **Has alcanzado el límite diario de ${status.maxDaily} consultas incluidas con la aplicación.**\n\n` +
@@ -396,10 +411,13 @@ ${resultContext}
       };
     }
 
-    const systemPrompt = this.buildSystemPrompt(archetypePersona, currentResult, userProfile, effectiveGender);
+    const systemPrompt =
+      this.buildSystemPrompt(archetypePersona, currentResult, userProfile, effectiveGender) +
+      (crisisAbierta ? `\n\n${CRISIS_ACTIVE_NOTE}` : '');
 
     try {
       if (settings.provider === 'local') {
+        if (crisisAbierta) return seguimientoDeCrisis;
         return {
           text: this.getLocalArchetypeReflection(message, currentResult, archetypePersona, effectiveGender),
           modelUsed: 'Motor Simbólico Local',
@@ -580,6 +598,7 @@ ${resultContext}
       throw new Error('No se pudo procesar la solicitud con el proveedor actual.');
     } catch (err: any) {
       console.warn('AI Provider fallback triggered:', err);
+      if (crisisAbierta) return seguimientoDeCrisis;
       return {
         text: `${this.getLocalArchetypeReflection(message, currentResult, archetypePersona, effectiveGender)}\n\n*(Nota: Respuesta del motor simbólico local debido a: ${err.message || 'conexión de red'})*`,
         modelUsed: 'Fallback Local',

@@ -1,6 +1,13 @@
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
-import { CRISIS_PROTOCOL, CRISIS_RESPONSE, detectCrisis } from "../services/crisisSupport";
+import {
+  CRISIS_ACTIVE_NOTE,
+  CRISIS_FOLLOWUP,
+  CRISIS_PROTOCOL,
+  CRISIS_RESPONSE,
+  crisisInRecentMessages,
+  detectCrisis,
+} from "../services/crisisSupport";
 
 dotenv.config();
 
@@ -52,10 +59,14 @@ export async function handleGeminiChat(body: {
     return { text: CRISIS_RESPONSE };
   }
 
+  // Con la señal en un mensaje anterior la crisis sigue abierta: el modelo acompaña con el aviso
+  // en el prompt, y sin modelo no se vuelve a interpretar ningún arquetipo.
+  const crisisAbierta = crisisInRecentMessages(history.filter(h => h.role === 'user').map(h => h.parts));
+
   const ai = getAiClient();
   if (!ai) {
     return {
-      text: generateSynthesizedArchetypalResponse(message, archetypeContext, archetypePersona)
+      text: crisisAbierta ? CRISIS_FOLLOWUP : generateSynthesizedArchetypalResponse(message, archetypeContext, archetypePersona)
     };
   }
 
@@ -101,6 +112,7 @@ DIRECTRICES ÉTICAS Y DE TONO FUNDAMENTALES:
 
 ${personaInstruction}
 ${contextPrompt}
+${crisisAbierta ? CRISIS_ACTIVE_NOTE : ''}
 `;
 
   const formattedHistory = history.map(h => ({
@@ -140,7 +152,7 @@ ${contextPrompt}
   // If all live API attempts fail (e.g. 503 high demand across all endpoints or network limitation)
   // Provide an intelligent, contextual archetypal reflection so user never sees a broken raw error
   return {
-    text: generateSynthesizedArchetypalResponse(message, archetypeContext, archetypePersona)
+    text: crisisAbierta ? CRISIS_FOLLOWUP : generateSynthesizedArchetypalResponse(message, archetypeContext, archetypePersona)
   };
 }
 

@@ -1,6 +1,33 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { CRISIS_PROTOCOL, CRISIS_RESPONSE, detectCrisis } from './crisisSupport';
+import {
+  CRISIS_FOLLOWUP,
+  CRISIS_MEMORY,
+  CRISIS_PROTOCOL,
+  CRISIS_RESPONSE,
+  crisisInRecentMessages,
+  detectCrisis,
+} from './crisisSupport';
+
+describe('crisisInRecentMessages', () => {
+  it('la crisis sigue abierta en los mensajes siguientes aunque no se repitan las palabras', () => {
+    assert.equal(crisisInRecentMessages(['Quiero suicidarme esta noche', 'Estoy en casa, a oscuras']), true);
+  });
+
+  it('se cierra cuando la señal queda atrás de la ventana', () => {
+    const despues = Array.from({ length: CRISIS_MEMORY }, (_, i) => `Hoy he hablado con mi hermana (${i})`);
+    assert.equal(crisisInRecentMessages(['Quiero suicidarme', ...despues]), false);
+  });
+
+  it('una conversación normal no la abre', () => {
+    assert.equal(crisisInRecentMessages(['¿Cómo equilibro mi Guerrero?', 'Gracias, me sirve']), false);
+  });
+
+  it('el seguimiento tampoco inventa teléfonos ni habla del mapa', () => {
+    assert.doesNotMatch(CRISIS_FOLLOWUP, /\d{3}/);
+    assert.doesNotMatch(CRISIS_FOLLOWUP, /arquetipo|sombra|mapa/i);
+  });
+});
 
 describe('detectCrisis', () => {
   const crisis = [
@@ -25,6 +52,13 @@ describe('detectCrisis', () => {
     'Vivo violencia doméstica',
     'Voy a matar a mi jefe',
     'SUICIDIO',
+    // Los que se escapaban en la revisión de Codex
+    'Me voy a matar esta noche',
+    'Me voy a hacer daño',
+    'Mi pareja me está pegando ahora',
+    'Si sigue así me mato',
+    'Estoy solo y ya tengo las pastillas en la mano',
+    'Me corto a propósito cuando me siento así',
   ];
 
   for (const frase of crisis) {
@@ -44,6 +78,14 @@ describe('detectCrisis', () => {
     'Siento miedo de fracasar',
     'Mi Rey interior quiere controlarlo todo',
     'La muerte simbólica del ego en el Héroe',
+    // Falsos positivos que señaló Codex: lo accidental y lo negado no son crisis
+    'Me lastimé entrenando y quiero adaptar el reto',
+    'No quiero hacerme daño, quiero aprender a poner límites',
+    'Me hice daño en la rodilla corriendo',
+    'Me hago daño en la espalda cuando entreno',
+    'Esta semana me voy a matar a trabajar',
+    'Me mato de risa con la Bufona',
+    'No pienso en morirme, pienso en cambiar de trabajo',
   ];
 
   for (const frase of sinCrisis) {
