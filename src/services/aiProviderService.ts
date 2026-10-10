@@ -8,6 +8,7 @@ import {
   GenderMode,
   UserProfile,
 } from '../types';
+import { getMapLead } from './scoringEngine';
 import {
   CRISIS_ACTIVE_NOTE,
   CRISIS_FOLLOWUP,
@@ -329,15 +330,30 @@ ${userProfile.currentGoal ? `- Objetivo / Desafío Actual: ${userProfile.current
       const dominantNarrative = getArchetypeNarrative(dominantArch, userGender);
       const top3Names = currentResult.top3.map(a => getArchetypeName(a.archetypeId, userGender)).join(', ');
       const devNames = currentResult.developmentArchetypes.map(a => getArchetypeName(a.archetypeId, userGender)).join(', ');
+      const lead = getMapLead(currentResult, userGender);
+      const dimensiones = `Mente (${currentResult.dimensionScores.mente}%), Acción (${currentResult.dimensionScores.accion}%), Corazón (${currentResult.dimensionScores.corazon}%), Construcción (${currentResult.dimensionScores.construccion}%)`;
 
-      resultContext = `
+      // Lo que el mapa no sostiene, la IA tampoco puede afirmarlo: ni un dominante en un mapa
+      // plano, ni uno solo cuando varios van a la par.
+      resultContext =
+        lead.kind === 'flat'
+          ? `
 CONTEXTO DEL MAPA ARQUETÍPICO DEL USUARIO (Sistema de 18 Arquetipos Universales):
-- Arquetipo Dominante: ${getArchetypeName(dominantArch, userGender)} (${dominantNarrative.characterTitle || dominantNarrative.name})
+- Mapa sin un polo claro: sus respuestas puntúan parecido en todas las figuras. No le atribuyas un arquetipo dominante ni le recomiendes desarrollar figuras concretas por su puesto en el ranking; ayúdale a explorar situaciones concretas.
+- Balance Dimensional: ${dimensiones}
+`
+          : `
+CONTEXTO DEL MAPA ARQUETÍPICO DEL USUARIO (Sistema de 18 Arquetipos Universales):
+${
+  lead.kind === 'tie'
+    ? `- En cabeza, a la par y sin un único dominante: ${lead.ids.map(id => getArchetypeName(id, userGender)).join(', ')}. No presentes a ninguna de ellas como «su» arquetipo dominante.`
+    : `- Arquetipo Dominante: ${getArchetypeName(dominantArch, userGender)} (${dominantNarrative.characterTitle || dominantNarrative.name})
   * Esencia: ${dominantNarrative.shortDescription}
-  * Desafío Central: ${dominantNarrative.centralQuestion}
-- Tríada Dominante (Top 3): ${top3Names}
-- Arquetipos de Desarrollo (Equilibrio): ${devNames}
-- Balance Dimensional: Mente (${currentResult.dimensionScores.mente}%), Acción (${currentResult.dimensionScores.accion}%), Corazón (${currentResult.dimensionScores.corazon}%), Construcción (${currentResult.dimensionScores.construccion}%)
+  * Desafío Central: ${dominantNarrative.centralQuestion}`
+}
+- Tríada (Top 3): ${top3Names}
+- Lo que menos apareció en sus respuestas (no es una carencia): ${devNames}
+- Balance Dimensional: ${dimensiones}
 - Perfil Compuesto: ${currentResult.compositeProfile?.title || 'Explorador reflexivo'}
 - Síntesis del Perfil: ${currentResult.compositeProfile?.synthesis || ''}
 `;

@@ -12,6 +12,7 @@ import {
   Calendar,
 } from 'lucide-react';
 import { getArchetype, getArchetypeName } from '../../data/archetypesData';
+import { getMapLead } from '../../services/scoringEngine';
 import { ArchetypeId, AssessmentResult, Challenge, GenderMode, JournalEntry } from '../../types';
 import { DimensionBar } from '../common/DimensionBar';
 import { RadarChartComponent } from '../common/RadarChartComponent';
@@ -95,6 +96,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const activeChallenges = challenges.slice(0, 4);
 
   const dominantName = getArchetypeName(currentResult.dominantArchetype.archetypeId, currentGender);
+  const lead = getMapLead(currentResult, currentGender);
 
   // Past comparison result if multiple evaluations exist
   const previousResult = history.length > 1 ? history[1] : undefined;
@@ -130,7 +132,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             {currentResult.compositeProfile.title}
           </h1>
           <p className="text-xs sm:text-sm text-[#9DA79F] mt-0.5">
-            Dominante: <strong className="text-[#F2EFE6] font-serif">{dominantName}</strong> ({currentResult.dominantArchetype.normalizedScore}%) · Actualizado en {new Date(currentResult.date).toLocaleDateString('es-ES', { month: 'short', day: 'numeric', year: 'numeric' })}
+            {lead.kind === 'single' ? (
+              <>Dominante: <strong className="text-[#F2EFE6] font-serif">{dominantName}</strong> · </>
+            ) : lead.kind === 'tie' ? (
+              <>Sin un único dominante · </>
+            ) : null}
+            Actualizado en {new Date(currentResult.date).toLocaleDateString('es-ES', { month: 'short', day: 'numeric', year: 'numeric' })}
           </p>
         </div>
 
@@ -154,23 +161,36 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {/* Highlights Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Dominant Card */}
-        <div
-          onClick={() => onSelectArchetype(currentResult.dominantArchetype.archetypeId)}
-          className="p-5 rounded-2xl bg-[#121A17] border border-[#315C45] hover:border-[#D6A84F] transition-all cursor-pointer space-y-2"
-        >
-          <span className="text-xs uppercase tracking-wider text-[#9DA79F] font-medium">
-            Arquetipo Dominante
-          </span>
-          <div className="flex items-center justify-between">
-            <span className="text-3xl">{currentResult.dominantArchetype.emoji}</span>
-            <span className="font-mono text-xl font-bold text-[#D6A84F]">
-              {currentResult.dominantArchetype.normalizedScore}%
+        {lead.kind === 'single' ? (
+          <div
+            onClick={() => onSelectArchetype(currentResult.dominantArchetype.archetypeId)}
+            className="p-5 rounded-2xl bg-[#121A17] border border-[#315C45] hover:border-[#D6A84F] transition-all cursor-pointer space-y-2"
+          >
+            <span className="text-xs uppercase tracking-wider text-[#9DA79F] font-medium">
+              Arquetipo Dominante
             </span>
+            <div className="flex items-center justify-between">
+              <span className="text-3xl">{currentResult.dominantArchetype.emoji}</span>
+              <span className="font-mono text-xl font-bold text-[#D6A84F]">
+                {currentResult.dominantArchetype.normalizedScore}
+              </span>
+            </div>
+            <h3 className="font-serif font-bold text-lg text-[#F2EFE6]">
+              {dominantName}
+            </h3>
           </div>
-          <h3 className="font-serif font-bold text-lg text-[#F2EFE6]">
-            {dominantName}
-          </h3>
-        </div>
+        ) : (
+          // Sin polo claro o con varios a la par, no hay un dominante que destacar.
+          <div
+            onClick={() => onSelectTab('result')}
+            className="p-5 rounded-2xl bg-[#121A17] border border-[#315C45] hover:border-[#D6A84F] transition-all cursor-pointer space-y-2"
+          >
+            <span className="text-xs uppercase tracking-wider text-[#9DA79F] font-medium">
+              {lead.kind === 'flat' ? 'Tu mapa' : 'En cabeza, a la par'}
+            </span>
+            <h3 className="font-serif font-bold text-lg text-[#F2EFE6] leading-snug">{lead.label}</h3>
+          </div>
+        )}
 
         {/* Top 3 Archetypes */}
         <div className="p-5 rounded-2xl bg-[#121A17] border border-[#1E2A25] space-y-2">

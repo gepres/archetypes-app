@@ -15,6 +15,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { ARCHETYPES, DIMENSIONS, getArchetype } from '../../data/archetypesData';
+import { getMapLead } from '../../services/scoringEngine';
 import { ARCHETYPE_VISUALS } from '../../data/archetypeImages';
 import { ArchetypeId, AssessmentResult, GenderMode } from '../../types';
 import { ArchetypeIllustratedArtwork } from '../archetypes/ArchetypeIllustratedArtwork';
@@ -52,6 +53,8 @@ export const ShareResultImageModal: React.FC<ShareResultImageModalProps> = ({
   const dominant = getArchetype(result.dominantArchetype.archetypeId, gender);
   const dominantVisual = ARCHETYPE_VISUALS[result.dominantArchetype.archetypeId];
   const { compositeProfile } = result;
+  // La imagen sale a redes: no puede proclamar un dominante que las respuestas no sostienen.
+  const lead = getMapLead(result, gender);
 
   // Theme styling configurations
   const themeStyles = {
@@ -183,7 +186,12 @@ function comoNombreDeFichero(texto: string): string {
         await navigator.share({
           files: [file],
           title: `Mi Mapa Arquetípico: ${compositeProfile.title}`,
-          text: `Descubrí mi arquetipo dominante: ${dominant.name} (${result.dominantArchetype.normalizedScore}%). Descubre el tuyo: ${SITIO}`,
+          text:
+            lead.kind === 'single'
+              ? `Descubrí mi arquetipo dominante: ${dominant.name}. Descubre el tuyo: ${SITIO}`
+              : lead.kind === 'tie'
+                ? `Mis arquetipos van a la par: ${lead.label.replace(/, a la par$/, '')}. Descubre los tuyos: ${SITIO}`
+                : `Hice el test de arquetipos y mi mapa no tiene un polo claro. Haz el tuyo: ${SITIO}`,
         });
         setShareSuccess(true);
         setTimeout(() => setShareSuccess(false), 3000);
@@ -456,7 +464,8 @@ function comoNombreDeFichero(texto: string): string {
 
               {/* Main Archetype Illustrated Core */}
               <div className="relative z-10 my-3 flex flex-col items-center text-center space-y-2">
-                {/* Illustrated Avatar/Portrait Card */}
+                {/* Illustrated Avatar/Portrait Card: sin polo claro no hay un rostro que enseñar */}
+                {lead.kind !== 'flat' && (
                 <div
                   className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden shadow-2xl border-2 shrink-0 bg-[#0E1513] relative"
                   style={{ borderColor: themeStyles.cardBorder }}
@@ -465,29 +474,39 @@ function comoNombreDeFichero(texto: string): string {
                     archetypeId={dominant.id}
                     className="w-full h-full object-cover"
                   />
-                  <div className="absolute top-1 right-1 px-1.5 py-0.5 rounded-md bg-black/70 border border-white/10 text-[9px] font-mono font-bold text-[#FFE898]">
-                    {result.dominantArchetype.normalizedScore}%
-                  </div>
+                  {lead.kind === 'single' && (
+                    <div className="absolute top-1 right-1 px-1.5 py-0.5 rounded-md bg-black/70 border border-white/10 text-[9px] font-mono font-bold text-[#FFE898]">
+                      {result.dominantArchetype.normalizedScore}
+                    </div>
+                  )}
                 </div>
+                )}
 
                 {/* Dominant Titles */}
                 <div>
                   <div className="inline-flex items-center gap-1 text-[10px] uppercase font-bold tracking-wider text-[#A6B2A8]">
-                    <span>Arquetipo Dominante</span>
-                    <span>·</span>
-                    {/* El nombre de la dimension, no su identificador: "corazon"
-                        con capitalize salia "Corazon", sin tilde. */}
-                    <span>{DIMENSIONS[dominant.dimension].name.split(' & ')[0]}</span>
+                    <span>{lead.kind === 'single' ? 'Arquetipo Dominante' : lead.kind === 'tie' ? 'En cabeza, a la par' : 'Mi mapa'}</span>
+                    {lead.kind === 'single' && (
+                      <>
+                        <span>·</span>
+                        {/* El nombre de la dimension, no su identificador: "corazon"
+                            con capitalize salia "Corazon", sin tilde. */}
+                        <span>{DIMENSIONS[dominant.dimension].name.split(' & ')[0]}</span>
+                      </>
+                    )}
                   </div>
                   <h3 className="font-serif text-2xl sm:text-3xl font-bold text-[#F2EFE6] tracking-tight">
-                    {dominant.name}
+                    {lead.kind === 'single' ? dominant.name : lead.label}
                   </h3>
-                  <p className="text-[11px] font-medium" style={{ color: themeStyles.accentColor }}>
-                    {dominantVisual.characterTitle}
-                  </p>
+                  {lead.kind === 'single' && (
+                    <p className="text-[11px] font-medium" style={{ color: themeStyles.accentColor }}>
+                      {dominantVisual.characterTitle}
+                    </p>
+                  )}
                 </div>
 
-                {/* Composite Title & Synthesis */}
+                {/* Composite Title & Synthesis (en un mapa plano repetiría el titular) */}
+                {lead.kind !== 'flat' && (
                 <div className={`w-full p-3 rounded-2xl border text-left space-y-1.5 ${themeStyles.subtleBox}`}>
                   {/* La combinacion son tres nombres completos: al lado del titulo
                       del bloque no cabe y se pisan. Va debajo, en su linea. */}
@@ -500,10 +519,13 @@ function comoNombreDeFichero(texto: string): string {
                   <p className="text-[9px] font-semibold text-[#D6A84F] leading-tight">
                     {compositeProfile.archetypeCombination}
                   </p>
-                  <p className="text-[10px] text-[#C5CFC7] leading-relaxed italic font-serif">
-                    "{dominant.mantra}"
-                  </p>
+                  {lead.kind === 'single' && (
+                    <p className="text-[10px] text-[#C5CFC7] leading-relaxed italic font-serif">
+                      "{dominant.mantra}"
+                    </p>
+                  )}
                 </div>
+                )}
               </div>
 
               {/* 4 Dimensions Bar (Optional Toggle) */}
@@ -545,8 +567,9 @@ function comoNombreDeFichero(texto: string): string {
                 </div>
               )}
 
-              {/* Top 3 Ranking Podiums (Optional Toggle) */}
-              {showTop3 && (
+              {/* Top 3 Ranking Podiums (Optional Toggle). En un mapa plano ese orden lo decide la
+                  lista de datos, no las respuestas: no se publica. */}
+              {showTop3 && lead.kind !== 'flat' && (
                 <div className={`relative z-10 p-2 rounded-xl border my-1 ${themeStyles.subtleBox}`}>
                   <div className="text-[9px] font-bold text-[#9DA79F] uppercase tracking-wider mb-1 text-center">
                     Top 3 Fuerzas Arquetípicas

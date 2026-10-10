@@ -165,7 +165,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
               <div>
                 <p className="text-xs text-[#9DA79F]">Tu mapa activo guardado:</p>
                 <p className="font-serif font-bold text-[#F2EFE6] text-base">
-                  {currentResult.compositeProfile.title} ({getArchetypeName(currentResult.dominantArchetype.archetypeId, currentGender)})
+                  {currentResult.compositeProfile.title}
                 </p>
               </div>
             </div>

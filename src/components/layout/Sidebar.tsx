@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { AssessmentResult, UserProfile } from '../../types';
 import { getArchetypeName } from '../../data/archetypesData';
+import { getMapLead } from '../../services/scoringEngine';
 import { BrandLogo } from '../common/BrandLogo';
 import { AiModelStatusBadge } from '../common/AiModelStatusBadge';
 
@@ -54,6 +55,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenAiSettings,
   userProfile,
 }) => {
+  const lead = currentResult ? getMapLead(currentResult, userProfile.gender || 'male') : null;
   const mainNavItems = [
     { id: 'landing', label: 'Inicio', icon: Compass },
     { id: 'dashboard', label: 'Mi Mapa', icon: LayoutDashboard },
@@ -134,18 +136,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <div className="p-4 border-t border-[#1E2A25] bg-[#0E1513] space-y-2">
         {currentResult ? (
           <div className="bg-[#121A17] border border-[#23332D] rounded-xl p-3 space-y-2">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-[#9DA79F]">Arquetipo central</span>
-              <span className="font-bold text-[#D6A84F]">
-                {currentResult.dominantArchetype.normalizedScore}%
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xl">{currentResult.dominantArchetype.emoji}</span>
-              <span className="font-serif font-bold text-sm text-[#F2EFE6]">
-                {getArchetypeName(currentResult.dominantArchetype.archetypeId, userProfile.gender || 'male')}
-              </span>
-            </div>
+            {lead?.kind === 'single' ? (
+              <>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-[#9DA79F]">Arquetipo central</span>
+                  <span className="font-bold text-[#D6A84F]">
+                    {currentResult.dominantArchetype.normalizedScore}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">{currentResult.dominantArchetype.emoji}</span>
+                  <span className="font-serif font-bold text-sm text-[#F2EFE6]">
+                    {getArchetypeName(currentResult.dominantArchetype.archetypeId, userProfile.gender || 'male')}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <>
+                <span className="text-xs text-[#9DA79F]">Tu mapa</span>
+                <p className="font-serif font-bold text-sm text-[#F2EFE6] leading-snug">{lead?.label}</p>
+              </>
+            )}
             <div className="flex gap-1.5 pt-1">
               <button
                 onClick={() => onSelectTab('result')}

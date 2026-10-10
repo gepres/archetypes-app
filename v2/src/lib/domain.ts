@@ -19,7 +19,7 @@ export {
 
 export { LIKERT_OPTIONS, QUESTIONS_DATA, QUICK_QUESTION_IDS } from '@v1/data/questionsData';
 
-export { calculateAssessmentResult } from '@v1/services/scoringEngine';
+export { calculateAssessmentResult, getMapLead, listNames } from '@v1/services/scoringEngine';
 
 export { ArchetypeIllustratedArtwork } from '@v1/components/archetypes/ArchetypeIllustratedArtwork';
 

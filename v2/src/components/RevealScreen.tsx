@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import { ArrowRight, Check, RotateCcw, Share2, Volume2, VolumeX } from 'lucide-react';
-import { ArchetypeIllustratedArtwork, DIMENSIONS, getArchetype } from '../lib/domain';
+import { ArchetypeIllustratedArtwork, DIMENSIONS, getArchetype, getMapLead, listNames } from '../lib/domain';
 import type { AssessmentResult } from '../lib/domain';
 import { callar, decir, vibrar } from '../lib/voice';
 
@@ -24,17 +24,26 @@ export const RevealScreen: React.FC<RevealScreenProps> = ({
   const yaHabloRef = useRef(false);
 
   const dominante = getArchetype(resultado.dominantArchetype.archetypeId, 'universal');
-  const segundo = getArchetype(resultado.ranking[1].archetypeId, 'universal');
   const dimension = DIMENSIONS[dominante.dimension];
-  // Si el mapa no tiene un polo claro, o los dos primeros van a la par, no se proclama un
-  // dominante que las respuestas no sostienen.
-  const plano = !!resultado.compositeProfile.isFlat;
-  const empate = !!resultado.compositeProfile.isTie;
+  // Si el mapa no tiene un polo claro, o varios van a la par, no se proclama un dominante que
+  // las respuestas no sostienen.
+  const lider = getMapLead(resultado, 'universal');
+  const plano = lider.kind === 'flat';
+  const empate = lider.kind === 'tie';
+  // Quiénes acompañan al del rostro: todos los empatados, o el segundo si no hay empate.
+  const companeros = (empate ? lider.ids.filter(id => id !== dominante.id) : [resultado.ranking[1].archetypeId]).map(id =>
+    getArchetype(id, 'universal')
+  );
+  const nombresCompaneros =
+    companeros.length > 4
+      ? `${companeros.slice(0, 3).map(a => a.name).join(', ')} y ${companeros.length - 3} más`
+      : listNames(companeros.map(a => a.name));
+  const todosALaPar = listNames([dominante.name, ...companeros.slice(0, 3).map(a => a.name)]);
 
   const guion = plano
-    ? 'Tus respuestas puntúan parecido en casi todas las figuras, así que ninguna destaca sobre las demás. Si vuelves a responder pensando en situaciones concretas de las últimas semanas, el mapa se dibuja mejor.'
+    ? 'Tus respuestas puntúan parecido en todas las figuras, así que ninguna destaca sobre las demás. Si vuelves a responder pensando en situaciones concretas de las últimas semanas, el mapa se dibuja mejor.'
     : empate
-      ? `Tus respuestas ponen a la par a ${dominante.name} y a ${segundo.name}. ${dominante.shortDescription} Su mantra: ${dominante.mantra}`
+      ? `Tus respuestas ponen a la par a ${todosALaPar}${companeros.length > 3 ? ', entre otras' : ''}. ${dominante.shortDescription}`
       : `Tu arquetipo dominante es ${dominante.name}. ${dominante.shortDescription} Tu mantra: ${dominante.mantra}`;
 
   useEffect(() => {
@@ -47,7 +56,7 @@ export const RevealScreen: React.FC<RevealScreenProps> = ({
     const cabecera = plano
       ? 'Hice el test de arquetipos y mi mapa no tiene un polo claro.'
       : empate
-        ? `Mis arquetipos van a la par: ${dominante.name} y ${segundo.name}.`
+        ? `Mis arquetipos van a la par: ${todosALaPar}${companeros.length > 3 ? ' y más' : ''}.`
         : `Mi arquetipo dominante es ${dominante.name}. «${dominante.mantra}»`;
     const texto = `${cabecera}
 
@@ -228,7 +237,9 @@ Descubre el tuyo escuchando, en dos minutos:`;
 
           <p className="text-xs text-[#7B8880]">
             {empate ? 'A la par con' : 'Te acompaña'}{' '}
-            <span className="text-[#C5CFC7] font-semibold">{segundo.emoji} {segundo.name}</span>
+            <span className="text-[#C5CFC7] font-semibold">
+              {companeros.length === 1 ? `${companeros[0].emoji} ${companeros[0].name}` : nombresCompaneros}
+            </span>
           </p>
         </motion.div>
         </>)}

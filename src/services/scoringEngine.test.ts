@@ -1,10 +1,11 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  FLAT_MAX_SPREAD,
+  FLAT_MAX_RANGE,
   TIE_MAX_GAP,
   adaptAssessmentResultToGender,
   calculateAssessmentResult,
+  getMapLead,
 } from './scoringEngine';
 import { QUESTIONS_DATA, QUICK_QUESTION_IDS } from '../data/questionsData';
 import { ARCHETYPE_DRIVES, getDimensionTension } from '../data/archetypePairs';
@@ -49,8 +50,11 @@ describe('perfil por pareja', () => {
     calculateAssessmentResult(respuestasAlAzar(r), i % 2 ? 'full' : 'quick', (['male', 'female', 'universal'] as GenderMode[])[i % 3])
   );
 
-  it('el título es la pareja que encabeza el ranking', () => {
-    for (const res of resultados.filter(x => !x.compositeProfile.isFlat)) {
+  const lideres = (res: AssessmentResult) =>
+    res.ranking.filter(s => res.ranking[0].normalizedScore - s.normalizedScore <= TIE_MAX_GAP);
+
+  it('con uno o dos en cabeza, el título es la pareja que encabeza el ranking', () => {
+    for (const res of resultados.filter(x => !x.compositeProfile.isFlat && lideres(x).length <= 2)) {
       const [a, b] = res.ranking;
       assert.equal(res.compositeProfile.title, `${a.name} + ${b.name}`);
       assert.deepEqual(res.compositeProfile.pair, [a.archetypeId, b.archetypeId]);
@@ -58,18 +62,46 @@ describe('perfil por pareja', () => {
     }
   });
 
-  it('el empate se marca exactamente cuando el 1.º y el 2.º están a la par', () => {
+  it('el empate se marca exactamente cuando dos o más figuras están a la par en cabeza', () => {
     for (const res of resultados.filter(x => !x.compositeProfile.isFlat)) {
-      const [a, b] = res.ranking;
-      assert.equal(res.compositeProfile.isTie, a.normalizedScore - b.normalizedScore <= TIE_MAX_GAP);
+      const grupo = lideres(res);
+      assert.equal(res.compositeProfile.isTie, grupo.length >= 2);
+      if (grupo.length >= 2) assert.deepEqual(res.compositeProfile.tiedLeaders, grupo.map(s => s.archetypeId));
+      else assert.equal('tiedLeaders' in res.compositeProfile, false);
     }
   });
 
-  it('el mapa plano se marca exactamente cuando el 1.º apenas supera al del medio', () => {
+  it('el mapa plano se marca exactamente cuando todo el mapa cabe en pocos puntos', () => {
     for (const res of resultados) {
-      const plano = res.ranking[0].normalizedScore - res.ranking[8].normalizedScore <= FLAT_MAX_SPREAD;
-      assert.equal(!!res.compositeProfile.isFlat, plano);
+      const rango = res.ranking[0].normalizedScore - res.ranking[res.ranking.length - 1].normalizedScore;
+      assert.equal(!!res.compositeProfile.isFlat, rango <= FLAT_MAX_RANGE);
     }
+  });
+
+  // Los dos casos que encontró la revisión de Codex
+  const rapidas = QUESTIONS_DATA.filter(q => QUICK_QUESTION_IDS.includes(q.id));
+
+  it('un mapa contrastado no es plano aunque arriba haya muchos empatados', () => {
+    // Acción a 1 y todo lo demás a 5: once figuras arriba y tres abajo, a 88 puntos.
+    const res = calculateAssessmentResult(rapidas.map(q => ({ questionId: q.id, value: q.dimensionFocus === 'accion' ? 1 : 5 })), 'quick', 'male');
+    const p = res.compositeProfile;
+    assert.equal(p.isFlat, false);
+    assert.equal(p.isTie, true);
+    assert.ok((p.tiedLeaders ?? []).length >= 3);
+    assert.equal(p.pair, undefined, 'no se elige una pareja entre empatados');
+    assert.match(p.title, /a la par/);
+    assert.ok(p.developmentArchetypes.length > 0, 'el contraste sí se cuenta: lo que menos apareció');
+  });
+
+  it('un empate de tres no se reduce a una pareja con el tercero «detrás»', () => {
+    // Corazón a 5 y todo lo demás a 1: Amante, Cuidador y Bufón empatan arriba.
+    const res = calculateAssessmentResult(rapidas.map(q => ({ questionId: q.id, value: q.dimensionFocus === 'corazon' ? 5 : 1 })), 'quick', 'male');
+    const p = res.compositeProfile;
+    const grupo = lideres(res);
+    assert.ok(grupo.length >= 3, `solo ${grupo.length} en cabeza`);
+    assert.equal(p.pair, undefined);
+    for (const s of grupo) assert.ok(p.title.includes(s.name) || p.synthesis.includes(s.name), `${s.name} no aparece`);
+    for (const s of grupo) assert.doesNotMatch(p.synthesis, new RegExp(`con ${s.name} detrás`));
   });
 
   it('ya no hay seis títulos fijos ni «El Integrador X»', () => {
@@ -106,7 +138,8 @@ describe('por qué te salió', () => {
         assert.ok(lista.length <= 2);
         for (const e of lista) {
           const q = QUESTIONS_DATA.find(x => x.id === e.questionId)!;
-          assert.ok(q.weights.some(w => w.archetypeId === id), `la ${e.questionId} no puntúa ${id}`);
+          const peso = q.weights.find(w => w.archetypeId === id)?.weight ?? 0;
+          assert.ok(peso >= 2, `la ${e.questionId} no pesa lo bastante en ${id} (peso ${peso})`);
           assert.ok(e.value >= 4);
           assert.equal(respuestas.find(x => x.questionId === e.questionId)!.value, e.value);
         }
@@ -145,6 +178,35 @@ describe('resultados guardados', () => {
     assert.equal('variants' in recompuesto.dominantArchetype, false);
     assert.deepEqual(Object.keys(recompuesto.dominantArchetype).sort(), ['archetypeId', 'dimension', 'emoji', 'name', 'normalizedScore', 'rank', 'rawScore']);
     assert.ok(JSON.stringify(recompuesto).length < JSON.stringify(antiguo).length);
+  });
+});
+
+describe('getMapLead: ninguna pantalla proclama un dominante que no hay', () => {
+  const rapidas = QUESTIONS_DATA.filter(q => QUICK_QUESTION_IDS.includes(q.id));
+
+  it('mapa plano', () => {
+    const lead = getMapLead(calculateAssessmentResult(todas(3), 'full', 'male'), 'male');
+    assert.deepEqual(lead, { kind: 'flat', ids: [], label: 'Sin un polo claro' });
+  });
+
+  it('empate de tres: los nombra a los tres', () => {
+    const res = calculateAssessmentResult(rapidas.map(q => ({ questionId: q.id, value: q.dimensionFocus === 'corazon' ? 5 : 1 })), 'quick', 'female');
+    const lead = getMapLead(res, 'female');
+    assert.equal(lead.kind, 'tie');
+    assert.ok(lead.ids.length >= 3);
+    if (lead.ids.length === 3) assert.match(lead.label, /, a la par$/);
+  });
+
+  it('un dominante claro se nombra solo', () => {
+    const r = azar(5);
+    for (let i = 0; i < 200; i++) {
+      const res = calculateAssessmentResult(respuestasAlAzar(r), 'full', 'male');
+      const lead = getMapLead(res, 'male');
+      if (!res.compositeProfile.isFlat && !res.compositeProfile.isTie) {
+        assert.equal(lead.kind, 'single');
+        assert.deepEqual(lead.ids, [res.dominantArchetype.archetypeId]);
+      }
+    }
   });
 });
 

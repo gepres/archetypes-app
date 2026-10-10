@@ -205,10 +205,13 @@ export function calculateAssessmentResult(
 const EVIDENCE_PER_ARCHETYPE = 2;
 
 /**
- * Las respuestas que más empujaron a un arquetipo hacia arriba: las afirmaciones que lo
- * puntúan y con las que la persona estuvo de acuerdo (4 o 5), de más a menos peso. Si no
- * hay ninguna, la lista sale vacía y la pantalla no inventa un motivo.
+ * Las respuestas que más empujaron a un arquetipo hacia arriba: las afirmaciones donde ese
+ * arquetipo pesa de verdad (2 o 3; con peso 1 solo lo roza, y citarla como motivo no convence)
+ * y con las que la persona estuvo de acuerdo (4 o 5), de más a menos peso. Si no hay ninguna,
+ * la lista sale vacía y la pantalla no inventa un motivo.
  */
+const EVIDENCE_MIN_WEIGHT = 2;
+
 function collectEvidence(
   archetypeId: ArchetypeId,
   questions: typeof QUESTIONS_DATA,
@@ -220,7 +223,7 @@ function collectEvidence(
       const value = answerMap.get(q.id) ?? 0;
       return { questionId: q.id, value, weight };
     })
-    .filter(e => e.weight > 0 && e.value >= 4)
+    .filter(e => e.weight >= EVIDENCE_MIN_WEIGHT && e.value >= 4)
     .sort((x, y) => y.value * y.weight - x.value * x.weight || y.weight - x.weight)
     .slice(0, EVIDENCE_PER_ARCHETYPE)
     .map(({ questionId, value }) => ({ questionId, value }));
@@ -303,15 +306,43 @@ export function adaptAssessmentResultToGender(
   };
 }
 
-/** El 1.º y el 2.º se dan por empatados si los separa esta distancia o menos (en puntos de 0 a 100). */
+/** Dos figuras están a la par si las separa esta distancia o menos (en puntos de 10 a 98). */
 export const TIE_MAX_GAP = 1;
 
 /**
- * Un mapa no tiene polo claro si el primero apenas supera al del medio. Calibrado con
- * simulaciones: salta con respuestas planas (todo igual) y con quien dice «sí» a casi todo, y
- * no salta nunca con perfiles marcados ni con respuestas al azar.
+ * Un mapa no tiene polo claro si entre la figura que más puntúa y la que menos hay esta
+ * distancia o menos. Calibrado con simulaciones: salta siempre con todo igual y casi siempre
+ * con casi todo en el centro, y nunca con respuestas al azar, con perfiles marcados ni con un
+ * mapa contrastado (una dimensión baja y el resto alto), aunque arriba haya muchos empatados.
  */
-export const FLAT_MAX_SPREAD = 5;
+export const FLAT_MAX_RANGE = 15;
+
+/** «A», «A y B», «A, B y C». */
+export function listNames(names: string[]): string {
+  return names.length <= 1 ? names.join('') : `${names.slice(0, -1).join(', ')} y ${names[names.length - 1]}`;
+}
+
+/**
+ * Cómo nombrar la cabeza de un mapa en cualquier pantalla, para que ninguna proclame un
+ * dominante que las respuestas no sostienen: sin polo claro, varias figuras a la par, o una.
+ */
+export function getMapLead(
+  result: AssessmentResult,
+  gender: GenderMode = 'male'
+): { kind: 'flat' | 'tie' | 'single'; ids: ArchetypeId[]; label: string } {
+  const p = result.compositeProfile;
+  if (p.isFlat) return { kind: 'flat', ids: [], label: 'Sin un polo claro' };
+  if (p.isTie) {
+    const ids = p.tiedLeaders ?? [result.ranking[0].archetypeId, result.ranking[1].archetypeId];
+    const label =
+      ids.length > 3
+        ? `${ids.length} figuras a la par`
+        : `${listNames(ids.map(id => getArchetype(id, gender).name))}, a la par`;
+    return { kind: 'tie', ids, label };
+  }
+  const id = result.dominantArchetype.archetypeId;
+  return { kind: 'single', ids: [id], label: getArchetype(id, gender).name };
+}
 
 function generateCompositeProfile(
   ranking: ArchetypeScore[],
@@ -319,39 +350,13 @@ function generateCompositeProfile(
   gender: GenderMode = 'male'
 ): CompositeProfile {
   const [first, second, third] = ranking;
-  const middle = ranking[Math.floor(ranking.length / 2) - 1];
+  const last = ranking[ranking.length - 1];
   const a = getArchetype(first.archetypeId, gender);
   const b = getArchetype(second.archetypeId, gender);
   const c = getArchetype(third.archetypeId, gender);
 
   const archetypeKey = `${a.id}-${b.id}-${c.id}`;
   const archetypeCombination = `${a.name} + ${b.name} + ${c.name}`;
-
-  // Si nada destaca, no se inventa una identidad: se dice.
-  const isFlat = first.normalizedScore - middle.normalizedScore <= FLAT_MAX_SPREAD;
-  if (isFlat) {
-    return {
-      archetypeKey,
-      title: 'Un mapa sin un polo claro',
-      archetypeCombination,
-      synthesis:
-        'Tus respuestas puntúan parecido en casi todas las figuras: ninguna destaca lo bastante como para ponerle nombre. ' +
-        'Puede ser un momento de equilibrio, o que hayas respondido casi todo igual. ' +
-        'Si vuelves a responder pensando en situaciones concretas de las últimas semanas, el mapa se dibuja mejor.',
-      strengths: [],
-      risksAndShadows: [],
-      developmentArchetypes: [],
-      isFlat: true,
-      isTie: false,
-    };
-  }
-
-  // El perfil se nombra por la pareja que lo encabeza: 153 combinaciones en vez de seis
-  // títulos fijos, y cada una dice algo de esas dos figuras y no de cualquiera.
-  const isTie = first.normalizedScore - second.normalizedScore <= TIE_MAX_GAP;
-  const head = isTie
-    ? `${a.name} y ${b.name} comparten el primer puesto de tu mapa`
-    : `${a.name} y ${b.name} encabezan tu mapa`;
 
   const developmentArchetypes = ranking
     .slice(-2)
@@ -367,6 +372,57 @@ function generateCompositeProfile(
       };
     });
 
+  // Si todo el mapa cabe en unos pocos puntos, no se inventa una identidad: se dice.
+  const range = first.normalizedScore - last.normalizedScore;
+  if (range <= FLAT_MAX_RANGE) {
+    return {
+      archetypeKey,
+      title: 'Un mapa sin un polo claro',
+      archetypeCombination,
+      synthesis:
+        `Tus respuestas puntúan parecido en todas las figuras: entre la que más y la que menos hay ${range} puntos, poco para ponerle nombre a ninguna. ` +
+        'Puede ser un momento de equilibrio, o que hayas respondido casi todo igual. ' +
+        'Si vuelves a responder pensando en situaciones concretas de las últimas semanas, el mapa se dibuja mejor.',
+      strengths: [],
+      risksAndShadows: [],
+      developmentArchetypes: [],
+      isFlat: true,
+      isTie: false,
+    };
+  }
+
+  // Quiénes comparten el primer puesto. Si son tres o más, las respuestas no distinguen entre
+  // ellos: elegir dos por el orden en que están en los datos sería inventar.
+  const leaders = ranking.filter(s => first.normalizedScore - s.normalizedScore <= TIE_MAX_GAP);
+  const leaderIds = leaders.map(s => s.archetypeId);
+
+  if (leaders.length >= 3) {
+    const names = leaders.map(s => getArchetype(s.archetypeId, gender).name);
+    const shown = names.length <= 5 ? listNames(names) : `${names.length} figuras, entre ellas ${listNames(names.slice(0, 3))},`;
+    const lows = developmentArchetypes.map(d => d.name);
+    return {
+      archetypeKey,
+      title: names.length === 3 ? `${listNames(names)}, a la par` : `${names.length} figuras a la par`,
+      archetypeCombination,
+      synthesis:
+        `${shown} comparten el primer puesto de tu mapa: tus respuestas no distinguen entre ellas. ` +
+        `Lo que sí se ve es lo que menos apareció: ${listNames(lows)}.`,
+      strengths: [],
+      risksAndShadows: [],
+      developmentArchetypes,
+      tiedLeaders: leaderIds,
+      isTie: true,
+      isFlat: false,
+    };
+  }
+
+  // El perfil se nombra por la pareja que lo encabeza: 306 combinaciones en vez de seis
+  // títulos fijos, y cada una dice algo de esas dos figuras y no de cualquiera.
+  const isTie = leaders.length === 2;
+  const head = isTie
+    ? `${a.name} y ${b.name} comparten el primer puesto de tu mapa`
+    : `${a.name} y ${b.name} encabezan tu mapa`;
+
   return {
     archetypeKey,
     title: `${a.name} + ${b.name}`,
@@ -377,6 +433,7 @@ function generateCompositeProfile(
     developmentArchetypes,
     pair: [a.id, b.id],
     tension: getDimensionTension(a.dimension, b.dimension),
+    ...(isTie ? { tiedLeaders: leaderIds } : {}),
     isTie,
     isFlat: false,
   };

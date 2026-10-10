@@ -155,9 +155,11 @@ export interface CompositeProfile {
   pair?: [ArchetypeId, ArchetypeId];
   /** La pregunta que abre la tensión entre esas dos figuras. */
   tension?: string;
-  /** El 1.º y el 2.º están a la par: no hay un dominante claro entre los dos. */
+  /** Dos o más figuras comparten el primer puesto: no hay un dominante claro entre ellas. */
   isTie?: boolean;
-  /** Nada destaca sobre el resto: el mapa no tiene un polo claro y no se le pone nombre. */
+  /** Las figuras que comparten el primer puesto, cuando hay empate (dos o más). */
+  tiedLeaders?: ArchetypeId[];
+  /** Todo el mapa cabe en unos pocos puntos: no tiene un polo claro y no se le pone nombre. */
   isFlat?: boolean;
 }
 
