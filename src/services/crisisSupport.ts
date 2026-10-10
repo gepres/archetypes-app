@@ -43,10 +43,11 @@ const MODISMOS: RegExp[] = [
 
 // Hacerse daño, en presente, pasado, imperfecto o pretérito perfecto: "me hice daño", "me he
 // cortado", "me lastimaba"…
-// Cortarse con objeto ("me he cortado el pelo", "me corté las uñas") no es hacerse daño: tras
-// los verbos de cortar no puede venir un artículo.
+// Cortarse el pelo o las uñas no es hacerse daño; cortarse el brazo o las muñecas, sí. Por
+// eso se excluyen solo esos objetos, no cualquier cosa que venga detrás del verbo.
+const CORTE_INOCUO = '(el|la|los|las|mi|mis) (pelo|cabello|flequillo|fleco|melena|puntas|barba|bigote|unas)';
 const ACTO_DANO =
-  '(me (hice|hago|hacia|he hecho) dano|me (lastime|lastimo|lastimaba|he lastimado|golpee|golpeo|he golpeado|queme|quemo|he quemado)|me (corte|corto|cortaba|he cortado)(?! (el|la|los|las|un|una|mi|mis) ))';
+  `(me (hice|hago|hacia|he hecho) dano|me (lastime|lastimo|lastimaba|he lastimado|golpee|golpeo|he golpeado|queme|quemo|he quemado)|me (corte|corto|cortaba|he cortado)(?! ${CORTE_INOCUO}))`;
 const INTENCION = '(a proposito|adrede|aposta|queriendo|intencionadamente)';
 // "No me he cortado a propósito" o "nunca me hice daño adrede" niegan el acto.
 const SIN_NEGAR = '(?<!\\b(no|nunca|jamas) )';
@@ -130,13 +131,24 @@ export const CRISIS_CLOSED_NOTE =
  * salvo (la marca CRISIS_CLOSED_NOTE), sin tener que borrar el historial. Una señal posterior
  * la vuelve a abrir.
  */
-export function crisisInConversation(mensajes: { role: string; content: string; crisisClosed?: boolean }[]): boolean {
+export function crisisInConversation(
+  mensajes: { id?: string; role: string; content: string; crisisClosed?: boolean }[]
+): boolean {
   let abierta = false;
   for (const m of mensajes) {
     if (m.role === 'user' && detectCrisis(m.content)) abierta = true;
-    // Solo cierra la marca que pone el botón. Un texto, aunque coincida con la nota de cierre
-    // (una respuesta del modelo que la cite, o el usuario que la pegue), no cierra nada.
-    else if (m.role !== 'user' && m.crisisClosed === true) abierta = false;
+    // Solo cierra lo que puso el botón. Un texto, aunque coincida con la nota de cierre (una
+    // respuesta del modelo que la cite, o el usuario que la pegue), no cierra nada.
+    else if (m.role !== 'user' && esCierreDelBoton(m)) abierta = false;
   }
   return abierta;
+}
+
+/**
+ * Un cierre puesto por el botón. Los que se guardaron antes de existir la marca se reconocen
+ * por el id que solo pone el botón (`msg-safe-…`) junto al texto exacto: las respuestas del
+ * modelo llevan otros ids (`msg-ai-…`), así que una cita sigue sin cerrar nada.
+ */
+function esCierreDelBoton(m: { id?: string; content: string; crisisClosed?: boolean }): boolean {
+  return m.crisisClosed === true || (!!m.id && m.id.startsWith('msg-safe-') && m.content === CRISIS_CLOSED_NOTE);
 }

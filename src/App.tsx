@@ -370,6 +370,7 @@ export default function App() {
               key={userProfile.id}
               currentResult={currentResult}
               initialPrompt={aiInitialPrompt}
+              onInitialPromptConsumed={() => setAiInitialPrompt(undefined)}
               initialPersona={aiInitialPersona}
               gender={userProfile.gender || 'male'}
               onGenderChange={handleGenderChange}

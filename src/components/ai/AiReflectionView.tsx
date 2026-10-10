@@ -34,6 +34,8 @@ interface AiReflectionViewProps {
   initialPersona?: string;
   gender?: GenderMode;
   onGenderChange?: (gender: GenderMode) => void;
+  /** Se avisa en cuanto se envía la pregunta inicial, para que no se vuelva a enviar al montar otra vez. */
+  onInitialPromptConsumed?: () => void;
 }
 
 /** El nombre legible del modelo activo, no su identificador. */
@@ -58,6 +60,7 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
   initialPersona = 'general',
   gender: propGender,
   onGenderChange,
+  onInitialPromptConsumed,
 }) => {
   const [userProfile, setUserProfile] = useState<UserProfile>(() => StorageService.getUserProfile());
   const currentGender: GenderMode = propGender || userProfile.gender || 'male';
@@ -170,8 +173,22 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
   useEffect(() => {
     if (initialPrompt && initialPrompt !== inputText) {
       handleSend(initialPrompt);
+      // Se consume una sola vez: al remontar el chat (otra cuenta, volver a la pestaña) no se
+      // reenvía, ni en nombre de quien no la eligió.
+      onInitialPromptConsumed?.();
     }
   }, [initialPrompt]);
+
+  // Mientras este chat esté montado. Una respuesta que llega después de desmontarlo (por
+  // cambiar de cuenta, aunque luego se vuelva a la misma) no se guarda: su copia de la
+  // conversación es antigua y pisaría los mensajes escritos entretanto.
+  const montadoRef = useRef(true);
+  useEffect(() => {
+    montadoRef.current = true;
+    return () => {
+      montadoRef.current = false;
+    };
+  }, []);
 
   const handleSend = async (textToSend?: string) => {
     const text = textToSend || inputText;
@@ -212,7 +229,7 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
         personaUsed: activePersona !== 'general' ? selectedPersonaObj.name : undefined,
       };
 
-      if (StorageService.getUserProfile().id !== dueno) return;
+      if (!montadoRef.current || StorageService.getUserProfile().id !== dueno) return;
       const updated = [...newMessages, aiMsg];
       setMessages(updated);
       StorageService.saveChatMessages(updated);

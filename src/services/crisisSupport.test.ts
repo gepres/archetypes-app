@@ -40,6 +40,14 @@ describe('crisisInConversation', () => {
     assert.equal(crisisInConversation([yo('Quiero suicidarme'), yo(CRISIS_CLOSED_NOTE)]), true);
   });
 
+  it('un cierre guardado antes de existir la marca se sigue reconociendo por el id del botón', () => {
+    const antiguo = { id: 'msg-safe-1700000000000', role: 'model', content: CRISIS_CLOSED_NOTE };
+    assert.equal(crisisInConversation([yo('Quiero suicidarme'), antiguo]), false);
+    // Pero una respuesta del modelo con su propio id y el mismo texto sigue sin cerrar nada.
+    const cita = { id: 'msg-ai-1700000000000', role: 'model', content: CRISIS_CLOSED_NOTE };
+    assert.equal(crisisInConversation([yo('Quiero suicidarme'), cita]), true);
+  });
+
   it('una respuesta del modelo que cite la nota de cierre no cierra nada (quinta revisión de Codex)', () => {
     assert.equal(crisisInConversation([yo('Quiero suicidarme'), app(CRISIS_CLOSED_NOTE)]), true);
   });
@@ -100,6 +108,11 @@ describe('detectCrisis', () => {
     'Voy a tomarme las pastillas para no despertar',
     'Me voy a\nmatar',
     'Me he cortado a propósito en el brazo',
+    // Sexta revisión de Codex: partes del cuerpo con artículo, intención antes y después
+    'Me he cortado el brazo a propósito',
+    'Me corté las muñecas adrede',
+    'A propósito me corté la piel',
+    'Adrede me he cortado los brazos',
   ];
 
   for (const frase of crisis) {
@@ -139,6 +152,8 @@ describe('detectCrisis', () => {
     'Me he cortado el pelo a propósito',
     'No me he cortado a propósito, fue un accidente',
     'Me corté las uñas adrede',
+    'A propósito me corté el flequillo',
+    'Me corto la barba a propósito para el verano',
   ];
 
   for (const frase of sinCrisis) {
