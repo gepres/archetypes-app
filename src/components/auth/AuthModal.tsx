@@ -121,7 +121,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       const cloudData = profile.id ? await FirebaseService.loadFullDataFromCloud(profile.id) : null;
       StorageService.enterAccount(profile, cloudData, { bringGuestData: llevarDatosDeInvitado });
       setSavedAccounts(StorageService.getSavedAccounts());
-      onUserChange(profile);
+      onUserChange(StorageService.getUserProfile());
       onClose();
     } catch (err: any) {
       setErrorMsg(err?.message || 'Error durante la autenticación.');
@@ -140,7 +140,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       const cloudData = await FirebaseService.loadFullDataFromCloud(profile.id);
       StorageService.enterAccount(profile, cloudData, { bringGuestData: llevarDatosDeInvitado });
       setSavedAccounts(StorageService.getSavedAccounts());
-      onUserChange(profile);
+      onUserChange(StorageService.getUserProfile());
       onClose();
     } catch (err: any) {
       setErrorMsg(err?.message || 'Error al iniciar sesión con Google.');
@@ -157,7 +157,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     });
     StorageService.enterAccount(updatedProfile, null, { bringGuestData: llevarDatosDeInvitado });
     setSavedAccounts(StorageService.getSavedAccounts());
-    onUserChange(updatedProfile);
+    onUserChange(StorageService.getUserProfile());
     onClose();
   };
 

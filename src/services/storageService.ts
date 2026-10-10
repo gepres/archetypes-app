@@ -490,7 +490,12 @@ export const StorageService = {
   saveUserProfile(profile: UserProfile): void {
     try {
       profile.lastActive = new Date().toISOString();
-      if (!profile.gender) profile.gender = DEFAULT_GENDER;
+      // Un perfil que llega sin perspectiva no pisa la que esta misma cuenta ya tenía guardada.
+      if (!profile.gender) {
+        const guardado = localStorage.getItem(STORAGE_KEYS.USER_PROFILE);
+        const anterior: UserProfile | null = guardado ? JSON.parse(guardado) : null;
+        profile.gender = (anterior?.id === profile.id ? anterior.gender : undefined) ?? DEFAULT_GENDER;
+      }
       localStorage.setItem(STORAGE_KEYS.USER_PROFILE, JSON.stringify(profile));
       this.syncActiveAccountData();
     } catch (e) {
@@ -557,7 +562,8 @@ export const StorageService = {
       name: targetAccount.name,
       email: targetAccount.email,
       isGuest: false,
-      gender: accountData.gender || currentSaved.gender || DEFAULT_GENDER,
+      // La de la cuenta antes que la de quien estaba en el navegador.
+      gender: accountData.gender || targetAccount.gender || currentSaved.gender || DEFAULT_GENDER,
       avatarEmoji: targetAccount.avatarEmoji,
       pinCode: accountData.pinCode,
       createdAt: targetAccount.createdAt,
@@ -597,8 +603,10 @@ export const StorageService = {
     const i = accounts.findIndex(
       a => a.id === profile.id || (!!profile.email && a.email.toLowerCase() === profile.email.toLowerCase())
     );
+    // La perspectiva viaja con la cuenta, para no perderla al volver a entrar.
+    const genero = profile.gender ? { gender: profile.gender } : {};
     if (i >= 0) {
-      accounts[i] = { ...accounts[i], data, lastActive: now };
+      accounts[i] = { ...accounts[i], ...genero, data, lastActive: now };
     } else {
       accounts.push({
         id: profile.id,
@@ -607,6 +615,7 @@ export const StorageService = {
         avatarEmoji: profile.avatarEmoji || '🧭',
         createdAt: profile.createdAt || now,
         lastActive: now,
+        ...genero,
         data,
       });
     }
@@ -652,9 +661,20 @@ export const StorageService = {
       if (!mismaCuenta && outgoing.isGuest && opts.bringGuestData) data = mergeAccountData(data, active);
       if (cloud) data = mergeAccountData(data, { ...emptyAccountData(), ...cloud });
 
+      // La perspectiva es de la persona, no de la sesión. Si el perfil que llega no la trae (los
+      // de Firebase no la guardan), no se le pone la de por defecto encima de una elegida: la de
+      // esta misma cuenta si ya estaba abierta, la que esta cuenta tenía guardada, o la que había
+      // en el navegador (la que eligió el invitado que ahora entra en su cuenta).
+      const perfil: UserProfile = incoming.gender
+        ? incoming
+        : {
+            ...incoming,
+            gender: (mismaCuenta ? outgoing.gender : guardada?.gender) ?? outgoing.gender ?? DEFAULT_GENDER,
+          };
+
       this.writeActiveData(data);
-      this.saveUserProfile(incoming);
-      this.vaultUpsert(incoming, data);
+      this.saveUserProfile(perfil);
+      this.vaultUpsert(perfil, data);
     } finally {
       syncPaused = false;
     }

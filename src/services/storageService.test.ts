@@ -485,6 +485,50 @@ describe('perspectiva de quien llega por primera vez', () => {
     assert.equal(StorageService.getUserProfile().gender, 'universal');
   });
 
+  it('volver a entrar en la misma cuenta con un perfil de la nube sin perspectiva no la cambia (Codex)', () => {
+    vacio();
+    const cuenta = (gender?: 'male' | 'female' | 'universal'): UserProfile => ({ id: 'uidA', name: 'A', email: 'a@x.com', isGuest: false, createdAt: '', lastActive: '', ...(gender ? { gender } : {}) });
+    StorageService.enterAccount(cuenta('male'), null);
+    StorageService.enterAccount(cuenta(), null);
+    assert.equal(StorageService.getUserProfile().gender, 'male');
+  });
+
+  it('quien eligió una perspectiva como invitado la conserva al entrar en su cuenta', () => {
+    vacio();
+    StorageService.saveUserProfile({ ...StorageService.getUserProfile(), gender: 'female' });
+    StorageService.enterAccount({ id: 'uidN', name: 'N', email: 'n@x.com', isGuest: false, createdAt: '', lastActive: '' }, null);
+    assert.equal(StorageService.getUserProfile().gender, 'female');
+  });
+
+  it('cada cuenta recupera la suya al volver a ella', () => {
+    vacio();
+    const A = { id: 'uidA', name: 'A', email: 'a@x.com', isGuest: false, createdAt: '', lastActive: '' } as UserProfile;
+    const B = { id: 'uidB', name: 'B', email: 'b@x.com', isGuest: false, createdAt: '', lastActive: '' } as UserProfile;
+    StorageService.enterAccount({ ...A, gender: 'male' }, null);
+    StorageService.enterAccount({ ...B, gender: 'female' }, null);
+    StorageService.enterAccount(A, null); // la nube la devuelve sin perspectiva
+    assert.equal(StorageService.getUserProfile().gender, 'male');
+    StorageService.enterAccount(B, null);
+    assert.equal(StorageService.getUserProfile().gender, 'female');
+  });
+
+  it('guardar un perfil sin perspectiva de la misma cuenta conserva la que tenía (lo que hace la app tras entrar)', () => {
+    vacio();
+    StorageService.enterAccount({ id: 'uidA', name: 'A', email: 'a@x.com', isGuest: false, createdAt: '', lastActive: '', gender: 'male' }, null);
+    StorageService.saveUserProfile({ id: 'uidA', name: 'A', email: 'a@x.com', isGuest: false, createdAt: '', lastActive: '' });
+    assert.equal(StorageService.getUserProfile().gender, 'male');
+  });
+
+  it('elegir una cuenta guardada recupera su perspectiva, no la de quien estaba', () => {
+    vacio();
+    const B = StorageService.loginOrCreateAccount({ name: 'B', email: 'b@x.com', gender: 'female' });
+    StorageService.enterAccount(B, null);
+    const A = StorageService.loginOrCreateAccount({ name: 'A', email: 'a@x.com', gender: 'male' });
+    StorageService.enterAccount(A, null);
+    const deNuevoB = StorageService.loginOrCreateAccount({ name: 'B', email: 'b@x.com' });
+    assert.equal(deNuevoB.gender, 'female');
+  });
+
   it('quien ya eligió una perspectiva la conserva', () => {
     const mem = vacio();
     mem.set('archetypes_user_profile', JSON.stringify({ id: 'u', name: 'A', email: '', isGuest: true, gender: 'male', createdAt: '', lastActive: '' }));

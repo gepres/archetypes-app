@@ -252,6 +252,8 @@ export interface AccountRecord {
   avatarEmoji: string;
   createdAt: string;
   lastActive: string;
+  /** La perspectiva que eligió esta cuenta: los perfiles de Firebase no la traen al volver a entrar. */
+  gender?: GenderMode;
   data: {
     currentResult: AssessmentResult | null;
     history: AssessmentResult[];
