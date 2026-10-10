@@ -309,7 +309,7 @@ function generateCompositeProfile(
     ];
   } else if ((topIds.includes('amante') || topIds.includes('sanador')) && (topIds.includes('cuidador') || topIds.includes('bufon'))) {
     title = gender === 'female' ? "La Conectora Compasiva" : "El Conector Compasivo";
-    synthesis = `Tu mapa está profundamente arraigado en la dimensión del Corazón. Posees una sensibilidad humana excepcional, calidez para sostener a otros en momentos vulnerables y una capacidad innata para sanar y enriquecer los vínculos afectivos.`;
+    synthesis = `Tu mapa está profundamente arraigado en la dimensión del Corazón. Posees una sensibilidad humana excepcional, calidez para sostener a otros en momentos vulnerables y el deseo de cuidar y reparar los vínculos afectivos.`;
     strengths = [
       "Empatía profunda y escucha activa sin prejuicios",
       "Habilidad para armonizar ambientes tensos y reparar heridas relacionales",

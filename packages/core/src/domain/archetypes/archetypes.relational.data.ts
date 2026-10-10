@@ -222,7 +222,7 @@ export const RELATIONAL_ARCHETYPES: Record<'padre' | 'cuidador' | 'bufon' | 'exp
         mantra: 'Pongo mis manos y mi fuerza al servicio del bien común con serenidad.',
         strength: 'Ayuda práctica, fiabilidad absoluta y apoyo desinteresado.',
         shadow: 'Mártir silencioso / Resentimiento acumulado',
-        shadowDescription: 'Carga con todo en silencio hasta explotar o enfermar por agotamiento.',
+        shadowDescription: 'Carga con todo en silencio hasta agotarse o explotar.',
         shadowAntidote: 'Aprender a delegar y expresar las propias necesidades con franqueza.',
         domains: {
           liderazgo: 'Servicio y apoyo incondicional a los miembros del equipo.',
@@ -251,7 +251,7 @@ export const RELATIONAL_ARCHETYPES: Record<'padre' | 'cuidador' | 'bufon' | 'exp
         mantra: 'Me cuido para cuidar; mi bienestar es el origen de mi servicio.',
         strength: 'Empatía tierna, hospitalidad, escucha reparadora y generosidad.',
         shadow: 'Codependencia / Autoanulación en el rol de salvadora',
-        shadowDescription: 'Se olvida de sí misma, se vuelve codependiente y manipula desde el papel de víctima.',
+        shadowDescription: 'Se olvida de sí misma, se vuelve codependiente y le cuesta pedir lo que necesita: espera que los demás lo adivinen.',
         shadowAntidote: 'Ponerse a una misma en primer lugar en la lista de prioridades de cuidado.',
         domains: {
           liderazgo: 'Creación de ambientes armónicos y acogedores.',
@@ -500,7 +500,7 @@ export const RELATIONAL_ARCHETYPES: Record<'padre' | 'cuidador' | 'bufon' | 'exp
     developmentExercises: [
       {
         title: 'La Microaventura en Solitario',
-        description: 'Haz una excursión a un lugar desconocido por tu cuenta, sin mapa prediseñado.',
+        description: 'Visita un lugar accesible y seguro que no conozcas —un barrio, un parque, un mercado— sin planear cada paso. Avisa a alguien de adónde vas.',
         actionStep: 'Toma decisiones sobre la marcha y disfruta de tu propia compañía durante unas horas.'
       }
     ],
@@ -837,7 +837,7 @@ export const RELATIONAL_ARCHETYPES: Record<'padre' | 'cuidador' | 'bufon' | 'exp
         developmentExercises: [
           {
             title: 'Entrenamiento de Resistencia',
-            description: 'Ponte una meta física o intelectual exigente y cúmplela sin excusas.',
+            description: 'Ponte una meta exigente pero alcanzable, física o intelectual, y avanza en ella esta semana. Ajústala si tu cuerpo o tu situación lo piden.',
             actionStep: 'Concluye el reto con presencia.'
           }
         ]

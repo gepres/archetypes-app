@@ -59,7 +59,7 @@ export const INITIAL_CHALLENGES: Challenge[] = [
     archetypeId: 'guerrero',
     title: 'Sesión de esfuerzo físico con presencia',
     description: 'Entrenar la disciplina corporal y la tolerancia a la incomodidad.',
-    actionGuidance: 'Realiza 30 minutos de ejercicio físico intenso, concentrándote en tu respiración y en mantener la postura.',
+    actionGuidance: 'Dedica hasta 30 minutos a moverte a la intensidad que tu cuerpo permita hoy —caminar a paso vivo, bailar, subir escaleras—, con la atención en tu respiración. Si algo duele o te mareas, para.',
     timeEstimate: '30 min',
     difficulty: 'intermedio',
     completed: false,

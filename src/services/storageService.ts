@@ -26,6 +26,26 @@ const STORAGE_KEYS = {
   SAVED_DAILY_CARD: 'archetypes_daily_card',
 };
 
+/**
+ * El texto de un reto lo pone el catálogo; del usuario solo es si lo completó y cuándo.
+ *
+ * Antes se guardaba la lista entera y se devolvía tal cual, así que un reto corregido o añadido
+ * después nunca llegaba a quien ya tenía la app. Un reto retirado del catálogo se conserva solo
+ * si estaba completado, porque eso ya es historia del usuario.
+ */
+export function mergeChallengeProgress(catalog: Challenge[], stored: Challenge[]): Challenge[] {
+  const saved = new Map(stored.map(c => [c.id, c]));
+  const current = catalog.map(c => {
+    const progress = saved.get(c.id);
+    return progress
+      ? { ...c, completed: !!progress.completed, completedAt: progress.completedAt }
+      : { ...c };
+  });
+  const catalogIds = new Set(catalog.map(c => c.id));
+  const retired = stored.filter(c => !catalogIds.has(c.id) && c.completed);
+  return [...current, ...retired];
+}
+
 // Initial default sample journal prompts
 export const JOURNAL_PROMPTS = [
   "¿Dónde estoy actuando hoy desde mi Guerrero y dónde estoy evitando poner límites?",
@@ -163,7 +183,7 @@ export const StorageService = {
   getChallenges(): Challenge[] {
     try {
       const data = localStorage.getItem(STORAGE_KEYS.CHALLENGES);
-      if (data) return JSON.parse(data);
+      if (data) return mergeChallengeProgress(INITIAL_CHALLENGES, JSON.parse(data));
       this.saveChallenges(INITIAL_CHALLENGES);
       return INITIAL_CHALLENGES;
     } catch (e) {
