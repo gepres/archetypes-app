@@ -76,6 +76,17 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
   const [messages, setMessages] = useState<ChatMessage[]>(() =>
     StorageService.getChatMessages()
   );
+  // La conversación vigente, al instante. El estado tarda un render en reflejar un cambio, y en
+  // ese hueco pueden pasar cosas que la necesitan: una respuesta inmediata busca su pregunta, o
+  // al volver a la pestaña se recarga la conversación y en el mismo momento se envía una
+  // consulta de fuera. Quien cambia la conversación la actualiza aquí también, y los envíos
+  // construyen sobre ella, no sobre el estado del último render.
+  const mensajesRef = useRef(messages);
+  mensajesRef.current = messages;
+  const ponerMensajes = (lista: ChatMessage[]) => {
+    mensajesRef.current = lista;
+    setMessages(lista);
+  };
   const [inputText, setInputText] = useState('');
   const [activePersona, setActivePersona] = useState<string>(initialPersona);
   const [isLoading, setIsLoading] = useState(false);
@@ -186,7 +197,8 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
     const antes = activoAntesRef.current;
     activoAntesRef.current = isActive;
     if (!isActive || antes) return;
-    if (!sinGuardar) setMessages(StorageService.getChatMessages());
+    // Antes que la consulta de fuera que pueda llegar con la vuelta: se envía sobre esta.
+    if (!sinGuardar) ponerMensajes(StorageService.getChatMessages());
     refreshAiStatus();
   }, [isActive]);
 
@@ -206,10 +218,6 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
     }
   }, [initialPrompt, isLoading]);
 
-  // La conversación que se ve ahora, para saber al llegar una respuesta si su pregunta está aquí.
-  const mensajesRef = useRef(messages);
-  mensajesRef.current = messages;
-
   // Mientras este chat esté montado. Una respuesta que llega después de desmontarlo no toca
   // esta vista: se guarda en la conversación vigente y avisa a la vista que haya montada.
   const montadoRef = useRef(true);
@@ -220,7 +228,9 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
     // guarda con la siguiente escritura. Si su pregunta no está aquí (otra cuenta, conversación
     // reiniciada), no hace nada.
     const recibir = (preguntaId: string, respuesta: ChatMessage, guardada: boolean) => {
-      if (!insertarRespuesta(mensajesRef.current, preguntaId, respuesta)) return;
+      const conRespuesta = insertarRespuesta(mensajesRef.current, preguntaId, respuesta);
+      if (!conRespuesta) return;
+      mensajesRef.current = conRespuesta;
       setMessages(prev => insertarRespuesta(prev, preguntaId, respuesta) ?? prev);
       setSinGuardar(!guardada);
     };
@@ -255,23 +265,28 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
       personaUsed: voz.id !== 'general' ? voz.name : undefined,
     };
 
-    const newMessages = [...messages, userMsg];
-    // Al momento, sin esperar al render: una respuesta inmediata (motor local, cupo agotado)
-    // puede llegar antes, y tiene que encontrar aquí su pregunta.
-    mensajesRef.current = newMessages;
-    setMessages(newMessages);
+    // Sobre la conversación vigente, no sobre la del último render (ver mensajesRef).
+    const historial = mensajesRef.current;
+    const newMessages = [...historial, userMsg];
+    ponerMensajes(newMessages);
     setSinGuardar(!StorageService.saveChatMessages(newMessages));
     setInputText('');
     setIsLoading(true);
-    void pedirRespuesta(text, dueno, userMsg.id, voz);
+    void pedirRespuesta(text, dueno, userMsg.id, voz, historial);
     return true;
   };
 
-  const pedirRespuesta = async (text: string, dueno: string, preguntaId: string, voz: { id: string; name: string }) => {
+  const pedirRespuesta = async (
+    text: string,
+    dueno: string,
+    preguntaId: string,
+    voz: { id: string; name: string },
+    historial: ChatMessage[]
+  ) => {
     try {
       const reply = await GeminiService.sendMessage(
         text,
-        messages,
+        historial,
         currentResult,
         voz.id,
         userProfile,
@@ -303,7 +318,7 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
   const handleClearHistory = () => {
     if (window.confirm('¿Deseas reiniciar la conversación de reflexión?')) {
       const { messages: vacia, guardada } = StorageService.clearChatMessages();
-      setMessages(vacia);
+      ponerMensajes(vacia);
       setSinGuardar(!guardada);
     }
   };
@@ -576,8 +591,8 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
           <button
             type="button"
             onClick={() => {
-              const { messages: cerrada, guardada } = StorageService.closeCrisis(messages);
-              setMessages(cerrada);
+              const { messages: cerrada, guardada } = StorageService.closeCrisis(mensajesRef.current);
+              ponerMensajes(cerrada);
               setSinGuardar(!guardada);
             }}
             className="shrink-0 px-3.5 py-2 rounded-xl bg-[#315C45] hover:bg-[#3D7055] text-xs font-semibold text-[#F2EFE6] transition-colors"
