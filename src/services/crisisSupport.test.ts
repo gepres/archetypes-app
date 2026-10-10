@@ -122,6 +122,9 @@ describe('detectCrisis', () => {
     'Me corté una ceja adrede hasta sangrar',
     'Me corté las puntas de los dedos a propósito',
     'Me corté las uñas a propósito hasta sangrar',
+    // Novena revisión de Codex: una parte del cuerpo detrás de lo cosmético lo convierte en lesión
+    'Me corté las puntas del pulgar y del índice a propósito',
+    'Me corté el pelo y los brazos a propósito',
   ];
 
   for (const frase of crisis) {
@@ -171,6 +174,11 @@ describe('detectCrisis', () => {
     'Me corté las puntas a propósito',
     'Me corté las puntas del pelo a propósito',
     'Me corté cocinando hasta sangrar',
+    // Novena revisión de Codex: la intención negada no es intención, y el pelo es pelo
+    'Me corté las uñas hasta sangrar sin querer, no a propósito',
+    'Me hice daño, pero no lo hice a propósito',
+    'Me corté las puntas de mi pelo a propósito',
+    'Me corté las uñas de las manos a propósito',
   ];
 
   for (const frase of sinCrisis) {

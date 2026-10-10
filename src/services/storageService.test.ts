@@ -148,6 +148,68 @@ describe('chat: una respuesta tardía no pisa ni se pierde', () => {
     }
   });
 
+  // Las escrituras del chat fallan como con el almacenamiento lleno mientras `lleno` sea true.
+  const conDiscoLleno = () => {
+    const ls = (globalThis as any).localStorage;
+    const setItem = ls.setItem;
+    const estado = { lleno: true };
+    ls.setItem = (k: string, v: string) => {
+      if (estado.lleno && k === 'archetypes_chat_messages') throw new Error('QuotaExceededError');
+      setItem(k, v);
+    };
+    return estado;
+  };
+
+  it('si no se pudo guardar la pregunta, su respuesta tampoco se pierde (novena revisión de Codex)', () => {
+    const restaurar = montar();
+    try {
+      StorageService.saveChatMessages([msg('w', 'model')]);
+      const disco = conDiscoLleno();
+      assert.equal(StorageService.saveChatMessages([msg('w', 'model'), msg('q1', 'user')]), false);
+      // La vista que vuelve a montarse ve la pregunta aunque no esté en disco.
+      assert.deepEqual(ids(StorageService.getChatMessages()), ['w', 'q1']);
+      const tras = StorageService.addChatReply('uidX', 'q1', msg('r1', 'model'));
+      assert.deepEqual(ids(tras?.messages), ['w', 'q1', 'r1']);
+      assert.equal(tras?.guardada, false);
+      // En cuanto hay sitio, la siguiente escritura lo guarda todo.
+      disco.lleno = false;
+      assert.equal(StorageService.saveChatMessages(StorageService.getChatMessages()), true);
+      assert.deepEqual(ids(JSON.parse((globalThis as any).localStorage.getItem('archetypes_chat_messages'))), ['w', 'q1', 'r1']);
+    } finally {
+      restaurar();
+    }
+  });
+
+  it('con dos respuestas pendientes y el disco lleno, la segunda no borra la primera (novena revisión de Codex)', () => {
+    const restaurar = montar();
+    try {
+      StorageService.saveChatMessages([msg('w', 'model'), msg('q1', 'user'), msg('q2', 'user')]);
+      conDiscoLleno();
+      StorageService.addChatReply('uidX', 'q1', msg('r1', 'model'));
+      const tras = StorageService.addChatReply('uidX', 'q2', msg('r2', 'model'));
+      assert.deepEqual(ids(tras?.messages), ['w', 'q1', 'r1', 'q2', 'r2']);
+    } finally {
+      restaurar();
+    }
+  });
+
+  it('lo que no se pudo guardar no aparece en otra cuenta', () => {
+    const restaurar = montar();
+    try {
+      const A: UserProfile = { id: 'uidA', name: 'A', email: 'a@x.com', isGuest: false, createdAt: '', lastActive: '' };
+      const B: UserProfile = { id: 'uidB', name: 'B', email: 'b@x.com', isGuest: false, createdAt: '', lastActive: '' };
+      StorageService.enterAccount(A, null);
+      const disco = conDiscoLleno();
+      StorageService.saveChatMessages([msg('w', 'model'), msg('secreto-de-A', 'user')]);
+      disco.lleno = false;
+      StorageService.enterAccount(B, null);
+      assert.ok(!StorageService.getChatMessages().some(m => m.id === 'secreto-de-A'));
+      assert.equal(StorageService.addChatReply('uidA', 'secreto-de-A', msg('r', 'model')), null);
+    } finally {
+      restaurar();
+    }
+  });
+
   it('una respuesta tardía sigue detrás de su pregunta al salir y volver a la cuenta (octava revisión de Codex)', () => {
     const restaurar = montar();
     try {

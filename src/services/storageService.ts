@@ -20,6 +20,12 @@ import { CRISIS_CLOSED_NOTE } from './crisisSupport';
 // `applyAccountData`).
 let syncPaused = false;
 
+// La conversación que no se pudo guardar (almacenamiento lleno) y de qué cuenta es. Mientras
+// exista, es la conversación vigente de esa cuenta: se lee de aquí y no del disco, para que ni
+// una respuesta tardía ni la vista al volver pierdan lo que no llegó a guardarse. La siguiente
+// escritura que funcione la guarda y la suelta; cambiar los datos de cuenta también la suelta.
+let chatSinGuardar: { dueno: string; messages: ChatMessage[] } | null = null;
+
 function welcomeMessage(): ChatMessage {
   return {
     id: 'msg-welcome-1',
@@ -353,6 +359,7 @@ export const StorageService = {
 
   // Chat messages for Gemini
   getChatMessages(): ChatMessage[] {
+    if (chatSinGuardar && chatSinGuardar.dueno === this.getUserProfile().id) return chatSinGuardar.messages;
     try {
       const data = localStorage.getItem(STORAGE_KEYS.CHAT_MESSAGES);
       if (data) return JSON.parse(data);
@@ -367,16 +374,21 @@ export const StorageService = {
     }
   },
 
-  /** Devuelve si quedó guardada: con el almacenamiento lleno, la escritura falla. */
+  /**
+   * Devuelve si quedó guardada. Con el almacenamiento lleno la escritura falla, y la
+   * conversación se queda en memoria como la vigente de esta cuenta (ver `chatSinGuardar`).
+   */
   saveChatMessages(messages: ChatMessage[]): boolean {
     try {
       localStorage.setItem(STORAGE_KEYS.CHAT_MESSAGES, JSON.stringify(messages));
-      this.syncActiveAccountData();
-      return true;
     } catch (e) {
       console.error("Error saving chat messages:", e);
+      chatSinGuardar = { dueno: this.getUserProfile().id, messages };
       return false;
     }
+    chatSinGuardar = null;
+    this.syncActiveAccountData();
+    return true;
   },
 
   /**
@@ -552,6 +564,7 @@ export const StorageService = {
 
   /** Pone en el navegador los datos de una persona, sin subir nada. */
   writeActiveData(d: AccountData): void {
+    chatSinGuardar = null;
     if (d.currentResult) localStorage.setItem(STORAGE_KEYS.CURRENT_RESULT, JSON.stringify(d.currentResult));
     else localStorage.removeItem(STORAGE_KEYS.CURRENT_RESULT);
     localStorage.setItem(STORAGE_KEYS.ASSESSMENT_HISTORY, JSON.stringify(d.history ?? []));

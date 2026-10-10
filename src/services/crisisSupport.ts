@@ -46,16 +46,21 @@ const MODISMOS: RegExp[] = [
 // Cortarse el pelo o las uñas no es hacerse daño; cortarse el brazo o las muñecas, sí. Por
 // eso se excluyen solo esos objetos, no cualquier cosa que venga detrás del verbo. El artículo
 // es obligatorio: sin él, «me corté una vez» se leería como «me corté una (uña)». Solo entra
-// lo inequívocamente cosmético: «la punta» o «una ceja» pueden ser una lesión, y «las puntas»
-// solo cuentan si no son «de los dedos».
+// lo inequívocamente cosmético («la punta» o «una ceja» pueden ser una lesión), y deja de serlo
+// si detrás se nombra una parte del cuerpo: «las puntas del pulgar», «el pelo y los brazos».
+// Manos y pies no cuentan como tal: «las uñas de las manos» es cosmético.
+const CUERPO =
+  '(dedos?|pulgar(es)?|indices?|meniques?|anular(es)?|yemas?|munecas?|brazos?|antebrazos?|piernas?|muslos?|piel|cara|vientre|abdomen|venas?|cuello|tobillos?|pecho)';
 const CORTE_INOCUO =
   '(yo mism[oa] )?' +
   '(un poco (el|la|los|las|de)|el|la|los|las|mi|mis|tu|tus|su|sus|un|una|unos|unas) ' +
-  '(pelo|cabello|flequillo|fleco|melena|puntas(?! de\\b)|mechon|mechones|rizos?|coleta|trenza|barba|bigote|patillas?|una|unas)\\b';
+  `(pelo|cabello|flequillo|fleco|melena|puntas|mechon|mechones|rizos?|coleta|trenza|barba|bigote|patillas?|una|unas)\\b(?!.{0,30}\\b${CUERPO}\\b)`;
 const CORTE = 'me (corte|corto|cortaba|he cortado)';
 const ACTO_DANO =
   `(me (hice|hago|hacia|he hecho) dano|me (lastime|lastimo|lastimaba|he lastimado|golpee|golpeo|he golpeado|queme|quemo|he quemado)|me (corte|corto|cortaba|he cortado)(?! ${CORTE_INOCUO}))`;
 const INTENCION = '(a proposito|adrede|aposta|queriendo|intencionadamente)';
+// La intención tiene que estar afirmada: «no a propósito», «no lo hice adrede» la niegan.
+const INTENCION_AFIRMADA = `(?<!\\b(no|nunca|jamas|ni|sin|no lo hice|no lo hago|no fue) )\\b${INTENCION}\\b`;
 // "No me he cortado a propósito" o "nunca me hice daño adrede" niegan el acto.
 const SIN_NEGAR = '(?<!\\b(no|nunca|jamas) )';
 
@@ -85,14 +90,15 @@ const SENALES: RegExp[] = [
   // hice daño a propósito" es una señal en cualquier tiempo, diga dónde, y vaya la intención
   // antes o después del acto ("a propósito me hice daño").
   /\bautolesi/,
-  new RegExp(`${SIN_NEGAR}\\b${ACTO_DANO}.{0,40}\\b${INTENCION}\\b`),
-  new RegExp(`\\b${INTENCION}\\b.{0,40}${SIN_NEGAR}\\b${ACTO_DANO}`),
+  new RegExp(`${SIN_NEGAR}\\b${ACTO_DANO}.{0,40}${INTENCION_AFIRMADA}`),
+  new RegExp(`${INTENCION_AFIRMADA}.{0,40}${SIN_NEGAR}\\b${ACTO_DANO}`),
   // La intención de no despertar, aunque no diga cantidades: "tomarme las pastillas para no
   // despertar".
   /\bpara no (despertar|volver a despertar|seguir aqui)\b/,
   // Hacerse sangre a propósito es una lesión, se corte lo que se corte: aquí no vale la
-  // excepción de lo cosmético. Sin intención («me corté cocinando hasta sangrar») no cuenta.
-  new RegExp(`^(?=.*\\b${INTENCION}\\b).*${SIN_NEGAR}\\b${CORTE}\\b.{0,60}\\bhasta (sangrar|hacerme sangre|que (me )?sangr)`),
+  // excepción de lo cosmético. Sin intención afirmada («me corté cocinando hasta sangrar», «sin
+  // querer, no a propósito») no cuenta.
+  new RegExp(`^(?=.*${INTENCION_AFIRMADA}).*${SIN_NEGAR}\\b${CORTE}\\b.{0,60}\\bhasta (sangrar|hacerme sangre|que (me )?sangr)`),
   /\bdormir(me)? para siempre\b/,
   // Lo accidental ("me hice daño en la rodilla", "me lastimé entrenando") no cuenta.
   /\bme hago dano\b(?! (en|al|entrenando|jugando|corriendo|haciendo))/,
