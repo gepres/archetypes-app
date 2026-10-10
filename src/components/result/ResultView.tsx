@@ -170,9 +170,15 @@ export const ResultView: React.FC<ResultViewProps> = ({
           <p className="text-sm sm:text-base text-[#C5CFC7] leading-relaxed font-light pt-1">
             {compositeProfile.synthesis}
           </p>
+          {compositeProfile.tension && (
+            <p className="font-serif italic text-base sm:text-lg text-[#E5D7B7] leading-relaxed pt-2">
+              {compositeProfile.tension}
+            </p>
+          )}
         </div>
 
-        {/* Strengths & Risks Grid */}
+        {/* Strengths & Risks Grid: un mapa sin polo claro no tiene fortalezas ni sombras que atribuir */}
+        {(compositeProfile.strengths.length > 0 || compositeProfile.risksAndShadows.length > 0) && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-[#1E2A25]">
           {/* Fortalezas */}
           <div className="p-4 rounded-xl bg-[#16201D] border border-[#1E2A25] space-y-2.5">
@@ -206,6 +212,7 @@ export const ResultView: React.FC<ResultViewProps> = ({
             </ul>
           </div>
         </div>
+        )}
       </section>
 
       {/* 4 Dimensions Balance */}
@@ -281,6 +288,7 @@ export const ResultView: React.FC<ResultViewProps> = ({
       </section>
 
       {/* Suggested Development Archetypes */}
+      {compositeProfile.developmentArchetypes.length > 0 && (
       <section className="p-6 sm:p-7 rounded-2xl bg-[#121A17] border border-[#23332D] space-y-5">
         <div className="space-y-1">
           <span className="text-xs uppercase tracking-widest text-[#D6A84F] font-bold">
@@ -331,6 +339,7 @@ export const ResultView: React.FC<ResultViewProps> = ({
           })}
         </div>
       </section>
+      )}
 
       {/* Next Steps CTA Cards */}
       <section className="space-y-4">

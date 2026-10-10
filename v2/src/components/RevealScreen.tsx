@@ -26,8 +26,16 @@ export const RevealScreen: React.FC<RevealScreenProps> = ({
   const dominante = getArchetype(resultado.dominantArchetype.archetypeId, 'universal');
   const segundo = getArchetype(resultado.ranking[1].archetypeId, 'universal');
   const dimension = DIMENSIONS[dominante.dimension];
+  // Si el mapa no tiene un polo claro, o los dos primeros van a la par, no se proclama un
+  // dominante que las respuestas no sostienen.
+  const plano = !!resultado.compositeProfile.isFlat;
+  const empate = !!resultado.compositeProfile.isTie;
 
-  const guion = `Tu arquetipo dominante es ${dominante.name}. ${dominante.shortDescription} Tu mantra: ${dominante.mantra}`;
+  const guion = plano
+    ? 'Tus respuestas puntúan parecido en casi todas las figuras, así que ninguna destaca sobre las demás. Si vuelves a responder pensando en situaciones concretas de las últimas semanas, el mapa se dibuja mejor.'
+    : empate
+      ? `Tus respuestas ponen a la par a ${dominante.name} y a ${segundo.name}. ${dominante.shortDescription} Su mantra: ${dominante.mantra}`
+      : `Tu arquetipo dominante es ${dominante.name}. ${dominante.shortDescription} Tu mantra: ${dominante.mantra}`;
 
   useEffect(() => {
     const t = window.setTimeout(() => setRevelado(true), prefersReducedMotion ? 0 : 220);
@@ -36,7 +44,12 @@ export const RevealScreen: React.FC<RevealScreenProps> = ({
 
   const compartir = async () => {
     const url = typeof window !== 'undefined' ? window.location.origin + '/v2/' : '';
-    const texto = `Mi arquetipo dominante es ${dominante.name}. «${dominante.mantra}»
+    const cabecera = plano
+      ? 'Hice el test de arquetipos y mi mapa no tiene un polo claro.'
+      : empate
+        ? `Mis arquetipos van a la par: ${dominante.name} y ${segundo.name}.`
+        : `Mi arquetipo dominante es ${dominante.name}. «${dominante.mantra}»`;
+    const texto = `${cabecera}
 
 Descubre el tuyo escuchando, en dos minutos:`;
     const completo = `${texto} ${url}`;
@@ -144,10 +157,31 @@ Descubre el tuyo escuchando, en dos minutos:`;
           transition={{ duration: 0.5 }}
           className="text-center text-[11px] font-bold uppercase tracking-[0.3em] text-[#8A968D] pt-2"
         >
-          Tu arquetipo dominante
+          {plano ? 'Tu mapa' : empate ? 'Tus arquetipos, a la par' : 'Tu arquetipo dominante'}
         </motion.p>
 
+        {/* Sin polo claro no hay un rostro que enseñar: se dice, y se ofrece cómo afinarlo. */}
+        {plano && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={revelado ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6 }}
+            className="space-y-4 text-center pt-6"
+          >
+            <h1 className="font-serif text-3xl font-bold leading-tight">Sin un polo claro</h1>
+            <p className="text-sm text-[#C5CFC7] leading-relaxed">
+              Tus respuestas puntúan parecido en casi todas las figuras: ninguna destaca lo bastante como para
+              ponerle nombre. Puede ser un momento de equilibrio, o que hayas respondido casi todo igual.
+            </p>
+            <p className="text-sm text-[#8A968D] leading-relaxed">
+              Si vuelves a responder pensando en situaciones concretas de las últimas semanas, el mapa se dibuja
+              mejor.
+            </p>
+          </motion.div>
+        )}
+
         {/* El rostro */}
+        {!plano && (<>
         <motion.div
           initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.88, y: 22 }}
           animate={revelado ? { opacity: 1, scale: 1, y: 0 } : {}}
@@ -193,9 +227,11 @@ Descubre el tuyo escuchando, en dos minutos:`;
           </blockquote>
 
           <p className="text-xs text-[#7B8880]">
-            Te acompaña <span className="text-[#C5CFC7] font-semibold">{segundo.emoji} {segundo.name}</span>
+            {empate ? 'A la par con' : 'Te acompaña'}{' '}
+            <span className="text-[#C5CFC7] font-semibold">{segundo.emoji} {segundo.name}</span>
           </p>
         </motion.div>
+        </>)}
 
         {/* Un solo camino hacia adelante */}
         <motion.div
@@ -225,7 +261,7 @@ Descubre el tuyo escuchando, en dos minutos:`;
             ) : (
               <>
                 <Share2 className="w-4 h-4" />
-                Compartir mi arquetipo
+                {plano ? 'Compartir mi mapa' : empate ? 'Compartir mis arquetipos' : 'Compartir mi arquetipo'}
               </>
             )}
           </button>

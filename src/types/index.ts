@@ -150,6 +150,21 @@ export interface CompositeProfile {
     reason: string;
     activationPractice: string;
   }[];
+  // Los perfiles guardados antes de nombrarse por pareja no traen estos campos.
+  /** Las dos figuras que encabezan el mapa y le dan nombre. */
+  pair?: [ArchetypeId, ArchetypeId];
+  /** La pregunta que abre la tensión entre esas dos figuras. */
+  tension?: string;
+  /** El 1.º y el 2.º están a la par: no hay un dominante claro entre los dos. */
+  isTie?: boolean;
+  /** Nada destaca sobre el resto: el mapa no tiene un polo claro y no se le pone nombre. */
+  isFlat?: boolean;
+}
+
+/** Una respuesta que pesó en un arquetipo: el *por qué te salió*. */
+export interface AnswerEvidence {
+  questionId: number;
+  value: number; // 1 a 5, lo que respondió la persona
 }
 
 export interface AssessmentResult {
@@ -165,6 +180,8 @@ export interface AssessmentResult {
   developmentArchetypes: ArchetypeScore[];
   dimensionScores: Record<DimensionId, number>;
   compositeProfile: CompositeProfile;
+  /** Las respuestas que más pesaron en cada uno de los tres primeros. No existe en resultados antiguos. */
+  evidence?: Partial<Record<ArchetypeId, AnswerEvidence[]>>;
 }
 
 export interface JournalEntry {

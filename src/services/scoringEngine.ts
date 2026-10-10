@@ -1,6 +1,8 @@
 import { ARCHETYPES, getArchetypeName, getArchetype, withDe } from '../data/archetypesData';
+import { ARCHETYPE_DRIVES, getDimensionTension } from '../data/archetypePairs';
 import { QUESTIONS_DATA, QUICK_QUESTION_IDS } from '../data/questionsData';
 import {
+  AnswerEvidence,
   ArchetypeId,
   ArchetypeScore,
   AssessmentAnswer,
@@ -99,11 +101,16 @@ export function calculateAssessmentResult(
     integrador: 0,
   };
 
+  // El orden se decide con la puntuación sin redondear: redondeada, dos arquetipos distintos
+  // empatan a menudo y el desempate lo hacía el orden en que están declarados en los datos.
+  const exactScores = {} as Record<ArchetypeId, number>;
+
   (Object.keys(rawScores) as ArchetypeId[]).forEach(id => {
     const max = maxPossibleScores[id] || 1;
     const min = max / 5;
     const scoreVal = rawScores[id];
-    const percentage = Math.round(((scoreVal - min) / (max - min)) * 100);
+    exactScores[id] = ((scoreVal - min) / (max - min)) * 100;
+    const percentage = Math.round(exactScores[id]);
     normalizedScores[id] = Math.max(10, Math.min(98, percentage));
   });
 
@@ -121,7 +128,7 @@ export function calculateAssessmentResult(
         dimension: arch.dimension,
       };
     })
-    .sort((a, b) => b.normalizedScore - a.normalizedScore);
+    .sort((a, b) => exactScores[b.archetypeId] - exactScores[a.archetypeId]);
 
   ranking.forEach((item, index) => {
     item.rank = index + 1;
@@ -172,6 +179,11 @@ export function calculateAssessmentResult(
   // Generate composite profile
   const compositeProfile = generateCompositeProfile(ranking, dimensionScores, gender);
 
+  const evidence: Partial<Record<ArchetypeId, AnswerEvidence[]>> = {};
+  top3.forEach(item => {
+    evidence[item.archetypeId] = collectEvidence(item.archetypeId, activeQuestions, answerMap);
+  });
+
   return {
     id: `eval-${Date.now()}`,
     date: new Date().toISOString(),
@@ -185,7 +197,33 @@ export function calculateAssessmentResult(
     developmentArchetypes,
     dimensionScores,
     compositeProfile,
+    evidence,
   };
+}
+
+/** Cuántas respuestas se guardan como *por qué te salió* para cada arquetipo. */
+const EVIDENCE_PER_ARCHETYPE = 2;
+
+/**
+ * Las respuestas que más empujaron a un arquetipo hacia arriba: las afirmaciones que lo
+ * puntúan y con las que la persona estuvo de acuerdo (4 o 5), de más a menos peso. Si no
+ * hay ninguna, la lista sale vacía y la pantalla no inventa un motivo.
+ */
+function collectEvidence(
+  archetypeId: ArchetypeId,
+  questions: typeof QUESTIONS_DATA,
+  answerMap: Map<number, number>
+): AnswerEvidence[] {
+  return questions
+    .map(q => {
+      const weight = q.weights.find(w => w.archetypeId === archetypeId)?.weight ?? 0;
+      const value = answerMap.get(q.id) ?? 0;
+      return { questionId: q.id, value, weight };
+    })
+    .filter(e => e.weight > 0 && e.value >= 4)
+    .sort((x, y) => y.value * y.weight - x.value * x.weight || y.weight - x.weight)
+    .slice(0, EVIDENCE_PER_ARCHETYPE)
+    .map(({ questionId, value }) => ({ questionId, value }));
 }
 
 /**
@@ -196,12 +234,6 @@ export function adaptAssessmentResultToGender(
   gender: GenderMode = 'male'
 ): AssessmentResult {
   const dominantId = result.dominantArchetype.archetypeId;
-  const dominantArchetype = {
-    ...result.dominantArchetype,
-    ...getArchetype(dominantId, gender),
-    normalizedScore: result.dominantArchetype.normalizedScore,
-    rawScore: result.dominantArchetype.rawScore,
-  };
 
   const ranking = result.ranking.map(item => {
     const arch = getArchetype(item.archetypeId, gender);
@@ -212,6 +244,20 @@ export function adaptAssessmentResultToGender(
       dimension: arch.dimension,
     };
   });
+
+  // Solo los campos de una puntuación. Antes se copiaba aquí el arquetipo entero, con sus
+  // tres variantes, y el resultado guardado engordaba cada vez que cambiaba la perspectiva.
+  const { archetypeId, rawScore, normalizedScore, rank } = result.dominantArchetype;
+  const dominantArch = getArchetype(dominantId, gender);
+  const dominantArchetype: ArchetypeScore = {
+    archetypeId,
+    name: dominantArch.name,
+    emoji: dominantArch.emoji,
+    rawScore,
+    normalizedScore,
+    rank,
+    dimension: dominantArch.dimension,
+  };
 
   const top3 = result.top3.map(item => {
     const arch = getArchetype(item.archetypeId, gender);
@@ -257,144 +303,81 @@ export function adaptAssessmentResultToGender(
   };
 }
 
+/** El 1.º y el 2.º se dan por empatados si los separa esta distancia o menos (en puntos de 0 a 100). */
+export const TIE_MAX_GAP = 1;
+
+/**
+ * Un mapa no tiene polo claro si el primero apenas supera al del medio. Calibrado con
+ * simulaciones: salta con respuestas planas (todo igual) y con quien dice «sí» a casi todo, y
+ * no salta nunca con perfiles marcados ni con respuestas al azar.
+ */
+export const FLAT_MAX_SPREAD = 5;
+
 function generateCompositeProfile(
   ranking: ArchetypeScore[],
-  dimensionScores: Record<DimensionId, number>,
+  _dimensionScores: Record<DimensionId, number>,
   gender: GenderMode = 'male'
 ): CompositeProfile {
-  const top1 = ranking[0].archetypeId;
-  const top2 = ranking[1].archetypeId;
-  const top3 = ranking[2].archetypeId;
-  const topIds = [top1, top2, top3];
+  const [first, second, third] = ranking;
+  const middle = ranking[Math.floor(ranking.length / 2) - 1];
+  const a = getArchetype(first.archetypeId, gender);
+  const b = getArchetype(second.archetypeId, gender);
+  const c = getArchetype(third.archetypeId, gender);
 
-  const name1 = getArchetypeName(top1, gender);
-  const name2 = getArchetypeName(top2, gender);
-  const name3 = getArchetypeName(top3, gender);
+  const archetypeKey = `${a.id}-${b.id}-${c.id}`;
+  const archetypeCombination = `${a.name} + ${b.name} + ${c.name}`;
 
-  const topNames = `${name1} + ${name2} + ${name3}`;
-
-  let title = gender === 'female' ? "La Estratega Consciente" : "El Estratega Consciente";
-  let synthesis = `Tu mapa refleja una configuración singular donde ${name1} lidera tu psique, fuertemente respaldada por la energía ${withDe(name2)} y ${withDe(name3)}.`;
-  let strengths: string[] = [];
-  let risksAndShadows: string[] = [];
-
-  // Determine synthesis theme based on prominent top 3 combination
-  if (topIds.includes('mago') && (topIds.includes('creador') || topIds.includes('constructor'))) {
-    title = gender === 'female' ? "La Alquimista Creadora" : "El Alquimista Creador";
-    synthesis = `Tu perfil combina una marcada inclinación hacia la comprensión de patrones profundos, la invención creativa y la materialización de soluciones innovadoras. Tiendes a conectar ideas dispares y transformar conceptos abstractos en realidades tangibles.`;
-    strengths = [
-      "Pensamiento sistémico y visión estratégica anticipatoria",
-      "Alta capacidad de innovación y expresión técnica/artística",
-      "Curiosidad insaciable y aprendizaje autónomo acelerado",
-      "Habilidad para destrabar problemas complejos con soluciones no convencionales"
-    ];
-    risksAndShadows = [
-      "Tendencia a la dispersión y a comenzar múltiples proyectos sin cerrarlos",
-      "Aislamiento intelectual o parálisis por sobreanálisis perfeccionista",
-      "Dificultad para sostener tareas rutinarias de administración cotidiana"
-    ];
-  } else if ((topIds.includes('rey') || topIds.includes('soberano')) && (topIds.includes('guerrero') || topIds.includes('padre'))) {
-    title = gender === 'female' ? "La Soberana Protectora" : "El Soberano Protector";
-    synthesis = `Tu configuración proyecta una fuerte presencia organizadora, orientada al orden ético, la disciplina y la custodia del bienestar colectivo. Buscas construir estabilidad duradera y asumir la responsabilidad final de tus proyectos y vínculos.`;
-    strengths = [
-      "Autoridad moral serena y capacidad de contención en crisis",
-      "Foco en resultados sostenibles y visión de largo plazo",
-      "Firmeza para establecer límites claros y resolver desacuerdos",
-      "Compromiso generoso con la formación y desarrollo de tu entorno"
-    ];
-    risksAndShadows = [
-      "Exceso de carga sobre los propios hombros e incapacidad para delegar",
-      "Rigidez ante imprevistos o resistencia a la ligereza y el descanso",
-      "Riesgo de frialdad emocional o autoritarismo reactivo bajo estrés"
-    ];
-  } else if ((topIds.includes('amante') || topIds.includes('sanador')) && (topIds.includes('cuidador') || topIds.includes('bufon'))) {
-    title = gender === 'female' ? "La Conectora Compasiva" : "El Conector Compasivo";
-    synthesis = `Tu mapa está profundamente arraigado en la dimensión del Corazón. Posees una sensibilidad humana excepcional, calidez para sostener a otros en momentos vulnerables y el deseo de cuidar y reparar los vínculos afectivos.`;
-    strengths = [
-      "Empatía profunda y escucha activa sin prejuicios",
-      "Habilidad para armonizar ambientes tensos y reparar heridas relacionales",
-      "Apreciación de la belleza estética y disfrute del presente",
-      "Autenticidad emocional que genera confianza inmediata"
-    ];
-    risksAndShadows = [
-      "Tendencia al autosacrificio y dificultad para decir 'no'",
-      "Vulnerabilidad a la codependencia o a tomar las cargas ajenas como propias",
-      "Evitación del conflicto necesario por miedo a dañar la armonía"
-    ];
-  } else if (topIds.includes('guerrero') && (topIds.includes('heroe') || topIds.includes('rebelde'))) {
-    title = gender === 'female' ? "La Guerrera Transformadora" : "El Forjador Transformador";
-    synthesis = `Tu motor principal es la superación de desafíos, el coraje activo y la conquista de metas exigentes. Encuentras tu identidad en la disciplina noble, la defensa de la justicia y la disrupción liberadora frente a lo obsoleto.`;
-    strengths = [
-      "Fuerza de voluntad extraordinaria y alta tolerancia a la incomodidad",
-      "Capacidad de actuar con rapidez y decisión en situaciones críticas",
-      "Lealtad incondicional a tus principios y a quienes defiendes",
-      "Orientación a la excelencia y a superar los propios límites"
-    ];
-    risksAndShadows = [
-      "Adicción a la adrenalina del conflicto o incapacidad de frenar",
-      "Juicio severo hacia la debilidad propia o la lentitud ajena",
-      "Dificultad para aceptar la vulnerabilidad y la ternura sin defensas"
-    ];
-  } else if (topIds.includes('sacerdote') || topIds.includes('mistico') || topIds.includes('integrador')) {
-    title = gender === 'female' ? "La Tejedora del Misterio y la Totalidad" : "El Guardián del Misterio y la Totalidad";
-    synthesis = `Tu mapa refleja una búsqueda profunda de sentido, contemplación y síntesis holística. Te mueves con soltura entre lo visible y lo invisible, buscando armonizar los opuestos y vivir desde un centro sereno e incorruptible.`;
-    strengths = [
-      "Percepción intuitiva sutil y serenidad existencial profunda",
-      "Capacidad de sintetizar polaridades y mediar en conflictos complejos",
-      "Alineación con valores trascendentes y respeto por lo sagrado",
-      "Presencia de paz que disuelve la agitación colectiva"
-    ];
-    risksAndShadows = [
-      "Desconexión ocasional de las demandas prácticas y materiales cotidianas",
-      "Aislamiento místico o incomodidad con el ruido del mundo",
-      "Dificultad para comunicar verdades intuitivas a mentes puramente racionales"
-    ];
-  } else {
-    // Dynamic Title
-    title = `${gender === 'female' ? 'La Integradora' : 'El Integrador'} ${name1}`;
-    synthesis = `Tu perfil integra de forma dinámica la fuerza ${withDe(name1)} con la versatilidad ${withDe(name2)} y la presencia ${withDe(name3)}. Manifiestas un balance singular entre tus impulsos reflexivos, afectivos y de acción.`;
-    strengths = [
-      `Capacidad de liderar desde las virtudes nucleares del arquetipo ${name1}`,
-      `Complementariedad táctica aportada por ${name2}`,
-      `Flexibilidad para responder a diversos desafíos sin quedar atrapado en un solo rol`,
-      "Claridad para navegar entre la reflexión interior y el impacto exterior"
-    ];
-    risksAndShadows = [
-      "Tensión interna entre diferentes prioridades y formas de operar",
-      "Posible oscilación entre la exigencia de acción y el repliegue reflexivo",
-      "Necesidad de consolidar un eje central para evitar desgaste de energía"
-    ];
+  // Si nada destaca, no se inventa una identidad: se dice.
+  const isFlat = first.normalizedScore - middle.normalizedScore <= FLAT_MAX_SPREAD;
+  if (isFlat) {
+    return {
+      archetypeKey,
+      title: 'Un mapa sin un polo claro',
+      archetypeCombination,
+      synthesis:
+        'Tus respuestas puntúan parecido en casi todas las figuras: ninguna destaca lo bastante como para ponerle nombre. ' +
+        'Puede ser un momento de equilibrio, o que hayas respondido casi todo igual. ' +
+        'Si vuelves a responder pensando en situaciones concretas de las últimas semanas, el mapa se dibuja mejor.',
+      strengths: [],
+      risksAndShadows: [],
+      developmentArchetypes: [],
+      isFlat: true,
+      isTie: false,
+    };
   }
 
-  // Determine development archetypes based on lowest scores
-  const lowestArchetype1 = ranking[ranking.length - 1].archetypeId;
-  const lowestArchetype2 = ranking[ranking.length - 2].archetypeId;
+  // El perfil se nombra por la pareja que lo encabeza: 153 combinaciones en vez de seis
+  // títulos fijos, y cada una dice algo de esas dos figuras y no de cualquiera.
+  const isTie = first.normalizedScore - second.normalizedScore <= TIE_MAX_GAP;
+  const head = isTie
+    ? `${a.name} y ${b.name} comparten el primer puesto de tu mapa`
+    : `${a.name} y ${b.name} encabezan tu mapa`;
 
-  const lowArch1 = getArchetype(lowestArchetype1, gender);
-  const lowArch2 = getArchetype(lowestArchetype2, gender);
-
-  const developmentArchetypes = [
-    {
-      archetypeId: lowestArchetype1,
-      name: lowArch1.name,
-      reason: `Integrar a ${lowArch1.name} te permitirá equilibrar tu energía dominante, aportando ${lowArch1.concepts.slice(0, 3).join(', ')}.`,
-      activationPractice: lowArch1.developmentExercises[0]?.actionStep || "Practicar conscientemente su pregunta central."
-    },
-    {
-      archetypeId: lowestArchetype2,
-      name: lowArch2.name,
-      reason: `${lowArch2.name} actúa como un contrapeso saludable frente a los riesgos de tu sombra arquetípica.`,
-      activationPractice: lowArch2.developmentExercises[0]?.actionStep || "Explorar sus ejercicios de reflexión."
-    }
-  ];
+  const developmentArchetypes = ranking
+    .slice(-2)
+    .reverse()
+    .map(low => {
+      const arch = getArchetype(low.archetypeId, gender);
+      return {
+        archetypeId: arch.id,
+        name: arch.name,
+        // Puntuar poco no es una carencia que haya que corregir: es lo que menos apareció.
+        reason: `${arch.name} apareció poco en tus respuestas. Si quieres aprender a ${ARCHETYPE_DRIVES[arch.id]}, puede ser un buen lugar para explorar.`,
+        activationPractice: arch.developmentExercises[0]?.actionStep || 'Lee su ficha y quédate con una sola pregunta.',
+      };
+    });
 
   return {
-    archetypeKey: `${top1}-${top2}-${top3}`,
-    title,
-    archetypeCombination: topNames,
-    synthesis,
-    strengths,
-    risksAndShadows,
+    archetypeKey,
+    title: `${a.name} + ${b.name}`,
+    archetypeCombination,
+    synthesis: `${head}, con ${c.name} detrás. Una parte de ti quiere ${ARCHETYPE_DRIVES[a.id]}; otra, ${ARCHETYPE_DRIVES[b.id]}.`,
+    strengths: [`Fuerza ${withDe(a.name)}: ${a.strength}`, `Fuerza ${withDe(b.name)}: ${b.strength}`],
+    risksAndShadows: [`Sombra ${withDe(a.name)}: ${a.shadow}`, `Sombra ${withDe(b.name)}: ${b.shadow}`],
     developmentArchetypes,
+    pair: [a.id, b.id],
+    tension: getDimensionTension(a.dimension, b.dimension),
+    isTie,
+    isFlat: false,
   };
 }

@@ -1,0 +1,163 @@
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import {
+  FLAT_MAX_SPREAD,
+  TIE_MAX_GAP,
+  adaptAssessmentResultToGender,
+  calculateAssessmentResult,
+} from './scoringEngine';
+import { QUESTIONS_DATA, QUICK_QUESTION_IDS } from '../data/questionsData';
+import { ARCHETYPE_DRIVES, getDimensionTension } from '../data/archetypePairs';
+import { ARCHETYPES_LIST, DIMENSIONS } from '../data/archetypesData';
+import { AssessmentResult, DimensionId, GenderMode } from '../types';
+
+const todas = (valor: number) => QUESTIONS_DATA.map(q => ({ questionId: q.id, value: valor }));
+
+// Generador determinista para que las pruebas no dependan de la suerte.
+function azar(semilla: number) {
+  let s = semilla;
+  return () => {
+    s = (s * 1103515245 + 12345) % 2147483648;
+    return s / 2147483648;
+  };
+}
+const respuestasAlAzar = (r: () => number) => QUESTIONS_DATA.map(q => ({ questionId: q.id, value: 1 + Math.floor(r() * 5) }));
+
+describe('mapa sin polo claro', () => {
+  for (const valor of [1, 3, 5]) {
+    it(`todo a ${valor}: no se inventa un dominante`, () => {
+      const { compositeProfile: p } = calculateAssessmentResult(todas(valor), 'full', 'male');
+      assert.equal(p.isFlat, true);
+      assert.equal(p.title, 'Un mapa sin un polo claro');
+      assert.equal(p.pair, undefined);
+      assert.deepEqual(p.developmentArchetypes, []);
+      assert.deepEqual(p.strengths, []);
+    });
+  }
+
+  it('los extremos siguen dentro de 0 a 100', () => {
+    for (const valor of [1, 5]) {
+      const r = calculateAssessmentResult(todas(valor), 'full', 'male');
+      for (const s of Object.values(r.scores)) assert.ok(s >= 0 && s <= 100);
+    }
+  });
+});
+
+describe('perfil por pareja', () => {
+  const r = azar(7);
+  const resultados = Array.from({ length: 600 }, (_, i) =>
+    calculateAssessmentResult(respuestasAlAzar(r), i % 2 ? 'full' : 'quick', (['male', 'female', 'universal'] as GenderMode[])[i % 3])
+  );
+
+  it('el título es la pareja que encabeza el ranking', () => {
+    for (const res of resultados.filter(x => !x.compositeProfile.isFlat)) {
+      const [a, b] = res.ranking;
+      assert.equal(res.compositeProfile.title, `${a.name} + ${b.name}`);
+      assert.deepEqual(res.compositeProfile.pair, [a.archetypeId, b.archetypeId]);
+      assert.ok(res.compositeProfile.tension && res.compositeProfile.tension.length > 0);
+    }
+  });
+
+  it('el empate se marca exactamente cuando el 1.º y el 2.º están a la par', () => {
+    for (const res of resultados.filter(x => !x.compositeProfile.isFlat)) {
+      const [a, b] = res.ranking;
+      assert.equal(res.compositeProfile.isTie, a.normalizedScore - b.normalizedScore <= TIE_MAX_GAP);
+    }
+  });
+
+  it('el mapa plano se marca exactamente cuando el 1.º apenas supera al del medio', () => {
+    for (const res of resultados) {
+      const plano = res.ranking[0].normalizedScore - res.ranking[8].normalizedScore <= FLAT_MAX_SPREAD;
+      assert.equal(!!res.compositeProfile.isFlat, plano);
+    }
+  });
+
+  it('ya no hay seis títulos fijos ni «El Integrador X»', () => {
+    const titulos = new Set(resultados.map(x => x.compositeProfile.title));
+    assert.ok(titulos.size > 60, `solo ${titulos.size} títulos distintos`);
+    for (const t of titulos) assert.doesNotMatch(t, /^(El|La) Integrador(a)? (El|La) /);
+  });
+
+  it('ningún texto del perfil queda con «del El» o «de La»', () => {
+    for (const res of resultados) {
+      const p = res.compositeProfile;
+      const todo = [p.synthesis, ...p.strengths, ...p.risksAndShadows, ...p.developmentArchetypes.map(d => d.reason)].join(' ');
+      assert.doesNotMatch(todo, /\bdel El\b|\bde El\b|\bde La\b/);
+    }
+  });
+
+  it('los de desarrollo no prometen equilibrio', () => {
+    for (const res of resultados.filter(x => !x.compositeProfile.isFlat)) {
+      for (const d of res.compositeProfile.developmentArchetypes) {
+        assert.match(d.reason, /apareció poco en tus respuestas/);
+        assert.doesNotMatch(d.reason, /equilibrar/);
+      }
+    }
+  });
+});
+
+describe('por qué te salió', () => {
+  it('solo cuenta respuestas de acuerdo con afirmaciones que puntúan ese arquetipo', () => {
+    const r = azar(11);
+    for (let i = 0; i < 200; i++) {
+      const respuestas = respuestasAlAzar(r);
+      const res = calculateAssessmentResult(respuestas, 'full', 'male');
+      for (const [id, lista] of Object.entries(res.evidence ?? {})) {
+        assert.ok(lista.length <= 2);
+        for (const e of lista) {
+          const q = QUESTIONS_DATA.find(x => x.id === e.questionId)!;
+          assert.ok(q.weights.some(w => w.archetypeId === id), `la ${e.questionId} no puntúa ${id}`);
+          assert.ok(e.value >= 4);
+          assert.equal(respuestas.find(x => x.questionId === e.questionId)!.value, e.value);
+        }
+      }
+    }
+  });
+
+  it('en el test rápido solo cita afirmaciones del rápido', () => {
+    const quick = QUESTIONS_DATA.filter(q => QUICK_QUESTION_IDS.includes(q.id)).map(q => ({ questionId: q.id, value: 5 }));
+    const res = calculateAssessmentResult(quick, 'quick', 'male');
+    for (const lista of Object.values(res.evidence ?? {})) {
+      for (const e of lista) assert.ok(QUICK_QUESTION_IDS.includes(e.questionId));
+    }
+  });
+
+  it('si nadie estuvo de acuerdo con nada, no inventa un motivo', () => {
+    const res = calculateAssessmentResult(todas(3), 'full', 'male');
+    for (const lista of Object.values(res.evidence ?? {})) assert.deepEqual(lista, []);
+  });
+});
+
+describe('resultados guardados', () => {
+  it('se recomponen con la lógica de ahora y dejan de engordar', () => {
+    const nuevo = calculateAssessmentResult(respuestasAlAzar(azar(3)), 'full', 'male');
+    // Así se guardaba antes: perfil con título fijo y el arquetipo entero dentro del dominante.
+    const antiguo = {
+      ...nuevo,
+      compositeProfile: { ...nuevo.compositeProfile, title: 'El Integrador El Creador', synthesis: 'la fuerza de El Creador' },
+      dominantArchetype: { ...nuevo.dominantArchetype, ...ARCHETYPES_LIST[0], variants: ARCHETYPES_LIST[0].variants },
+    } as unknown as AssessmentResult;
+    delete (antiguo.compositeProfile as any).pair;
+
+    const recompuesto = adaptAssessmentResultToGender(antiguo, 'female');
+    assert.notEqual(recompuesto.compositeProfile.title, 'El Integrador El Creador');
+    assert.ok(recompuesto.compositeProfile.pair || recompuesto.compositeProfile.isFlat);
+    assert.equal('variants' in recompuesto.dominantArchetype, false);
+    assert.deepEqual(Object.keys(recompuesto.dominantArchetype).sort(), ['archetypeId', 'dimension', 'emoji', 'name', 'normalizedScore', 'rank', 'rawScore']);
+    assert.ok(JSON.stringify(recompuesto).length < JSON.stringify(antiguo).length);
+  });
+});
+
+describe('textos de las parejas', () => {
+  it('cada arquetipo tiene su impulso', () => {
+    for (const a of ARCHETYPES_LIST) assert.ok(ARCHETYPE_DRIVES[a.id]?.length > 0, a.id);
+  });
+
+  it('las diez combinaciones de dimensiones tienen pregunta, en cualquier orden', () => {
+    const dims = Object.keys(DIMENSIONS) as DimensionId[];
+    for (const x of dims) for (const y of dims) {
+      assert.ok(getDimensionTension(x, y).length > 0, `${x}|${y}`);
+      assert.equal(getDimensionTension(x, y), getDimensionTension(y, x));
+    }
+  });
+});

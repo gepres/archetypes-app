@@ -13,6 +13,7 @@ import {
   UserProfile,
 } from '../types';
 import { FirebaseService } from './firebaseService';
+import { adaptAssessmentResultToGender } from './scoringEngine';
 
 const STORAGE_KEYS = {
   CURRENT_USER_ID: 'archetypes_active_user_id',
@@ -77,10 +78,24 @@ export const JOURNAL_PROMPTS = [
 
 export const StorageService = {
   // Current assessment result
+  /**
+   * Un resultado guardado trae escritos su perfil y sus nombres tal como eran al hacer el test.
+   * Al leerlo se recomponen con la lógica y la perspectiva de ahora, a partir de las
+   * puntuaciones, que es lo único que no cambia. Si el dato está roto, se devuelve tal cual.
+   */
+  refreshResult(result: AssessmentResult): AssessmentResult {
+    try {
+      return adaptAssessmentResultToGender(result, this.getUserProfile().gender || 'male');
+    } catch (e) {
+      console.warn('No se pudo recomponer un resultado guardado:', e);
+      return result;
+    }
+  },
+
   getCurrentResult(): AssessmentResult | null {
     try {
       const data = localStorage.getItem(STORAGE_KEYS.CURRENT_RESULT);
-      return data ? JSON.parse(data) : null;
+      return data ? this.refreshResult(JSON.parse(data)) : null;
     } catch (e) {
       console.error("Error reading current result:", e);
       return null;
@@ -108,7 +123,7 @@ export const StorageService = {
   getAssessmentHistory(): AssessmentResult[] {
     try {
       const data = localStorage.getItem(STORAGE_KEYS.ASSESSMENT_HISTORY);
-      return data ? JSON.parse(data) : [];
+      return data ? (JSON.parse(data) as AssessmentResult[]).map(r => this.refreshResult(r)) : [];
     } catch (e) {
       console.error("Error reading history:", e);
       return [];
