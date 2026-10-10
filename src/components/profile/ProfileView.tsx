@@ -30,7 +30,7 @@ import { withDe } from '../../data/archetypesData';
 import { getMapLead } from '../../services/scoringEngine';
 import { StorageService, backupBelongsTo } from '../../services/storageService';
 import { FirebaseService } from '../../services/firebaseService';
-import { AIProviderService } from '../../services/aiProviderService';
+import { AIProviderService, describirEstadoIA } from '../../services/aiProviderService';
 import { AccountRecord, AssessmentResult, GenderMode, UserProfile, DEFAULT_GENDER } from '../../types';
 import { NavTab } from '../layout/Sidebar';
 import { AiSettingsModal } from '../ai/AiSettingsModal';
@@ -559,7 +559,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
       </Seccion>
       {/* Instalación como app: sigue accesible aunque se cierre el banner flotante */}
       <InstallAppCard />
-      <Seccion id="ia" titulo="Asistente de IA" resumen="Proveedor, modelo y cupo" icono={Cpu} abierta={abierta} onToggle={alternar}>
+      <Seccion id="ia" titulo="Asistente de IA" resumen="Cuántas consultas te quedan y cómo se conecta" icono={Cpu} abierta={abierta} onToggle={alternar}>
         <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -568,22 +568,12 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             </div>
             <div>
               <h3 className="font-serif text-base font-bold text-[#F2EFE6] flex items-center gap-2">
-                <span>Motor de Inteligencia Artificial</span>
+                <span>Tu asistente</span>
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-400/10 text-amber-300 border border-amber-400/20 font-sans">
-                  {aiUsage.activeKeySource === 'none'
-                    ? 'Sin clave'
-                    : aiUsage.activeKeySource === 'app'
-                      ? 'Incluido con la app'
-                      : 'Ilimitado'}
+                  {describirEstadoIA(aiUsage).etiqueta}
                 </span>
               </h3>
-              <p className="text-xs text-[#9DA79F]">
-                {aiUsage.activeKeySource === 'none'
-                  ? 'Sin clave propia: responde el motor simbólico local, sin conexión externa.'
-                  : aiUsage.activeKeySource === 'app'
-                    ? `Usando la clave incluida con la app (${aiUsage.remainingCourtesy} de ${aiUsage.maxDaily} consultas restantes hoy).`
-                    : 'Configurado con tu propia clave o modo local. Sin límites diarios.'}
-              </p>
+              <p className="text-xs text-[#9DA79F]">{describirEstadoIA(aiUsage).detalle}</p>
             </div>
           </div>
           <button
@@ -592,7 +582,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             className="px-4 py-2.5 bg-[#1A2521] hover:bg-[#23332D] text-[#D6A84F] border border-[#315C45] rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-sm active:scale-95 shrink-0"
           >
             <Settings className="w-4 h-4" />
-            <span>Configurar Proveedores & API Keys</span>
+            <span>Ajustes del asistente</span>
           </button>
         </div>
         </div>

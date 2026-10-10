@@ -19,7 +19,7 @@ import { getArchetypeList, getArchetypeName, getArchetypeNarrative, withDe } fro
 import { getMapLead } from '../../services/scoringEngine';
 import { crisisInConversation } from '../../services/crisisSupport';
 import { GeminiService } from '../../services/geminiService';
-import { AIProviderService, PROVIDER_OPTIONS } from '../../services/aiProviderService';
+import { AIProviderService, describirEstadoIA } from '../../services/aiProviderService';
 import { StorageService, insertarRespuesta, unirConversaciones } from '../../services/storageService';
 import { suggestedPrompts } from '../../services/personalization';
 import { ArchetypeId, AssessmentResult, ChatMessage, GenderMode, UserProfile, DEFAULT_GENDER } from '../../types';
@@ -44,22 +44,6 @@ interface AiReflectionViewProps {
 // Las vistas del chat montadas ahora mismo. Una respuesta que llega cuando su vista ya se
 // desmontó (se fue a otra pestaña y volvió) avisa a la que esté montada para que la muestre.
 const vistasDelChat = new Set<(preguntaId: string, respuesta: ChatMessage, guardada: boolean) => void>();
-
-/** El nombre legible del modelo activo, no su identificador. */
-function nombreDelModelo(): string {
-  const s = AIProviderService.getSettings();
-  const opt = PROVIDER_OPTIONS[s.provider];
-  const elegido =
-    s.provider === 'openrouter'
-      ? s.openrouterModel
-      : s.provider === 'gemini'
-      ? s.geminiModel
-      : s.provider === 'openai'
-      ? s.openaiModel
-      : undefined;
-  const encontrado = opt.availableModels.find(m => m.id === elegido);
-  return encontrado ? encontrado.name : opt.name;
-}
 
 export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
   currentResult,
@@ -110,7 +94,6 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const [aiUsageState, setAiUsageState] = useState(() => AIProviderService.getUsageStatus());
-  const [activeModelName, setActiveModelName] = useState(() => nombreDelModelo());
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const listaRef = useRef<HTMLDivElement | null>(null);
@@ -143,7 +126,6 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
   const refreshAiStatus = () => {
     const status = AIProviderService.getUsageStatus();
     setAiUsageState(status);
-    setActiveModelName(nombreDelModelo());
     setUserProfile(StorageService.getUserProfile());
   };
 
@@ -355,6 +337,8 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
   const sinMensajes = !messages.some(m => m.role === 'user');
   // Con clave propia no hay cupo que gastar; con la incluida, si.
   const conCupo = aiUsageState.isUnlimited || aiUsageState.activeKeySource === 'custom';
+  // Lo que le importa a quien conversa: cuántas consultas le quedan, no el nombre del modelo.
+  const estadoIA = describirEstadoIA(aiUsageState);
   const esGeneral = activePersona === 'general';
 
   /** El rostro de la voz activa: ilustración si es un arquetipo, emblema si no. */
@@ -400,12 +384,7 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
           ) : (
             <Zap className="w-3 h-3 text-[#D6A84F]" />
           )}
-          <span className="max-w-[130px] truncate">{activeModelName}</span>
-          {!conCupo && (
-            <span className="text-[#D6A84F] font-semibold">
-              {aiUsageState.remainingCourtesy}/{aiUsageState.maxDaily}
-            </span>
-          )}
+          <span className={`truncate ${estadoIA.aviso ? 'text-[#D6A84F] font-semibold' : ''}`}>{estadoIA.etiqueta}</span>
         </span>
 
         <div className="relative shrink-0">
@@ -450,12 +429,7 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
                   ) : (
                     <Zap className="w-3 h-3 text-[#D6A84F]" />
                   )}
-                  <span className="truncate">{activeModelName}</span>
-                  {!conCupo && (
-                    <span className="shrink-0 text-[#D6A84F] font-semibold">
-                      {aiUsageState.remainingCourtesy}/{aiUsageState.maxDaily}
-                    </span>
-                  )}
+                  <span className={estadoIA.aviso ? 'text-[#D6A84F]' : ''}>{estadoIA.detalle}</span>
                 </div>
 
                 <div className="pt-1 border-t border-[#1A2521] space-y-1">

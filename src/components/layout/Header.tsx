@@ -37,7 +37,7 @@ export const Header: React.FC<HeaderProps> = ({
         <button
           onClick={onOpenAiSettings}
           className="p-1.5 bg-[#121A17] hover:bg-[#1A2521] text-[#D6A84F] border border-[#315C45] rounded-lg transition-all"
-          title="Ajustes de IA y Modelos"
+          title="Ajustes del asistente de IA"
         >
           <Cpu className="w-4 h-4 text-[#D6A84F]" />
         </button>

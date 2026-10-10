@@ -18,6 +18,8 @@ import {
   crisisInConversation,
   detectCrisis,
 } from './crisisSupport';
+import { motivoAmable } from './estadoAsistente';
+export { describirEstadoIA } from './estadoAsistente';
 
 // Cómo se llama cada perspectiva en el prompt. Es una preferencia de lenguaje para nombrar los
 // arquetipos, no un dato sobre el género de quien usa la app.
@@ -409,7 +411,7 @@ ${resultContext}
       return {
         text:
           this.getLocalArchetypeReflection(message, currentResult, archetypePersona, effectiveGender) +
-          `\n\n---\n*Respuesta del **motor simbólico local**, sin conexión externa. Para conversar con un modelo de IA, añade tu propia clave en **Ajustes de IA**.*`,
+          `\n\n---\n*Esta respuesta sale de tu mapa simbólico, sin un asistente de IA detrás. Si quieres conversar con uno, puedes conectarlo en **Ajustes de IA**.*`,
         modelUsed: 'Motor Simbólico Local',
         provider: 'local',
       };
@@ -420,9 +422,8 @@ ${resultContext}
       if (crisisAbierta) return seguimientoDeCrisis;
       return {
         text:
-          `⏳ **Has alcanzado el límite diario de ${status.maxDaily} consultas incluidas con la aplicación.**\n\n` +
-          `Para seguir conversando sin límite, ve a **Ajustes de IA (⚙️)** y añade tu propia clave gratuita de **OpenRouter**, **Google Gemini** u **OpenAI**.\n\n` +
-          `*El cupo se reinicia automáticamente a medianoche.*`,
+          `⏳ **Hoy ya usaste tus ${status.maxDaily} consultas.**\n\n` +
+          `Mañana se renuevan. Si quieres seguir hoy, en **Ajustes de IA (⚙️)** puedes conectar tu propia cuenta de un servicio de IA; varios tienen un uso gratuito.`,
         modelUsed: 'Cupo diario agotado',
         provider: settings.provider,
       };
@@ -617,7 +618,7 @@ ${resultContext}
       console.warn('AI Provider fallback triggered:', err);
       if (crisisAbierta) return seguimientoDeCrisis;
       return {
-        text: `${this.getLocalArchetypeReflection(message, currentResult, archetypePersona, effectiveGender)}\n\n*(Nota: Respuesta del motor simbólico local debido a: ${err.message || 'conexión de red'})*`,
+        text: `${this.getLocalArchetypeReflection(message, currentResult, archetypePersona, effectiveGender)}\n\n---\n*${motivoAmable(err)}*`,
         modelUsed: 'Fallback Local',
         provider: 'local',
       };
