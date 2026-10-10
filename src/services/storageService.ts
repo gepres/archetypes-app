@@ -1,7 +1,8 @@
-import { ARCHETYPES_LIST } from '../data/archetypesData';
+import { ARCHETYPES_LIST, withDe } from '../data/archetypesData';
 import { INITIAL_CHALLENGES } from '../data/challengesData';
 import {
   AccountRecord,
+  Archetype,
   ArchetypeId,
   AssessmentResult,
   Challenge,
@@ -44,6 +45,22 @@ export function mergeChallengeProgress(catalog: Challenge[], stored: Challenge[]
   const catalogIds = new Set(catalog.map(c => c.id));
   const retired = stored.filter(c => !catalogIds.has(c.id) && c.completed);
   return [...current, ...retired];
+}
+
+/**
+ * Los textos de la carta del día para un arquetipo ya resuelto en una perspectiva.
+ *
+ * La carta guardada se escribió con el nombre universal («Sanador / Sanadora»), así que quien
+ * la muestra los vuelve a componer con el arquetipo en la perspectiva elegida.
+ */
+export function composeDailyOracleTexts(
+  archetype: Archetype
+): Pick<DailyOracleCard, 'affirmation' | 'morningReflection' | 'eveningInquiry'> {
+  return {
+    affirmation: `Hoy elijo manifestar la energía luminosa ${withDe(archetype.name)}: ${archetype.strength}`,
+    morningReflection: `Al iniciar tu día: ¿cómo puedes responder a tus compromisos con el espíritu ${withDe(archetype.name)}?`,
+    eveningInquiry: `Al cerrar tu jornada: ¿en qué momentos te mantuviste fiel a tu centro, y dónde asomó su sombra (${archetype.shadow})?`,
+  };
 }
 
 // Initial default sample journal prompts
@@ -486,10 +503,8 @@ export const StorageService = {
       date: todayStr,
       archetypeId: archetype.id,
       mantra: archetype.mantra,
-      affirmation: `Hoy elijo manifestar la energía luminosa del ${archetype.name}: ${archetype.strength}`,
       dailyFocus: archetype.centralQuestion,
-      morningReflection: `Al iniciar tu día: ¿Cómo puedes responder a tus compromisos con la impecabilidad y el espíritu de ${archetype.name}?`,
-      eveningInquiry: `Al cerrar tu jornada: ¿En qué momentos te mantuviste fiel a tu centro y dónde se asomó la sombra del ${archetype.shadow}?`,
+      ...composeDailyOracleTexts(archetype),
     };
 
     try {

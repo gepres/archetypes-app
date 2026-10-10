@@ -9,7 +9,7 @@ import {
   ArrowRight,
   Shield,
 } from 'lucide-react';
-import { getArchetype, getArchetypeList } from '../../data/archetypesData';
+import { getArchetype, getArchetypeList, getDimensionShortName } from '../../data/archetypesData';
 import { ArchetypeId, Challenge, GenderMode } from '../../types';
 import { ArchetypeBadge } from '../common/ArchetypeBadge';
 import { PerspectiveSwitcher } from '../common/PerspectiveSwitcher';
@@ -215,7 +215,7 @@ export const ChallengesView: React.FC<ChallengesViewProps> = ({
                         {arch.name}
                       </span>
                       <span className="text-[10px] text-[#9DA79F] uppercase tracking-wider">
-                        {arch.dimension}
+                        {getDimensionShortName(arch.dimension)}
                       </span>
                     </div>
                   </div>

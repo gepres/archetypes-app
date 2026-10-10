@@ -15,7 +15,7 @@ import {
   X,
 } from 'lucide-react';
 import { ARCHETYPE_VISUALS } from '../../data/archetypeImages';
-import { getArchetypeList, getArchetypeName, getArchetypeNarrative } from '../../data/archetypesData';
+import { getArchetypeList, getArchetypeName, getArchetypeNarrative, withDe } from '../../data/archetypesData';
 import { GeminiService } from '../../services/geminiService';
 import { AIProviderService, PROVIDER_OPTIONS } from '../../services/aiProviderService';
 import { StorageService } from '../../services/storageService';
@@ -132,7 +132,7 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
       return narrative.reflectionQuestions.length > 0
         ? narrative.reflectionQuestions.slice(0, 4)
         : [
-            `¿Cómo puedo manifestar la energía de ${selectedPersonaObj.name} con mayor pureza?`,
+            `¿Cómo puedo manifestar la energía ${withDe(selectedPersonaObj.name)} con mayor pureza?`,
             `¿Qué sombra debo vigilar para no caer en el desbalance?`,
             `¿Cuál es el siguiente paso evolutivo para este arquetipo?`,
           ];

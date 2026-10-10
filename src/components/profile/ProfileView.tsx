@@ -26,6 +26,7 @@ import {
   RefreshCw,
   Check,
 } from 'lucide-react';
+import { withDe } from '../../data/archetypesData';
 import { StorageService } from '../../services/storageService';
 import { FirebaseService } from '../../services/firebaseService';
 import { AIProviderService } from '../../services/aiProviderService';
@@ -505,7 +506,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="font-serif font-bold text-sm text-[#F2EFE6]">
-                        {item.title || `Mapa del ${item.dominantArchetype?.name}`}
+                        {item.title || `Mapa ${withDe(item.dominantArchetype?.name ?? '')}`}
                       </span>
                       <span className="text-[10px] bg-[#1A2521] text-[#D6A84F] px-2 py-0.5 rounded-full font-bold">
                         {item.type === 'quick' ? 'Rápido' : 'Completo (60)'}

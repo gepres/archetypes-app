@@ -15,7 +15,7 @@ import {
   Eye,
   Headphones,
 } from 'lucide-react';
-import { getArchetype, getArchetypeName, getArchetypeList, DIMENSIONS } from '../../data/archetypesData';
+import { getArchetype, getArchetypeName, getArchetypeList, DIMENSIONS, withDe } from '../../data/archetypesData';
 import { ARCHETYPE_VISUALS } from '../../data/archetypeImages';
 import { ArchetypeId, AssessmentResult, GenderMode } from '../../types';
 import { NavTab } from '../layout/Sidebar';
@@ -284,7 +284,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
                 className="px-4 py-2 bg-[#315C45] hover:bg-[#3D7055] text-[#F2EFE6] text-xs font-semibold rounded-xl transition-all inline-flex items-center gap-1.5 active:scale-95"
               >
                 <Eye className="w-3.5 h-3.5" />
-                <span>Ver ficha completa de {spotlightArchetype.name}</span>
+                <span>Ver ficha completa {withDe(spotlightArchetype.name)}</span>
               </button>
             </div>
           </div>

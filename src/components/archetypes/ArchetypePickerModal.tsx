@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { X, Search, Sparkles, Check, Filter, Layers, Ban } from 'lucide-react';
-import { ARCHETYPES_LIST, getArchetypeList } from '../../data/archetypesData';
+import { ARCHETYPES_LIST, getArchetypeList, getDimensionShortName } from '../../data/archetypesData';
 import { ARCHETYPE_VISUALS } from '../../data/archetypeImages';
 import { ArchetypeId, GenderMode } from '../../types';
 import { ArchetypeIllustratedArtwork } from './ArchetypeIllustratedArtwork';
@@ -247,7 +247,7 @@ export const ArchetypePickerModal: React.FC<ArchetypePickerModalProps> = ({
 
                       <div className="flex items-center gap-1.5">
                         <span className="text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full bg-[#1A2521] text-[#D6A84F] border border-[#315C45]/50">
-                          {arch.dimension}
+                          {getDimensionShortName(arch.dimension)}
                         </span>
                       </div>
 

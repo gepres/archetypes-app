@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { GitMerge, Shuffle, ChevronRight, SlidersHorizontal } from 'lucide-react';
-import { ARCHETYPES, ARCHETYPES_LIST, getArchetype } from '../../data/archetypesData';
+import { ARCHETYPES, ARCHETYPES_LIST, getArchetype, getDimensionShortName, withDe } from '../../data/archetypesData';
 import { ARCHETYPE_VISUALS } from '../../data/archetypeImages';
 import { ArchetypeId, GenderMode } from '../../types';
 import { ArchetypeIllustratedArtwork } from './ArchetypeIllustratedArtwork';
@@ -58,7 +58,7 @@ export const SynergiesExplorerView: React.FC<SynergiesExplorerViewProps> = ({
 
   const relationshipDynamic = synergyData
     ? synergyData.description
-    : `La combinación de ${arch1.name} (${arch1.strength.toLowerCase()}) y ${arch2.name} (${arch2.strength.toLowerCase()}) aporta equilibrio entre ${arch1.dimension} y ${arch2.dimension}.`;
+    : `La combinación ${withDe(arch1.name)} (${arch1.strength.toLowerCase()}) y ${withDe(arch2.name)} (${arch2.strength.toLowerCase()}) aporta equilibrio entre ${getDimensionShortName(arch1.dimension).toLowerCase()} y ${getDimensionShortName(arch2.dimension).toLowerCase()}.`;
 
   return (
     <div id="synergies-explorer-view" className="max-w-4xl mx-auto space-y-10 pb-24 pt-2">
@@ -98,7 +98,7 @@ export const SynergiesExplorerView: React.FC<SynergiesExplorerViewProps> = ({
                     <span>{arch1.name}</span>
                   </div>
                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#1A2521] text-[#D6A84F] font-semibold border border-[#315C45]/50 inline-block">
-                    {arch1.dimension}
+                    {getDimensionShortName(arch1.dimension)}
                   </span>
                 </div>
               </div>
@@ -140,7 +140,7 @@ export const SynergiesExplorerView: React.FC<SynergiesExplorerViewProps> = ({
                     <span>{arch2.name}</span>
                   </div>
                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#1A2521] text-[#D6A84F] font-semibold border border-[#315C45]/50 inline-block">
-                    {arch2.dimension}
+                    {getDimensionShortName(arch2.dimension)}
                   </span>
                 </div>
               </div>
@@ -211,7 +211,7 @@ export const SynergiesExplorerView: React.FC<SynergiesExplorerViewProps> = ({
                 Tensión o riesgo a vigilar:
               </span>
               <p className="text-[#9DA79F]">
-                Si {arch1.name} domina en exceso ({arch1.shadow}), sofoca la cualidad de {arch2.name}. Se requiere alternar el mando según el contexto.
+                Si {arch1.name} domina en exceso ({arch1.shadow}), sofoca la cualidad {withDe(arch2.name)}. Se requiere alternar el mando según el contexto.
               </p>
             </div>
           </div>

@@ -1,4 +1,4 @@
-import { ARCHETYPES, getArchetypeName, getArchetype } from '../data/archetypesData';
+import { ARCHETYPES, getArchetypeName, getArchetype, withDe } from '../data/archetypesData';
 import { QUESTIONS_DATA, QUICK_QUESTION_IDS } from '../data/questionsData';
 import {
   ArchetypeId,
@@ -274,7 +274,7 @@ function generateCompositeProfile(
   const topNames = `${name1} + ${name2} + ${name3}`;
 
   let title = gender === 'female' ? "La Estratega Consciente" : "El Estratega Consciente";
-  let synthesis = `Tu mapa refleja una configuración singular donde ${name1} lidera tu psique, fuertemente respaldada por la energía de ${name2} y ${name3}.`;
+  let synthesis = `Tu mapa refleja una configuración singular donde ${name1} lidera tu psique, fuertemente respaldada por la energía ${withDe(name2)} y ${withDe(name3)}.`;
   let strengths: string[] = [];
   let risksAndShadows: string[] = [];
 
@@ -352,7 +352,7 @@ function generateCompositeProfile(
   } else {
     // Dynamic Title
     title = `${gender === 'female' ? 'La Integradora' : 'El Integrador'} ${name1}`;
-    synthesis = `Tu perfil integra de forma dinámica la fuerza de ${name1} con la versatilidad de ${name2} y la presencia de ${name3}. Manifiestas un balance singular entre tus impulsos reflexivos, afectivos y de acción.`;
+    synthesis = `Tu perfil integra de forma dinámica la fuerza ${withDe(name1)} con la versatilidad ${withDe(name2)} y la presencia ${withDe(name3)}. Manifiestas un balance singular entre tus impulsos reflexivos, afectivos y de acción.`;
     strengths = [
       `Capacidad de liderar desde las virtudes nucleares del arquetipo ${name1}`,
       `Complementariedad táctica aportada por ${name2}`,

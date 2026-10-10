@@ -13,7 +13,18 @@ import {
 } from 'lucide-react';
 import { ARCHETYPES, getArchetype } from '../../data/archetypesData';
 import { ARCHETYPE_VISUALS } from '../../data/archetypeImages';
+import { composeDailyOracleTexts } from '../../services/storageService';
 import { DailyOracleCard, GenderMode, UserProfile } from '../../types';
+
+/** «sábado 10 de octubre» a partir de la fecha de la carta, que se guarda como 2026-10-10. */
+function formatCardDate(isoDate: string): string {
+  // A mediodía para que ningún huso horario la mueva al día anterior.
+  const d = new Date(`${isoDate}T12:00:00`);
+  if (Number.isNaN(d.getTime())) return isoDate;
+  const weekday = d.toLocaleDateString('es-ES', { weekday: 'long' });
+  const month = d.toLocaleDateString('es-ES', { month: 'long' });
+  return `${weekday} ${d.getDate()} de ${month}`;
+}
 import { ArchetypePortraitCard } from './ArchetypePortraitCard';
 
 interface DailyOracleModalProps {
@@ -37,6 +48,7 @@ export const DailyOracleModal: React.FC<DailyOracleModalProps> = ({
   if (!isOpen) return null;
 
   const archetype = getArchetype(card.archetypeId, gender) || ARCHETYPES.rey;
+  const texts = composeDailyOracleTexts(archetype);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fadeIn">
@@ -62,7 +74,7 @@ export const DailyOracleModal: React.FC<DailyOracleModalProps> = ({
             {archetype.emoji} {archetype.name}
           </h2>
           <p className="text-xs text-[#9DA79F] mt-0.5">
-            Energía arquetípica para orientar tus decisiones hoy ({card.date})
+            Energía arquetípica para orientar tus decisiones hoy, {formatCardDate(card.date)}
           </p>
         </div>
 
@@ -95,7 +107,7 @@ export const DailyOracleModal: React.FC<DailyOracleModalProps> = ({
               <span>Afirmación e Impulso Luminoso</span>
             </div>
             <p className="text-xs sm:text-sm text-[#C5CFC7] leading-relaxed">
-              {card.affirmation}
+              {texts.affirmation}
             </p>
           </div>
 
@@ -107,7 +119,7 @@ export const DailyOracleModal: React.FC<DailyOracleModalProps> = ({
                 <span>Enfoque Matutino</span>
               </div>
               <p className="text-xs text-[#9DA79F] leading-relaxed">
-                {card.morningReflection}
+                {texts.morningReflection}
               </p>
             </div>
 
@@ -117,7 +129,7 @@ export const DailyOracleModal: React.FC<DailyOracleModalProps> = ({
                 <span>Revisión Nocturna</span>
               </div>
               <p className="text-xs text-[#9DA79F] leading-relaxed">
-                {card.eveningInquiry}
+                {texts.eveningInquiry}
               </p>
             </div>
           </div>
@@ -141,7 +153,7 @@ export const DailyOracleModal: React.FC<DailyOracleModalProps> = ({
           <div className="flex flex-col sm:flex-row gap-2.5 pt-2">
             <button
               onClick={() => {
-                onGoToJournalWithPrompt(card.morningReflection, archetype.id);
+                onGoToJournalWithPrompt(texts.morningReflection, archetype.id);
                 onClose();
               }}
               className="flex-1 py-2.5 px-4 bg-[#315C45] hover:bg-[#3D7055] text-[#F2EFE6] text-xs font-semibold rounded-xl transition-all shadow-md flex items-center justify-center gap-2 active:scale-98"

@@ -20,6 +20,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { NavTab } from './Sidebar';
 import { AiModelStatusBadge } from '../common/AiModelStatusBadge';
+import { QUESTIONS_DATA, QUICK_QUESTION_IDS } from '../../data/questionsData';
 
 interface BottomNavProps {
   currentTab: NavTab;
@@ -178,7 +179,9 @@ export const BottomNav: React.FC<BottomNavProps> = ({
                       <span className="text-xs font-bold text-[#F2EFE6] block leading-tight">
                         Hacer Test
                       </span>
-                      <span className="text-[10px] text-[#9DA79F]">15 o 60 preguntas</span>
+                      <span className="text-[10px] text-[#9DA79F]">
+                        {QUICK_QUESTION_IDS.length} o {QUESTIONS_DATA.length} preguntas
+                      </span>
                     </div>
                   </button>
                 )}

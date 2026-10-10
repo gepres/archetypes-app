@@ -14,7 +14,7 @@ import {
   Zap,
   Image as ImageIcon,
 } from 'lucide-react';
-import { ARCHETYPES, getArchetype } from '../../data/archetypesData';
+import { ARCHETYPES, DIMENSIONS, getArchetype, getDimensionShortName, withDe } from '../../data/archetypesData';
 import { ArchetypeId, AssessmentResult, GenderMode } from '../../types';
 import { ArchetypeBadge } from '../common/ArchetypeBadge';
 import { DimensionBar } from '../common/DimensionBar';
@@ -107,7 +107,7 @@ export const ResultView: React.FC<ResultViewProps> = ({
                   {dominant.name}
                 </h2>
                 <p className="text-xs text-[#9DA79F] capitalize">
-                  Dimensión: {dominant.dimension}
+                  Dimensión: {DIMENSIONS[dominant.dimension].name}
                 </p>
               </div>
             </div>
@@ -132,7 +132,7 @@ export const ResultView: React.FC<ResultViewProps> = ({
             onClick={() => onSelectArchetype(dominant.id)}
             className="w-full py-2.5 px-4 rounded-xl bg-[#1A2521] hover:bg-[#23332D] border border-[#23332D] text-xs font-semibold text-[#F2EFE6] transition-all flex items-center justify-center gap-2"
           >
-            <span>Ver perfil completo de {dominant.name}</span>
+            <span>Ver perfil completo {withDe(dominant.name)}</span>
             <ArrowRight className="w-3.5 h-3.5 text-[#D6A84F]" />
           </button>
         </div>
@@ -261,7 +261,7 @@ export const ResultView: React.FC<ResultViewProps> = ({
                       {item.name}
                     </p>
                     <p className="text-[10px] text-[#9DA79F] capitalize truncate">
-                      {arch.dimension}
+                      {getDimensionShortName(arch.dimension)}
                     </p>
                   </div>
                 </div>

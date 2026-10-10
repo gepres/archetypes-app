@@ -764,7 +764,7 @@ export const TRANSFORMATIONAL_ARCHETYPES: Record<'rebelde' | 'sanador' | 'constr
     shortDescription: 'La maestría de sintetizar opuestos, madurar la psique y vivir desde la totalidad consciente.',
     fullDescription: 'El Integrador / Integradora representa la culminación del viaje arquetípico: la capacidad de no vivir fragmentado. Une la espada del Guerrero con la ternura del Amante, la razón del Sabio con la risa del Bufón.',
     mantra: 'Integro todas mis facetas en una sola presencia armónica y madura.',
-    symbol: 'Ouroboros & Mandála de la Totalidad',
+    symbol: 'Uróboros & Mandala de la Totalidad',
     colorHex: '#D6A84F',
     characterTitle: 'Totalidad & Madurez Psicológica',
     strength: 'Integración de opuestos, flexibilidad psicológica suprema, sabiduría holística y madurez emocional.',
@@ -814,7 +814,7 @@ export const TRANSFORMATIONAL_ARCHETYPES: Record<'rebelde' | 'sanador' | 'constr
       masculine: {
         name: 'El Integrador',
         characterTitle: 'El Alquimista de la Madurez y Síntesis de Opuestos',
-        centralQuestion: '¿Cómo dejo de vivir fragmentado y synthesized mi fuerza, ternura, mente y acción?',
+        centralQuestion: '¿Cómo dejo de vivir fragmentado e integro mi fuerza, mi ternura, mi mente y mi acción?',
         shortDescription: 'Síntesis de opuestos (Guerrero + Amante, Sabio + Bufón), integridad y madurez total.',
         fullDescription: 'El Integrador masculino no reprime su agresividad ni su sensibilidad; las funde en una presencia masculina madura, firme y compasiva.',
         mantra: 'Integro mi fuerza y mi ternura en una sola integridad masculina madura.',

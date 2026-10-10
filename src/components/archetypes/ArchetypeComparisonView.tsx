@@ -16,7 +16,7 @@ import {
   SlidersHorizontal,
   X,
 } from 'lucide-react';
-import { ARCHETYPES, ARCHETYPES_LIST, getArchetype } from '../../data/archetypesData';
+import { ARCHETYPES, ARCHETYPES_LIST, getArchetype, getDimensionShortName, withDe } from '../../data/archetypesData';
 import { ARCHETYPE_VISUALS } from '../../data/archetypeImages';
 import { ArchetypeId, GenderMode, LifeDomainKey } from '../../types';
 import { ArchetypePortraitCard } from './ArchetypePortraitCard';
@@ -132,7 +132,7 @@ export const ArchetypeComparisonView: React.FC<ArchetypeComparisonViewProps> = (
                     <span>{arch1.name}</span>
                   </div>
                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#1A2521] text-[#D6A84F] font-semibold border border-[#315C45]/50 inline-block">
-                    {arch1.dimension}
+                    {getDimensionShortName(arch1.dimension)}
                   </span>
                   <p className="text-[11px] text-[#9DA79F] truncate">
                     {ARCHETYPE_VISUALS[arch1.id]?.characterTitle || arch1.symbol}
@@ -169,7 +169,7 @@ export const ArchetypeComparisonView: React.FC<ArchetypeComparisonViewProps> = (
                     <span>{arch2.name}</span>
                   </div>
                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#1A2521] text-[#D6A84F] font-semibold border border-[#315C45]/50 inline-block">
-                    {arch2.dimension}
+                    {getDimensionShortName(arch2.dimension)}
                   </span>
                   <p className="text-[11px] text-[#9DA79F] truncate">
                     {ARCHETYPE_VISUALS[arch2.id]?.characterTitle || arch2.symbol}
@@ -219,7 +219,7 @@ export const ArchetypeComparisonView: React.FC<ArchetypeComparisonViewProps> = (
                       <span>{arch3.name}</span>
                     </div>
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#1A2521] text-[#D6A84F] font-semibold border border-[#315C45]/50 inline-block">
-                      {arch3.dimension}
+                      {getDimensionShortName(arch3.dimension)}
                     </span>
                     <p className="text-[11px] text-[#9DA79F] truncate">
                       {ARCHETYPE_VISUALS[arch3.id]?.characterTitle || arch3.symbol}
@@ -385,7 +385,7 @@ export const ArchetypeComparisonView: React.FC<ArchetypeComparisonViewProps> = (
               <button
                 onClick={() =>
                   onGoToAiWithPrompt(
-                    `Hablemos desde la energía de ${archetype.name}. ¿Cómo responderías al dilema de equilibrar tu fuerza con otros arquetipos?`,
+                    `Hablemos desde la energía ${withDe(archetype.name)}. ¿Cómo responderías al dilema de equilibrar tu fuerza con otros arquetipos?`,
                     archetype.id
                   )
                 }

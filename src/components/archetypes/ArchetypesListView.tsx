@@ -24,7 +24,7 @@ import {
   Activity,
   Award,
 } from 'lucide-react';
-import { ARCHETYPES, ARCHETYPES_LIST, DIMENSIONS, getArchetype, getArchetypeList } from '../../data/archetypesData';
+import { ARCHETYPES, ARCHETYPES_LIST, DIMENSIONS, getArchetype, getArchetypeList, withDe } from '../../data/archetypesData';
 import { ARCHETYPE_VISUALS } from '../../data/archetypeImages';
 import { Archetype, ArchetypeId, DimensionId, GenderMode, LifeDomainKey } from '../../types';
 import { NavTab } from '../layout/Sidebar';
@@ -197,7 +197,7 @@ export const ArchetypesListView: React.FC<ArchetypesListViewProps> = ({
               onClick={() => {
                 if (onDiscussWithAi) {
                   onDiscussWithAi(
-                    `Hablemos desde la energía del ${selectedArchetype.name}. ¿Cómo puedo manifestar tu fuerza en mi día a día?`,
+                    `Hablemos desde la energía ${withDe(selectedArchetype.name)}. ¿Cómo puedo manifestar tu fuerza en mi día a día?`,
                     selectedArchetype.id
                   );
                 } else {
@@ -207,7 +207,7 @@ export const ArchetypesListView: React.FC<ArchetypesListViewProps> = ({
               className="w-full md:w-auto px-5 py-3.5 bg-gradient-to-r from-[#315C45] to-[#254635] hover:from-[#3D7055] hover:to-[#315C45] text-[#F2EFE6] rounded-2xl text-xs font-semibold flex items-center justify-center gap-2.5 transition-all shadow-lg active:scale-95 shrink-0 border border-[#4E8B69]/40"
             >
               <Bot className="w-4 h-4 text-[#86EFAC]" />
-              <span>Hablar con la Voz del {selectedArchetype.name}</span>
+              <span>Hablar con la voz {withDe(selectedArchetype.name)}</span>
             </button>
           </div>
 
@@ -371,7 +371,7 @@ export const ArchetypesListView: React.FC<ArchetypesListViewProps> = ({
         {detailActiveTab === 'ambitos' && (
           <div className="space-y-4">
             <p className="text-xs text-[#9DA79F]">
-              Manifestación concreta del {selectedArchetype.name} en los 5 territorios fundamentales de la existencia cotidiana:
+              Manifestación concreta {withDe(selectedArchetype.name)} en los 5 territorios fundamentales de la existencia cotidiana:
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {(Object.keys(DOMAIN_LABELS) as LifeDomainKey[]).map(domainKey => {

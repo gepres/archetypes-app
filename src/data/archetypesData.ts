@@ -38,6 +38,25 @@ export const DIMENSIONS: Record<DimensionId, DimensionInfo> = {
   },
 };
 
+/**
+ * Nombre corto de una dimensión para etiquetas: «Construcción», no el id «construccion».
+ * El id es una clave interna y no lleva tildes; nunca debe llegar a la pantalla.
+ */
+export function getDimensionShortName(id: DimensionId): string {
+  return DIMENSIONS[id]?.name.split(' & ')[0] ?? id;
+}
+
+/**
+ * Un nombre de arquetipo detrás de «de», bien contraído: «del Rey», «de la Reina» y, para los
+ * nombres universales sin artículo, «del arquetipo Rey / Reina». Escribir `del ${name}` a mano
+ * da «del El Rey» en cuanto la perspectiva no es la universal.
+ */
+export function withDe(name: string): string {
+  if (name.startsWith('El ')) return `del ${name.slice(3)}`;
+  if (name.startsWith('La ')) return `de la ${name.slice(3)}`;
+  return `del arquetipo ${name}`;
+}
+
 export const ARCHETYPES: Record<ArchetypeId, Archetype> = {
   ...CORE_ARCHETYPES,
   ...RELATIONAL_ARCHETYPES,
