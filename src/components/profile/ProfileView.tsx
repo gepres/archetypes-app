@@ -121,7 +121,10 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
       gender: gender,
       avatarEmoji: avatarEmoji,
       bio: bio.trim(),
-      isGuest: userProfile.isGuest && !email.trim(),
+      // Escribir un correo aquí no abre una cuenta: se sigue siendo invitado hasta entrar de
+      // verdad en una (enterAccount), que es quien aparca sus datos y su perspectiva. Antes el
+      // invitado pasaba a «cuenta» con el id del invitado, sin copia propia ni aparcado.
+      isGuest: userProfile.isGuest,
     };
     onUpdateProfile(updated);
     setSavedSuccess(true);

@@ -589,6 +589,17 @@ describe('perspectiva de quien llega por primera vez', () => {
     assert.equal(StorageService.getUserProfile().gender, 'female');
   });
 
+  it('un invitado que guardó su correo en el perfil sigue siendo invitado y recupera su perspectiva (Codex)', () => {
+    vacio();
+    // Lo que hace ahora el formulario del perfil: correo y perspectiva, sin dejar de ser invitado.
+    StorageService.saveUserProfile({ ...StorageService.getUserProfile(), email: 'a@x.com', gender: 'female' });
+    assert.equal(StorageService.getUserProfile().isGuest, true);
+    // Entra en su cuenta con ese mismo correo y luego cierra sesión.
+    StorageService.enterAccount({ id: 'uidA', name: 'A', email: 'a@x.com', isGuest: false, createdAt: '', lastActive: '', gender: 'male' }, null);
+    StorageService.switchToGuestMode();
+    assert.equal(StorageService.getUserProfile().gender, 'female');
+  });
+
   it('quien ya eligió una perspectiva la conserva', () => {
     const mem = vacio();
     mem.set('archetypes_user_profile', JSON.stringify({ id: 'u', name: 'A', email: '', isGuest: true, gender: 'male', createdAt: '', lastActive: '' }));
