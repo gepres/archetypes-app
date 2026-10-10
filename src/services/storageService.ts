@@ -39,9 +39,12 @@ export function mergeChallengeProgress(catalog: Challenge[], stored: Challenge[]
   const saved = new Map(stored.map(c => [c.id, c]));
   const current = catalog.map(c => {
     const progress = saved.get(c.id);
-    return progress
-      ? { ...c, completed: !!progress.completed, completedAt: progress.completedAt }
-      : { ...c };
+    if (!progress) return { ...c };
+    // Sin `completedAt: undefined`: Firestore rechaza el documento entero por un solo campo
+    // indefinido, y con él se caía el respaldo del diario y del resultado.
+    const merged: Challenge = { ...c, completed: !!progress.completed };
+    if (progress.completedAt) merged.completedAt = progress.completedAt;
+    return merged;
   });
   const catalogIds = new Set(catalog.map(c => c.id));
   const retired = stored.filter(c => !catalogIds.has(c.id) && c.completed);
@@ -236,12 +239,10 @@ export const StorageService = {
   toggleChallenge(id: string): Challenge[] {
     const challenges = this.getChallenges().map(c => {
       if (c.id === id) {
-        const completed = !c.completed;
-        return {
-          ...c,
-          completed,
-          completedAt: completed ? new Date().toISOString() : undefined,
-        };
+        const { completedAt: _previo, ...rest } = c;
+        return c.completed
+          ? { ...rest, completed: false }
+          : { ...rest, completed: true, completedAt: new Date().toISOString() };
       }
       return c;
     });
@@ -443,14 +444,20 @@ export const StorageService = {
   },
 
   /**
-   * ¿Lo que se guarda ahora acaba también en la nube? Solo si la cuenta tiene sesión abierta en
-   * Firebase con el mismo id: `syncActiveAccountData` lo intenta con cualquier cuenta registrada,
-   * pero las reglas de Firestore rechazan a quien no es dueño, así que una cuenta local no sube nada.
+   * ¿Lo que se guarda ahora acaba también en la nube? `cloud` solo si la cuenta tiene sesión
+   * abierta en Firebase con el mismo id: `syncActiveAccountData` lo intenta con cualquier cuenta
+   * registrada, pero las reglas de Firestore rechazan a quien no es dueño. `pending` mientras
+   * Firebase aún no ha dicho si hay sesión.
    */
-  isSyncingToCloud(): boolean {
+  getCloudSyncState(): 'local' | 'cloud' | 'pending' {
     const profile = this.getUserProfile();
-    if (!profile || profile.isGuest || !profile.email) return false;
-    return FirebaseService.getCurrentAuthUser()?.uid === profile.id;
+    // Las cuentas locales llevan ids `user-…` (y el invitado, `user-guest`); un uid de Firebase
+    // nunca lleva guiones. Esas no suben nada aunque se intente.
+    if (!profile || profile.isGuest || !profile.email || profile.id.startsWith('user-')) return 'local';
+    if (FirebaseService.getCurrentAuthUser()?.uid === profile.id) return 'cloud';
+    // Firebase restaura la sesión de forma asíncrona: mientras no termina, no se sabe si lo que
+    // se guarde subirá, y no se puede prometer que se queda solo en el navegador.
+    return FirebaseService.isAuthResolved() ? 'local' : 'pending';
   },
 
   syncActiveAccountData(): void {

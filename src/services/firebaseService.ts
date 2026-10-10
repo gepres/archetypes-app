@@ -64,9 +64,17 @@ export function getFirebaseApp(): FirebaseApp {
   return appInstance;
 }
 
+// Firebase restaura la sesión de forma asíncrona: hasta que lo hace, `currentUser` es null
+// aunque haya una sesión guardada. Esto dice si ya terminó.
+let authResolved = false;
+
 export function getFirebaseAuth() {
   if (!authInstance) {
     authInstance = getAuth(getFirebaseApp());
+    authInstance.authStateReady().then(
+      () => { authResolved = true; },
+      () => { authResolved = true; }
+    );
   }
   return authInstance;
 }
@@ -109,6 +117,16 @@ export const FirebaseService = {
       return auth.currentUser;
     } catch {
       return null;
+    }
+  },
+
+  /** ¿Terminó Firebase de restaurar la sesión? Si no está configurado, no hay nada que esperar. */
+  isAuthResolved(): boolean {
+    try {
+      getFirebaseAuth();
+      return authResolved;
+    } catch {
+      return true;
     }
   },
 
@@ -263,15 +281,19 @@ export const FirebaseService = {
     try {
       const db = getFirebaseDb();
       const userRef = doc(db, 'users', userId);
+      // Firestore rechaza el documento entero si un solo campo es `undefined`, y los datos
+      // locales los traen (un reto desmarcado, una entrada sin estado de ánimo). Pasarlos por
+      // JSON los quita sin tocar nada más.
+      const limpio: typeof data = JSON.parse(JSON.stringify(data));
 
       await setDoc(
         userRef,
         {
-          currentResult: data.currentResult,
-          history: data.history,
-          journalEntries: data.journalEntries,
-          challenges: data.challenges,
-          chatMessages: data.chatMessages,
+          currentResult: limpio.currentResult ?? null,
+          history: limpio.history,
+          journalEntries: limpio.journalEntries,
+          challenges: limpio.challenges,
+          chatMessages: limpio.chatMessages,
           lastSyncedAt: new Date().toISOString(),
           updatedAt: serverTimestamp(),
         },

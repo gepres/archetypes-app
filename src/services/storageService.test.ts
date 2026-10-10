@@ -40,6 +40,15 @@ describe('mergeChallengeProgress', () => {
     assert.deepEqual(ids, ['a', 'viejo-hecho']);
   });
 
+  it('no deja ningún campo indefinido, que Firestore rechazaría', () => {
+    const guardado = [reto('a'), reto('b', { completed: true, completedAt: '2026-10-01T10:00:00.000Z' })];
+    const res = mergeChallengeProgress([reto('a'), reto('b'), reto('c')], guardado);
+    for (const r of res) {
+      for (const [campo, valor] of Object.entries(r)) assert.notEqual(valor, undefined, `${r.id}.${campo}`);
+    }
+    assert.equal('completedAt' in res[0], false);
+  });
+
   it('no modifica el catálogo', () => {
     const catalogo = [reto('a')];
     mergeChallengeProgress(catalogo, [reto('a', { completed: true })]);

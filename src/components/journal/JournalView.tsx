@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Sparkles,
   Plus,
@@ -14,6 +14,7 @@ import {
   Lock,
 } from 'lucide-react';
 import { ARCHETYPES, ARCHETYPES_LIST } from '../../data/archetypesData';
+import { FirebaseService } from '../../services/firebaseService';
 import { JOURNAL_PROMPTS, StorageService } from '../../services/storageService';
 import { ArchetypeId, JournalEntry, GenderMode } from '../../types';
 import { ArchetypeBadge } from '../common/ArchetypeBadge';
@@ -33,6 +34,13 @@ export const JournalView: React.FC<JournalViewProps> = ({
   onDeleteEntry,
 }) => {
   const [isCreating, setIsCreating] = useState(false);
+  // Dónde acaba lo que se escribe. Se recalcula cuando Firebase termina de restaurar la sesión
+  // o cambia de usuario, para que el aviso no se quede con lo que valía al abrir la pantalla.
+  const [syncState, setSyncState] = useState(() => StorageService.getCloudSyncState());
+  useEffect(
+    () => FirebaseService.onAuthChanged(() => setSyncState(StorageService.getCloudSyncState())),
+    []
+  );
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedArchetypeFilter, setSelectedArchetypeFilter] = useState<string>('todos');
 
@@ -139,10 +147,15 @@ export const JournalView: React.FC<JournalViewProps> = ({
               Escribir Nueva Entrada
             </h3>
             {/* Se dice antes de escribir, y tiene que ser verdad: con cuenta en la nube, el diario sube. */}
-            {StorageService.isSyncingToCloud() ? (
+            {syncState === 'cloud' ? (
               <span className="inline-flex items-center gap-1.5 text-xs text-[#9DA79F]">
                 <Cloud className="w-3.5 h-3.5 shrink-0" />
                 Se guarda en este navegador y se sincroniza con tu cuenta
+              </span>
+            ) : syncState === 'pending' ? (
+              <span className="inline-flex items-center gap-1.5 text-xs text-[#9DA79F]">
+                <Cloud className="w-3.5 h-3.5 shrink-0" />
+                Se guarda en este navegador y, si tu sesión sigue abierta, también en tu cuenta
               </span>
             ) : (
               <span className="inline-flex items-center gap-1.5 text-xs text-[#9DA79F]">
