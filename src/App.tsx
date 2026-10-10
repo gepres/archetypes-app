@@ -411,6 +411,9 @@ export default function App() {
 
           {currentTab === 'profile' && (
             <ProfileView
+              // El formulario es de la cuenta abierta: al cambiar de cuenta se monta de nuevo con
+              // sus datos, para no guardar en la nueva la perspectiva o el nombre de la anterior.
+              key={userProfile.id}
               userProfile={userProfile}
               history={history}
               onUpdateProfile={handleUpdateProfile}
