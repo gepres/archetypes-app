@@ -554,7 +554,8 @@ export const StorageService = {
       accounts[existingIndex] = targetAccount;
     } else {
       targetAccount = {
-        id: `user-${Date.now()}`,
+        // Único aunque dos cuentas se creen en el mismo milisegundo.
+        id: `user-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         name: accountData.name.trim() || 'Caminante Arquetípico',
         email: accountData.email.trim().toLowerCase(),
         avatarEmoji: accountData.avatarEmoji || '👑',
@@ -577,12 +578,13 @@ export const StorageService = {
       email: targetAccount.email,
       isGuest: false,
       // Si es la cuenta que ya está abierta, la que tiene ahora (puede haberla cambiado después
-      // de entrar); si no, la de esa cuenta antes que la de quien estaba en el navegador.
+      // de entrar); si no, la de esa cuenta. La de quien estaba solo se hereda si era el
+      // invitado, que es la misma persona entrando en su cuenta; nunca la de otra cuenta.
       gender:
         accountData.gender ||
         (esLaActiva ? currentSaved.gender : undefined) ||
         targetAccount.gender ||
-        currentSaved.gender ||
+        (currentSaved.isGuest ? currentSaved.gender : undefined) ||
         DEFAULT_GENDER,
       avatarEmoji: targetAccount.avatarEmoji,
       pinCode: accountData.pinCode,
@@ -683,13 +685,17 @@ export const StorageService = {
 
       // La perspectiva es de la persona, no de la sesión. Si el perfil que llega no la trae (los
       // de Firebase no la guardan), no se le pone la de por defecto encima de una elegida: la de
-      // esta misma cuenta si ya estaba abierta, la que esta cuenta tenía guardada, o la que había
-      // en el navegador (la que eligió el invitado que ahora entra en su cuenta).
+      // esta misma cuenta si ya estaba abierta, la que esta cuenta tenía guardada, o la del
+      // invitado que ahora entra en su cuenta. Nunca la de otra cuenta registrada: en un
+      // dispositivo compartido sería la perspectiva de otra persona.
       const perfil: UserProfile = incoming.gender
         ? incoming
         : {
             ...incoming,
-            gender: (mismaCuenta ? outgoing.gender : guardada?.gender) ?? outgoing.gender ?? DEFAULT_GENDER,
+            gender:
+              (mismaCuenta ? outgoing.gender : guardada?.gender) ??
+              (outgoing.isGuest ? outgoing.gender : undefined) ??
+              DEFAULT_GENDER,
           };
 
       this.writeActiveData(data);

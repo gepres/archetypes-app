@@ -1,4 +1,4 @@
-import { describe, it } from 'node:test';
+import { after, before, describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { StorageService, backupBelongsTo, emptyAccountData, hasOwnData, insertarRespuesta, mergeAccountData, mergeChallengeProgress, ordenarConversacion, unirConversaciones } from './storageService';
 import { FirebaseService } from './firebaseService';
@@ -469,6 +469,11 @@ describe('cuentas: cada una ve y sube solo lo suyo', () => {
 });
 
 describe('perspectiva de quien llega por primera vez', () => {
+  // Ninguna prueba sale a la nube: la subida se sustituye por un doble mientras dura este bloque.
+  const subidaReal = FirebaseService.syncFullDataToCloud;
+  before(() => { FirebaseService.syncFullDataToCloud = async () => true; });
+  after(() => { FirebaseService.syncFullDataToCloud = subidaReal; });
+
   const vacio = () => {
     const mem = new Map<string, string>();
     (globalThis as any).localStorage = {
@@ -549,6 +554,22 @@ describe('perspectiva de quien llega por primera vez', () => {
     StorageService.enterAccount(B, null);
     const otraVezA = StorageService.loginOrCreateAccount({ name: 'A', email: 'a@x.com' });
     assert.equal(otraVezA.gender, 'female');
+  });
+
+  it('una cuenta que entra por primera vez no hereda la perspectiva de otra cuenta registrada (Codex)', () => {
+    vacio();
+    StorageService.enterAccount({ id: 'uidA', name: 'A', email: 'a@x.com', isGuest: false, createdAt: '', lastActive: '', gender: 'male' }, null);
+    StorageService.enterAccount({ id: 'uidB', name: 'B', email: 'b@x.com', isGuest: false, createdAt: '', lastActive: '' }, null);
+    assert.equal(StorageService.getUserProfile().gender, 'universal');
+    assert.equal(StorageService.getSavedAccounts().find(a => a.id === 'uidB')?.gender, 'universal');
+  });
+
+  it('tampoco al crear una cuenta local desde otra cuenta abierta', () => {
+    vacio();
+    const A = StorageService.loginOrCreateAccount({ name: 'A', email: 'a@x.com', gender: 'male' });
+    StorageService.enterAccount(A, null);
+    const B = StorageService.loginOrCreateAccount({ name: 'B', email: 'b@x.com' });
+    assert.equal(B.gender, 'universal');
   });
 
   it('quien ya eligió una perspectiva la conserva', () => {
