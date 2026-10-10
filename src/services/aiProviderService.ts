@@ -8,6 +8,17 @@ import {
   GenderMode,
   UserProfile,
 } from '../types';
+import { CRISIS_PROTOCOL, CRISIS_RESPONSE, detectCrisis } from './crisisSupport';
+
+// Cómo se llama cada perspectiva en el prompt. Es una preferencia de lenguaje para nombrar los
+// arquetipos, no un dato sobre el género de quien usa la app.
+const PERSPECTIVE_LABEL: Record<GenderMode, string> = {
+  male: 'MASCULINA',
+  female: 'FEMENINA',
+  universal: 'UNIVERSAL',
+};
+
+const PERSPECTIVE_EXAMPLES: ArchetypeId[] = ['rey', 'guerrero', 'mago', 'sabio', 'padre', 'cuidador'];
 
 // Claves incluidas con la app, inyectadas desde el .env por vite.config.ts.
 export const APP_KEYS = {
@@ -269,7 +280,8 @@ export const AIProviderService = {
     gender: GenderMode = 'male'
   ): string {
     const userGender: GenderMode = userProfile?.gender || gender || 'male';
-    const isFemale = userGender === 'female';
+    const perspective = PERSPECTIVE_LABEL[userGender] || PERSPECTIVE_LABEL.male;
+    const perspectiveExamples = PERSPECTIVE_EXAMPLES.map(id => getArchetypeName(id, userGender)).join(', ');
 
     let personaInstruction = '';
     if (archetypePersona && archetypePersona !== 'general') {
@@ -279,7 +291,8 @@ export const AIProviderService = {
 
       personaInstruction = `
 MODO DE PERSONA ARQUETÍPICA ACTIVO:
-Estás hablando EN PRIMERA PERSONA como la VOZ INTERIOR DEL ARQUETIPO: "${archetypeName.toUpperCase()}" (${isFemale ? 'Expresión Femenina' : 'Expresión Masculina'}).
+Estás hablando EN PRIMERA PERSONA como la VOZ DEL ARQUETIPO: "${archetypeName.toUpperCase()}" (perspectiva ${perspective.toLowerCase()}).
+- Eres una voz ficticia inspirada en este arquetipo, un recurso de reflexión. No conoces la mente del usuario ni formas parte de ella: no afirmes saber lo que siente o piensa.
 - Título / Esencia: ${narrative.characterTitle || narrative.shortDescription}
 - Desafío Nuclear / Pregunta de Poder: "${narrative.centralQuestion}"
 - Virtud y Fortaleza: ${narrative.strength}
@@ -297,7 +310,7 @@ Estás hablando EN PRIMERA PERSONA como la VOZ INTERIOR DEL ARQUETIPO: "${archet
       profileContext = `
 PERFIL DEL USUARIO:
 - Nombre: ${userProfile.name || 'Explorador'}
-- Género / Modalidad Narrativa: ${isFemale ? 'Mujer (Perspectiva y arquetipos femeninos aplicados)' : 'Hombre (Perspectiva y arquetipos masculinos aplicados)'}
+- Perspectiva narrativa elegida: ${perspective.toLowerCase()}
 ${userProfile.lifeStage ? `- Etapa de Vida: ${userProfile.lifeStage}` : ''}
 ${userProfile.currentGoal ? `- Objetivo / Desafío Actual: ${userProfile.currentGoal}` : ''}
 `;
@@ -323,10 +336,12 @@ CONTEXTO DEL MAPA ARQUETÍPICO DEL USUARIO (Sistema de 18 Arquetipos Universales
 `;
     }
 
-    return `Eres un Asistente Filosófico y Guía de Sabiduría Arquetípica para una aplicación de autoconocimiento basada en 18 arquetipos universales con narrativas adaptativas por género.
+    return `Eres un Asistente Filosófico y Guía de Sabiduría Arquetípica para una aplicación de autoconocimiento basada en 18 arquetipos universales, que se pueden leer en perspectiva masculina, femenina o universal.
 
-DIRECTRICES DE CONTENIDO Y GÉNERO:
-1. ADAPTACIÓN DE NARRATIVA: El usuario ha seleccionado una modalidad ${isFemale ? 'FEMENINA (ej: La Reina, La Guerrera, La Alquimista, La Sabia, La Sacerdotisa, La Amante, La Madre, La Cuidadora, etc.)' : 'MASCULINA (ej: El Rey, El Guerrero, El Mago, El Sabio, El Sacerdote, El Amante, El Padre, El Cuidador, etc.)'}. Adapta el tono, los nombres de los arquetipos, los ejemplos cotidianos y las reflexiones a esta perspectiva sin caer en estereotipos simplistas ni clichés.
+${CRISIS_PROTOCOL}
+
+DIRECTRICES DE CONTENIDO Y PERSPECTIVA:
+1. PERSPECTIVA NARRATIVA: El usuario eligió la perspectiva ${perspective} (ej: ${perspectiveExamples}). Es una preferencia de lenguaje para nombrar los arquetipos, no un dato sobre su género: no lo deduzcas ni lo menciones. Usa esos nombres y adapta los ejemplos cotidianos y las reflexiones sin caer en estereotipos simplistas ni clichés.
 2. NUNCA te presentes como psicólogo, terapeuta ni profesional clínico.
 3. NO realices diagnósticos clínicos ni afirmaciones médicas categóricas.
 4. Trata siempre los arquetipos como un MODELO SIMBÓLICO, existencial y de autoindagación personal profunda.
@@ -348,6 +363,12 @@ ${resultContext}
     userProfile?: UserProfile | null,
     gender: GenderMode = 'male'
   ): Promise<{ text: string; modelUsed: string; provider: AIProviderId }> {
+    // Ante una crisis no se interpreta nada ni se gasta cupo: la respuesta es siempre la misma,
+    // la dé quien la dé, para que no dependa de lo que decida un modelo.
+    if (detectCrisis(message)) {
+      return { text: CRISIS_RESPONSE, modelUsed: 'Protocolo de cuidado', provider: 'local' };
+    }
+
     const settings = this.getSettings();
     const status = this.getUsageStatus();
     const effectiveGender = userProfile?.gender || gender;
@@ -694,6 +715,8 @@ ${resultContext}
     archetypePersona?: string,
     gender: GenderMode = 'male'
   ): string {
+    if (detectCrisis(message)) return CRISIS_RESPONSE;
+
     if (archetypePersona && archetypePersona !== 'general') {
       const archId = archetypePersona.toLowerCase() as ArchetypeId;
       const name = getArchetypeName(archId, gender);

@@ -64,6 +64,16 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) =
             </code>
           ),
           hr: () => <hr className="border-[#23332D] my-3" />,
+          a: ({ href, children }) => (
+            <a
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-[#D6A84F] underline underline-offset-2 decoration-[#D6A84F]/50 hover:decoration-[#D6A84F]"
+            >
+              {children}
+            </a>
+          ),
         }}
       >
         {content}

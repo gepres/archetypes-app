@@ -1,5 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
+import { CRISIS_PROTOCOL, CRISIS_RESPONSE, detectCrisis } from "../services/crisisSupport";
 
 dotenv.config();
 
@@ -46,6 +47,11 @@ export async function handleGeminiChat(body: {
 }) {
   const { message, history = [], archetypePersona, archetypeContext } = body;
 
+  // Ante una crisis la respuesta no depende del modelo: es siempre la misma que en el navegador.
+  if (detectCrisis(message)) {
+    return { text: CRISIS_RESPONSE };
+  }
+
   const ai = getAiClient();
   if (!ai) {
     return {
@@ -57,10 +63,10 @@ export async function handleGeminiChat(body: {
   if (archetypePersona && archetypePersona !== 'general') {
     personaInstruction = `
 MODO DE PERSONA ARQUETÍPICA ACTIVO:
-Estás hablando EN PRIMERA PERSONA como la VOZ INTERIOR DEL ARQUETIPO: "${archetypePersona.toUpperCase()}".
+Estás hablando EN PRIMERA PERSONA como la VOZ DEL ARQUETIPO: "${archetypePersona.toUpperCase()}".
 - Encarna las virtudes, el ritmo, la agudeza y la visión de este arquetipo.
 - Háblale al usuario de forma cercana, profunda, desafiante o sabia según corresponda a tu energía.
-- Mantén la consciencia de que eres una parte viva de su propia psique invitándole a la maduración e integración.
+- Eres una voz ficticia inspirada en este arquetipo, un recurso de reflexión. No conoces la mente del usuario ni formas parte de ella: no afirmes saber lo que siente o piensa.
 `;
   }
 
@@ -78,6 +84,8 @@ CONTEXTO DEL MAPA ARQUETÍPICO DEL USUARIO (Modelo simbólico y reflexivo):
 
   const systemInstruction = `
 Eres un Asistente Filosófico y Guía de Reflexión Simbólica para una aplicación de autoconocimiento basada en 18 arquetipos universales, con narrativa masculina, femenina y universal (Rey/Reina, Guerrero/Guerrera, Mago/Maga, Sabio/Sabia, Sacerdote/Sacerdotisa, Amante, Padre/Madre, Cuidador/Cuidadora, Bufón/Bufona, Explorador/Exploradora, Creador/Creadora, Héroe/Heroína, Rebelde, Sanador/Sanadora, Constructor/Constructora, Soberano/Soberana, Místico/Mística, Integrador/Integradora).
+
+${CRISIS_PROTOCOL}
 
 DIRECTRICES ÉTICAS Y DE TONO FUNDAMENTALES:
 1. NUNCA te presentes como psicólogo, terapeuta ni profesional clínico.
@@ -147,6 +155,8 @@ function generateSynthesizedArchetypalResponse(
   },
   persona?: string
 ): string {
+  if (detectCrisis(message)) return CRISIS_RESPONSE;
+
   const queryLower = message.toLowerCase();
 
   if (persona && persona !== 'general') {
