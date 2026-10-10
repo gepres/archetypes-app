@@ -144,6 +144,9 @@ describe('detectCrisis', () => {
     'Estoy haciéndome daño otra vez',
     'Estoy haciéndome daño en las muñecas',
     'Me corto para no sentir nada',
+    // Decimocuarta revisión de Codex: «no sentir» seguido de otra cláusula
+    'Me corto para no sentir y no sé cómo parar',
+    'Me corto para no sentir…',
   ];
 
   for (const frase of crisis) {
@@ -211,6 +214,7 @@ describe('detectCrisis', () => {
     'Ya no me estoy haciendo daño en los brazos',
     'No estoy haciéndome daño en las muñecas',
     'Me lastimé entrenando y tomé ibuprofeno para no sentir dolor',
+    'Me hice daño en la rodilla y me puse hielo para no sentir nada de dolor',
   ];
 
   for (const frase of sinCrisis) {
