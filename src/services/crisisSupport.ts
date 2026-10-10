@@ -99,7 +99,7 @@ const SENALES: RegExp[] = [
   // con un deseo o un medio de riesgo delante, y sin hablar de dormir mejor. «Para no volver a
   // despertar» es inequívoco por sí solo.
   /\bpara no volver a despertar(me)?\b(?! a\b)/,
-  /^(?!.*\b(melatonina|somnifero|insomnio|valeriana|infusion|tila|dormir mejor|descansar)\b).*\b(quiero|quisiera|ojala|tomarme|tragarme|dormirme|cerrar los ojos)\b.{0,60}\bpara no despertar( (nunca|jamas)( mas)?| mas)?(?= *([.,;:!?…]|$))/,
+  /^(?!.*\b(melatonina|somnifero|insomnio|valeriana|infusion|tila|dormir mejor|descansar)\b).*\b(quiero|quisiera|ojala|tomarme|tragarme|dormirme|cerrar los ojos|me (voy a tomar|tome|tomare|voy a tragar|trague|tragare))\b.{0,60}\bpara no despertar( (nunca|jamas)( mas)?| mas)?(?= *([.,;:!?…]|$))/,
   /\b(tomarme|tragarme|pastillas|pildoras|tirarme|lanzarme|saltar|cortarme|hacerme dano|matarme|me voy a (tirar|lanzar|cortar)).{0,60}\bpara no (seguir|estar) aqui\b/,
   /\bpara no (seguir|estar) viv[oa]\b/,
   // Hacerse sangre a propósito es una lesión, se corte lo que se corte: aquí no vale la

@@ -157,6 +157,10 @@ describe('detectCrisis', () => {
     'Me tomaré las pastillas para no volver a despertar nunca',
     'Voy a tomarme todos los somníferos',
     'Ojalá dormirme para no despertar',
+    // Tercera revisión de cierre de Codex: el medio de riesgo conjugado
+    'Me voy a tomar las pastillas para no despertar',
+    'Me tomé las pastillas para no despertar',
+    'Me tomaré las pastillas para no despertar',
   ];
 
   for (const frase of crisis) {
@@ -239,6 +243,8 @@ describe('detectCrisis', () => {
     'Tomo pastillas para no despertar durante la noche',
     'Tomo pastillas para no despertar cada dos horas',
     'Quiero tomar melatonina para no despertar.',
+    'Me voy a tomar una pastilla para no despertar durante la noche',
+    'Me tomé la melatonina para no despertar a las 4',
   ];
 
   for (const frase of sinCrisis) {

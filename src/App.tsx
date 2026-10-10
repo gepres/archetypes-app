@@ -33,6 +33,14 @@ export default function App() {
   const [selectedArchetypeId, setSelectedArchetypeId] = useState<ArchetypeId | null>(null);
   const [aiInitialPrompt, setAiInitialPrompt] = useState<string | undefined>(undefined);
   const [aiInitialPersona, setAiInitialPersona] = useState<string>('general');
+  // El chat se queda montado (oculto) una vez abierto: al navegar por la app no se pierde lo que
+  // no se pudo guardar, ni una respuesta que llega mientras tanto. Se monta de nuevo al cambiar
+  // de cuenta (su key) o al reiniciar los datos locales (chatEpoch).
+  const [chatAbierto, setChatAbierto] = useState(false);
+  const [chatEpoch, setChatEpoch] = useState(0);
+  useEffect(() => {
+    if (currentTab === 'ai') setChatAbierto(true);
+  }, [currentTab]);
 
   // Modals state
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -184,6 +192,9 @@ export default function App() {
       )
     ) {
       localStorage.clear();
+      // Lo que el chat tenía en pantalla tampoco sobrevive al reinicio.
+      setChatAbierto(false);
+      setChatEpoch(e => e + 1);
       setCurrentResult(null);
       setHistory([]);
       setChallenges(StorageService.getChallenges());
@@ -363,11 +374,15 @@ export default function App() {
             />
           )}
 
-          {currentTab === 'ai' && (
+          {(chatAbierto || esChat) && (
+            // Fuera de su pestaña, oculto pero montado; dentro, sin caja propia («contents»),
+            // para que siga siendo hijo directo del <main> en el reparto de alto.
+            <div className={esChat ? 'contents' : 'hidden'}>
             <AiReflectionView
               // Cada cuenta, su conversación: al cambiar de cuenta el chat se monta de nuevo con
               // los mensajes de la que entra, sin arrastrar los de la que sale.
-              key={userProfile.id}
+              key={`${userProfile.id}:${chatEpoch}`}
+              isActive={esChat}
               currentResult={currentResult}
               initialPrompt={aiInitialPrompt}
               onInitialPromptConsumed={() => setAiInitialPrompt(undefined)}
@@ -375,6 +390,7 @@ export default function App() {
               gender={userProfile.gender || 'male'}
               onGenderChange={handleGenderChange}
             />
+            </div>
           )}
 
           {currentTab === 'profile' && (

@@ -36,6 +36,8 @@ interface AiReflectionViewProps {
   onGenderChange?: (gender: GenderMode) => void;
   /** Se avisa cuando la pregunta inicial se aceptó y se envió, para que no se reenvíe al montar otra vez. */
   onInitialPromptConsumed?: () => void;
+  /** Si es la pestaña visible. Fuera de ella el chat sigue montado, oculto. */
+  isActive?: boolean;
 }
 
 // Las vistas del chat montadas ahora mismo. Una respuesta que llega cuando su vista ya se
@@ -65,6 +67,7 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
   gender: propGender,
   onGenderChange,
   onInitialPromptConsumed,
+  isActive = true,
 }) => {
   const [userProfile, setUserProfile] = useState<UserProfile>(() => StorageService.getUserProfile());
   const currentGender: GenderMode = propGender || userProfile.gender || 'male';
@@ -167,8 +170,21 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
   };
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, isLoading]);
+    if (isActive) scrollToBottom();
+  }, [messages, isLoading, isActive]);
+
+  // Al volver a la pestaña. El chat sigue montado mientras se navega, así que al volver se pone
+  // al día: si todo estaba guardado, relee la conversación por si cambió fuera (una
+  // importación, la nube); si no, conserva la que tiene, que es la única copia.
+  // Solo al pasar de oculto a visible: ni al montar ni en la segunda pasada de StrictMode.
+  const activoAntesRef = useRef(isActive);
+  useEffect(() => {
+    const antes = activoAntesRef.current;
+    activoAntesRef.current = isActive;
+    if (!isActive || antes) return;
+    if (!sinGuardar) setMessages(StorageService.getChatMessages());
+    refreshAiStatus();
+  }, [isActive]);
 
   useEffect(() => {
     if (initialPersona) {
