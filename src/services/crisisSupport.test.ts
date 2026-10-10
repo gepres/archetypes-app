@@ -149,6 +149,12 @@ describe('detectCrisis', () => {
     'Me corto para no sentir…',
     'Me corto para no sentir el dolor emocional',
     'Me corto para no sentir tanto dolor por dentro',
+    // Revisión de cierre de Codex: «no despertar» y «no seguir aquí» con un medio de riesgo
+    'Quiero dormirme para no despertar más',
+    'Quiero cerrar los ojos para no despertar',
+    'Voy a tomarme todo para no seguir aquí',
+    'Me voy a tirar para no seguir aquí',
+    'Me tomaré las pastillas para no volver a despertar nunca',
   ];
 
   for (const frase of crisis) {
@@ -221,6 +227,11 @@ describe('detectCrisis', () => {
     'Me lastimé entrenando y tomé ibuprofeno para no sentir tanto dolor',
     'Me corté cocinando y me puse hielo para no sentir más dolor',
     'Me hice daño y tomé algo para no sentir ningún dolor',
+    // Revisión de cierre de Codex: finalidades cotidianas
+    'Me pongo auriculares para no despertar a mi pareja',
+    'Busco otro trabajo para no seguir aquí',
+    'Pongo la alarma para no despertar tarde',
+    'Tomo melatonina para no despertar a las 4',
   ];
 
   for (const frase of sinCrisis) {

@@ -95,7 +95,12 @@ const SENALES: RegExp[] = [
   new RegExp(`${INTENCION_AFIRMADA}.{0,40}${SIN_NEGAR}\\b${ACTO_DANO}`),
   // La intención de no despertar, aunque no diga cantidades: "tomarme las pastillas para no
   // despertar".
-  /\bpara no (despertar|volver a despertar|seguir aqui)\b/,
+  // Solo con un medio de riesgo delante, o cerrando la frase: «me pongo auriculares para no
+  // despertar a mi pareja» o «busco otro trabajo para no seguir aquí» no son crisis.
+  /\b(tomarme|tragarme|tomar|pastillas|pildoras|dormir(me)?|beber(me)?|tirarme|cortarme|hacerme dano).{0,60}\bpara no (volver a )?despertar\b(?! (a|al|tarde|temprano|cansad[oa]s?|con|de|mal|antes|pronto)\b)/,
+  /\bpara no (volver a )?despertar( (nunca|jamas)( mas)?| mas)?(?= *([.,;:!?…]|$))/,
+  /\b(tomarme|tragarme|pastillas|pildoras|tirarme|lanzarme|saltar|cortarme|hacerme dano|matarme|me voy a (tirar|lanzar|cortar)).{0,60}\bpara no (seguir|estar) aqui\b/,
+  /\bpara no (seguir|estar) viv[oa]\b/,
   // Hacerse sangre a propósito es una lesión, se corte lo que se corte: aquí no vale la
   // excepción de lo cosmético. Sin intención afirmada («me corté cocinando hasta sangrar», «sin
   // querer, no a propósito») no cuenta.
