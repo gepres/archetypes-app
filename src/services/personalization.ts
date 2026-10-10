@@ -82,10 +82,17 @@ export function recommendChallenges(challenges: Challenge[], result: AssessmentR
  * `dia`: el número del día local (numeroDeDia).
  */
 export function arquetipoDelDia(dia: number, result: AssessmentResult | null): ArchetypeId {
-  const general = ARCHETYPES_LIST[((dia % ARCHETYPES_LIST.length) + ARCHETYPES_LIST.length) % ARCHETYPES_LIST.length].id;
-  if (!result || dia % 3 === 0) return general;
-  const propias = [...new Set([...leadingArchetypes(result), ...growthArchetypes(result)])];
-  return propias.length ? propias[dia % propias.length] : general;
+  const n = ARCHETYPES_LIST.length;
+  const ciclo = (i: number, largo: number) => ((i % largo) + largo) % largo;
+  // Lo que encabeza y lo que menos apareció, alternados.
+  const propias = result ? intercalar(leadingArchetypes(result), growthArchetypes(result)) : [];
+  if (!propias.length) return ARCHETYPES_LIST[ciclo(dia, n)].id;
+  // Cada ciclo cuenta sus propias ocasiones. Si los dos usaran el número de día, con tres
+  // figuras propias una caería siempre en los días del ciclo general y no saldría nunca, y el
+  // general solo recorrería seis de los 18.
+  const tercio = Math.floor(dia / 3);
+  if (ciclo(dia, 3) === 0) return ARCHETYPES_LIST[ciclo(tercio, n)].id;
+  return propias[ciclo(dia - tercio - 1, propias.length)];
 }
 
 /** De dónde sale la carta de hoy respecto a tu mapa, si sale de él. */

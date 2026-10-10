@@ -64,17 +64,65 @@ describe('qué arquetipo trae la carta', () => {
     assert.equal(vistos.size, 18);
   });
 
-  it('con mapa, alterna entre tus figuras y lo que menos apareció, y uno de cada tres días el general', () => {
+  it('con mapa, dos de cada tres días sale de él, y el tercero del ciclo general', () => {
     const r = mapa(3);
     const propias = new Set([...leadingArchetypes(r), ...growthArchetypes(r)]);
-    for (let dia = 20000; dia < 20030; dia++) {
-      const id = arquetipoDelDia(dia, r);
-      if (dia % 3 === 0) assert.equal(id, arquetipoDelDia(dia, null), `día ${dia}: el general`);
-      else assert.ok(propias.has(id), `día ${dia}: ${id} no sale de tu mapa`);
+    for (let dia = 20001; dia < 20031; dia++) {
+      if (dia % 3 !== 0) assert.ok(propias.has(arquetipoDelDia(dia, r)), `día ${dia}: no sale de tu mapa`);
     }
-    // Y pasan todas tus figuras, no siempre la misma.
-    const delMapa = new Set(Array.from({ length: 30 }, (_, i) => arquetipoDelDia(20000 + i, r)).filter(id => propias.has(id)));
-    assert.equal(delMapa.size, propias.size);
+  });
+
+  // Un mapa a medida, con las figuras de cabeza y las de desarrollo que se quieran.
+  const conFiguras = (cabeza: ArchetypeId[], crecer: ArchetypeId[]): AssessmentResult => {
+    const base = mapa(1);
+    const resto = ARCHETYPES_LIST.map(x => x.id as ArchetypeId).filter(id => !cabeza.includes(id) && !crecer.includes(id));
+    const orden = [...cabeza, ...resto, ...crecer];
+    const porId = new Map(base.ranking.map(s => [s.archetypeId, s]));
+    const ranking = orden.map((id, i) => ({ ...porId.get(id)!, normalizedScore: 95 - i * 4, rank: i + 1 }));
+    return {
+      ...base,
+      ranking,
+      dominantArchetype: ranking[0],
+      developmentArchetypes: crecer.map(id => ranking.find(s => s.archetypeId === id)!),
+      compositeProfile: {
+        ...base.compositeProfile,
+        isFlat: false,
+        isTie: cabeza.length > 2,
+        tiedLeaders: cabeza.length > 2 ? cabeza : undefined,
+        pair: cabeza.length === 2 ? [cabeza[0], cabeza[1]] : undefined,
+        companions: undefined,
+      },
+    };
+  };
+
+  for (const [nombre, cabeza, crecer] of [
+    ['tres figuras (el caso de Codex)', ['constructor', 'creador'], ['cuidador']],
+    ['seis figuras', ['rey', 'mago', 'sabio'], ['bufon', 'amante', 'heroe']],
+    ['dos figuras', ['explorador', 'rebelde'], []],
+  ] as [string, ArchetypeId[], ArchetypeId[]][]) {
+    it(`con ${nombre}, ninguna queda fuera de la rotación (Codex)`, () => {
+      const r = conFiguras(cabeza, crecer);
+      const propias = [...leadingArchetypes(r), ...growthArchetypes(r)];
+      assert.equal(propias.length, cabeza.length + crecer.length);
+      const salen = new Set(Array.from({ length: 60 }, (_, i) => arquetipoDelDia(20000 + i, r)));
+      for (const id of propias) assert.ok(salen.has(id), `${id} nunca sale`);
+    });
+  }
+
+  it('los días del ciclo general recorren los 18, no solo unos pocos (Codex)', () => {
+    const r = conFiguras(['constructor', 'creador'], ['cuidador']);
+    const generales = new Set<ArchetypeId>();
+    for (let dia = 20001; generales.size < 18 && dia < 20001 + 18 * 3 + 3; dia++) {
+      if (dia % 3 === 0) generales.add(arquetipoDelDia(dia, r));
+    }
+    assert.equal(generales.size, 18);
+  });
+
+  it('alterna lo que encabeza con lo que menos apareció', () => {
+    const r = conFiguras(['rey', 'mago', 'sabio'], ['bufon', 'amante', 'heroe']);
+    const propios = Array.from({ length: 12 }, (_, i) => 20000 + i).filter(d => d % 3 !== 0).map(d => arquetipoDelDia(d, r));
+    const deCabeza = (id: ArchetypeId) => ['rey', 'mago', 'sabio'].includes(id);
+    for (let i = 1; i < propios.length; i++) assert.notEqual(deCabeza(propios[i]), deCabeza(propios[i - 1]), propios.join(' → '));
   });
 
   it('dice si sale de tu mapa', () => {
