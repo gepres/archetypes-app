@@ -69,6 +69,15 @@ export function mergeChallengeProgress(catalog: Challenge[], stored: Challenge[]
 
 type AccountData = AccountRecord['data'];
 
+/**
+ * ¿Es esta copia de respaldo de la cuenta abierta? Solo si no trae perfil (copias antiguas) o
+ * si su id coincide. El correo no basta: una cuenta local y una de Firebase pueden compartirlo
+ * y no son la misma.
+ */
+export function backupBelongsTo(current: UserProfile, backupProfile?: UserProfile | null): boolean {
+  return !backupProfile || backupProfile.id === current.id;
+}
+
 /** Una cuenta sin nada: lo que recibe quien entra en una cuenta nueva o sale a invitado. */
 export function emptyAccountData(): AccountData {
   return { currentResult: null, history: [], journalEntries: [], challenges: [], chatMessages: [] };

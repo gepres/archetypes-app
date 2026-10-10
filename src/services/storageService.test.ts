@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { StorageService, emptyAccountData, hasOwnData, mergeAccountData, mergeChallengeProgress } from './storageService';
+import { StorageService, backupBelongsTo, emptyAccountData, hasOwnData, mergeAccountData, mergeChallengeProgress } from './storageService';
 import { FirebaseService } from './firebaseService';
 import { calculateAssessmentResult } from './scoringEngine';
 import { QUESTIONS_DATA } from '../data/questionsData';
@@ -253,5 +253,18 @@ describe('mergeChallengeProgress', () => {
     const catalogo = [reto('a')];
     mergeChallengeProgress(catalogo, [reto('a', { completed: true })]);
     assert.equal(catalogo[0].completed, false);
+  });
+});
+
+describe('backupBelongsTo: una copia solo se importa en su cuenta', () => {
+  const p = (id: string, email = '', isGuest = false): UserProfile => ({ id, name: id, email, isGuest, createdAt: '', lastActive: '' });
+  it('la copia de la misma cuenta, sí', () => assert.equal(backupBelongsTo(p('uidA', 'a@x.com'), p('uidA', 'a@x.com')), true));
+  it('una copia antigua sin perfil, sí (en la cuenta abierta)', () => assert.equal(backupBelongsTo(p('uidA'), undefined), true));
+  it('la de otra cuenta, no', () => assert.equal(backupBelongsTo(p('uidB', 'b@x.com'), p('uidA', 'a@x.com')), false));
+  it('mismo correo pero otra identidad (local frente a Firebase), no', () =>
+    assert.equal(backupBelongsTo(p('uidFirebase', 'a@x.com'), p('user-123', 'a@x.com')), false));
+  it('una copia hecha sin cuenta, solo sin cuenta', () => {
+    assert.equal(backupBelongsTo(p('user-guest', '', true), p('user-guest', '', true)), true);
+    assert.equal(backupBelongsTo(p('uidA', 'a@x.com'), p('user-guest', '', true)), false);
   });
 });

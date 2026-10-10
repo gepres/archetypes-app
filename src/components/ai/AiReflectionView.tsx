@@ -176,6 +176,9 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
   const handleSend = async (textToSend?: string) => {
     const text = textToSend || inputText;
     if (!text.trim() || isLoading) return;
+    // De quién es esta conversación. Si mientras llega la respuesta se cambia de cuenta, la
+    // respuesta no se guarda: sería guardar la conversación de una cuenta en otra.
+    const dueno = StorageService.getUserProfile().id;
 
     const userMsg: ChatMessage = {
       id: `msg-${Date.now()}`,
@@ -209,6 +212,7 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
         personaUsed: activePersona !== 'general' ? selectedPersonaObj.name : undefined,
       };
 
+      if (StorageService.getUserProfile().id !== dueno) return;
       const updated = [...newMessages, aiMsg];
       setMessages(updated);
       StorageService.saveChatMessages(updated);

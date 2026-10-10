@@ -37,17 +37,24 @@ export const App: React.FC = () => {
     });
   }, []);
 
+  // De quien es la sesion cuando empieza el test (ver terminarTest).
+  const duenoRef = useRef(leerDueno());
+
   const terminarTest = useCallback((respuestas: AssessmentAnswer[]) => {
     // En perspectiva universal: la V2 no pregunta nada mas que las afirmaciones,
     // asi que nadie ha podido elegir una perspectiva concreta.
     const res = calculateAssessmentResult(respuestas, tipoRef.current, 'universal');
     setResultado(res);
     setPaso('revelacion');
-    // Se guarda para que la version completa lo encuentre ya hecho.
+    // Se guarda para que la version completa lo encuentre ya hecho, pero solo si sigue
+    // abierta la misma cuenta que empezo el test: si otra pestaña cambio de cuenta entretanto,
+    // guardarlo seria dejar el resultado de una persona en la cuenta de otra.
+    if (leerDueno() !== duenoRef.current) return;
     try {
       localStorage.setItem('archetypes_current_result', JSON.stringify(res));
       const previo = JSON.parse(localStorage.getItem('archetypes_history') || '[]');
-      localStorage.setItem('archetypes_history', JSON.stringify([res, ...previo].slice(0, 20)));
+      // Sin recortar: el historial es de la persona, y la version completa lo sube a su cuenta.
+      localStorage.setItem('archetypes_history', JSON.stringify([res, ...previo]));
       localStorage.setItem('archetype_perspective_selected', 'true');
     } catch {}
   }, []);
@@ -58,6 +65,7 @@ export const App: React.FC = () => {
   }, []);
 
   const arrancarTest = (elegido: TipoTest) => {
+    duenoRef.current = leerDueno();
     setTipo(elegido);
     tipoRef.current = elegido;
     setPaso('test');
@@ -103,3 +111,12 @@ export const App: React.FC = () => {
     />
   ) : null;
 };
+
+/** La cuenta abierta en este navegador (la escribe la version completa). */
+function leerDueno(): string {
+  try {
+    return JSON.parse(localStorage.getItem('archetypes_user_profile') || '{}').id || 'user-guest';
+  } catch {
+    return 'user-guest';
+  }
+}

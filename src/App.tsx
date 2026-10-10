@@ -365,6 +365,9 @@ export default function App() {
 
           {currentTab === 'ai' && (
             <AiReflectionView
+              // Cada cuenta, su conversación: al cambiar de cuenta el chat se monta de nuevo con
+              // los mensajes de la que entra, sin arrastrar los de la que sale.
+              key={userProfile.id}
               currentResult={currentResult}
               initialPrompt={aiInitialPrompt}
               initialPersona={aiInitialPersona}

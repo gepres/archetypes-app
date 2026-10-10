@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   User,
   LogIn,
@@ -44,15 +44,22 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     StorageService.getSavedAccounts()
   );
   // Lo que se hizo sin cuenta solo pasa a una cuenta si la persona lo elige. Se pregunta solo
-  // si quien entra es el invitado y tiene algo suyo (un mapa, notas, conversación…).
-  const [guestHasData] = useState(() => {
-    try {
-      return StorageService.getUserProfile().isGuest && hasOwnData(StorageService.readActiveData());
-    } catch {
-      return false;
-    }
-  });
+  // si quien entra es el invitado y tiene algo suyo (un mapa, notas, conversación…). Se mira
+  // cada vez que se abre el acceso, porque el modal sigue montado cuando está cerrado y el
+  // invitado puede haber escrito algo entretanto; y la elección empieza de nuevo cada vez.
+  const [guestHasData, setGuestHasData] = useState(false);
   const [bringGuestData, setBringGuestData] = useState(true);
+  useEffect(() => {
+    if (!isOpen) return;
+    try {
+      setGuestHasData(StorageService.getUserProfile().isGuest && hasOwnData(StorageService.readActiveData()));
+    } catch {
+      setGuestHasData(false);
+    }
+    setBringGuestData(true);
+  }, [isOpen]);
+  // Solo se transfiere lo que la casilla mostró y la persona dejó marcado.
+  const llevarDatosDeInvitado = guestHasData && bringGuestData;
 
   if (!isOpen) return null;
 
@@ -112,7 +119,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
       // Se entra en la cuenta con lo suyo y solo lo suyo (ver enterAccount).
       const cloudData = profile.id ? await FirebaseService.loadFullDataFromCloud(profile.id) : null;
-      StorageService.enterAccount(profile, cloudData, { bringGuestData });
+      StorageService.enterAccount(profile, cloudData, { bringGuestData: llevarDatosDeInvitado });
       setSavedAccounts(StorageService.getSavedAccounts());
       onUserChange(profile);
       onClose();
@@ -131,7 +138,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       
       // Se entra en la cuenta con lo suyo y solo lo suyo (ver enterAccount).
       const cloudData = await FirebaseService.loadFullDataFromCloud(profile.id);
-      StorageService.enterAccount(profile, cloudData, { bringGuestData });
+      StorageService.enterAccount(profile, cloudData, { bringGuestData: llevarDatosDeInvitado });
       setSavedAccounts(StorageService.getSavedAccounts());
       onUserChange(profile);
       onClose();
@@ -148,7 +155,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       email: account.email,
       avatarEmoji: account.avatarEmoji,
     });
-    StorageService.enterAccount(updatedProfile, null, { bringGuestData });
+    StorageService.enterAccount(updatedProfile, null, { bringGuestData: llevarDatosDeInvitado });
     setSavedAccounts(StorageService.getSavedAccounts());
     onUserChange(updatedProfile);
     onClose();

@@ -28,7 +28,7 @@ import {
 } from 'lucide-react';
 import { withDe } from '../../data/archetypesData';
 import { getMapLead } from '../../services/scoringEngine';
-import { StorageService } from '../../services/storageService';
+import { StorageService, backupBelongsTo } from '../../services/storageService';
 import { FirebaseService } from '../../services/firebaseService';
 import { AIProviderService } from '../../services/aiProviderService';
 import { AccountRecord, AssessmentResult, GenderMode, UserProfile } from '../../types';
@@ -196,9 +196,23 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
     reader.onload = event => {
       try {
         const json = JSON.parse(event.target?.result as string);
-        // De una vez, con el historial incluido, y una sola subida al final.
+        // Una copia solo se importa en la cuenta de la que salió: importar la de otra cuenta
+        // mezclaba sus datos con los de la abierta y los subía a esta. Las copias sin perfil
+        // (antiguas) se importan en la cuenta abierta.
+        const actual = StorageService.getUserProfile();
+        const deLaCopia = json.profile as UserProfile | undefined;
+        if (!backupBelongsTo(actual, deLaCopia)) {
+          alert(
+            deLaCopia?.isGuest
+              ? 'Esta copia se hizo sin cuenta. Para importarla, sal de tu cuenta, impórtala sin cuenta y, al entrar, elige guardar en la cuenta lo que hiciste sin ella.'
+              : `Esta copia es de otra cuenta (${deLaCopia?.name || deLaCopia?.email || 'sin nombre'}). Para importarla, entra antes en esa cuenta.`
+          );
+          return;
+        }
+        // De una vez, combinando con lo que ya hay, y una sola subida al final.
         StorageService.applyAccountData(json);
-        if (json.profile) onUpdateProfile(json.profile);
+        // Del perfil de la copia se recuperan los ajustes, nunca la identidad.
+        if (deLaCopia) onUpdateProfile({ ...actual, ...deLaCopia, id: actual.id, email: actual.email, isGuest: actual.isGuest });
         alert('Datos importados correctamente.');
         window.location.reload();
       } catch (err) {
