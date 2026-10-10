@@ -371,21 +371,38 @@ function generateCompositeProfile(
   const archetypeKey = `${a.id}-${b.id}-${c.id}`;
   const archetypeCombination = `${a.name} + ${b.name} + ${c.name}`;
 
-  const developmentArchetypes = ranking
-    .slice(-2)
-    .reverse()
-    .map(low => {
-      const arch = getArchetype(low.archetypeId, gender);
-      return {
-        archetypeId: arch.id,
-        name: arch.name,
-        // Puntuar poco no es una carencia que haya que corregir: es lo que menos apareció.
-        reason: `${arch.name} apareció poco en tus respuestas. Si quieres aprender a ${ARCHETYPE_DRIVES[arch.id]}, puede ser un buen lugar para explorar.`,
-        activationPractice: arch.developmentExercises[0]?.actionStep || 'Lee su ficha y quédate con una sola pregunta.',
-      };
-    });
+  // Lo que menos apareció, sin elegir por posición entre figuras que las respuestas no
+  // distinguen: se toma desde abajo mientras cada una se separe de la siguiente. Si abajo hay
+  // tres o más empatadas, no se recomienda ninguna.
+  const lowestIds: ArchetypeId[] = [];
+  const grupoDe = (s: ArchetypeScore) => ranking.filter(x => Math.abs(x.normalizedScore - s.normalizedScore) <= TIE_MAX_GAP);
+  // Lo elegido tiene que quedar cerrado: ninguna elegida puede estar empatada con una que se
+  // queda fuera (con 10, 11 y 12, elegir 10 y 11 dejaría fuera a 12, empatada con 11).
+  const cerrado = (ids: ArchetypeId[]) =>
+    ids.every(id => grupoDe(ranking.find(s => s.archetypeId === id)!).every(s => ids.includes(s.archetypeId)));
+  const grupoFinal = grupoDe(last).map(s => s.archetypeId).reverse();
+  if (grupoFinal.length <= 2 && cerrado(grupoFinal)) {
+    lowestIds.push(...grupoFinal);
+    if (lowestIds.length === 1) {
+      const siguiente = ranking[ranking.length - 2].archetypeId;
+      if (cerrado([...lowestIds, siguiente])) lowestIds.push(siguiente);
+    }
+  }
+  const developmentArchetypes = lowestIds.map(id => {
+    const arch = getArchetype(id, gender);
+    return {
+      archetypeId: arch.id,
+      name: arch.name,
+      // Puntuar poco no es una carencia que haya que corregir: es lo que menos apareció.
+      reason: `${arch.name} apareció poco en tus respuestas. Si quieres aprender a ${ARCHETYPE_DRIVES[arch.id]}, puede ser un buen lugar para explorar.`,
+      activationPractice: arch.developmentExercises[0]?.actionStep || 'Lee su ficha y quédate con una sola pregunta.',
+    };
+  });
+  const loQueMenos = developmentArchetypes.length
+    ? ` Lo que sí se ve es lo que menos apareció: ${listNames(developmentArchetypes.map(d => d.name))}.`
+    : '';
 
-  // Si todo el mapa cabe en unos pocos puntos, no se inventa una identidad: se dice.
+  // Si todo el mapa cabe en unos pocos puntos y nadie se despega, no se inventa una identidad.
   const range = first.normalizedScore - last.normalizedScore;
   if (range <= FLAT_MAX_RANGE && first.normalizedScore - second.normalizedScore <= FLAT_MAX_LEAD) {
     return {
@@ -412,19 +429,36 @@ function generateCompositeProfile(
   if (leaders.length >= 3) {
     const names = leaders.map(s => getArchetype(s.archetypeId, gender).name);
     const shown = names.length <= 5 ? listNames(names) : `${names.length} figuras, entre ellas ${listNames(names.slice(0, 3))},`;
-    const lows = developmentArchetypes.map(d => d.name);
     return {
       archetypeKey,
       title: names.length === 3 ? `${listNames(names)}, a la par` : `${names.length} figuras a la par`,
       archetypeCombination,
-      synthesis:
-        `${shown} comparten el primer puesto de tu mapa: tus respuestas no distinguen entre ellas. ` +
-        `Lo que sí se ve es lo que menos apareció: ${listNames(lows)}.`,
+      synthesis: `${shown} comparten el primer puesto de tu mapa: tus respuestas no distinguen entre ellas.${loQueMenos}`,
       strengths: [],
       risksAndShadows: [],
       developmentArchetypes,
       tiedLeaders: leaderIds,
       isTie: true,
+      isFlat: false,
+    };
+  }
+
+  // Un líder con un mapa casi sin contraste, o con tres o más empatadas detrás: no se inventa
+  // una pareja eligiendo a una de ellas por posición. Se nombra al líder y se dice que detrás
+  // van a la par. (Con exactamente dos empatadas detrás, la pareja se mantiene y se dice.)
+  const segundos = ranking.slice(1).filter(s => second.normalizedScore - s.normalizedScore <= TIE_MAX_GAP);
+  if (leaders.length === 1 && segundos.length >= 2 && (range <= FLAT_MAX_RANGE || segundos.length >= 3)) {
+    return {
+      archetypeKey,
+      title: a.name,
+      archetypeCombination: a.name,
+      synthesis:
+        `${a.name} encabeza tu mapa; detrás, ${segundos.length} figuras van a la par, sin que tus respuestas distingan entre ellas. ` +
+        `Lo que más pesa en lo que respondiste es el impulso de ${ARCHETYPE_DRIVES[a.id]}.`,
+      strengths: [`Fuerza ${withDe(a.name)}: ${a.strength}`],
+      risksAndShadows: [`Sombra ${withDe(a.name)}: ${a.shadow}`],
+      developmentArchetypes,
+      isTie: false,
       isFlat: false,
     };
   }
@@ -435,12 +469,20 @@ function generateCompositeProfile(
   const head = isTie
     ? `${a.name} y ${b.name} comparten el primer puesto de tu mapa`
     : `${a.name} y ${b.name} encabezan tu mapa`;
+  // El tercero: si va a la par del segundo, se dice; si no, solo se nombra cuando se distingue
+  // del cuarto.
+  const cuarto = ranking[3];
+  const detras = !isTie && segundos.length === 2
+    ? `, con ${c.name} a la par ${withDe(b.name)}`
+    : third.normalizedScore - cuarto.normalizedScore > TIE_MAX_GAP
+      ? `, con ${c.name} detrás`
+      : '';
 
   return {
     archetypeKey,
     title: `${a.name} + ${b.name}`,
     archetypeCombination,
-    synthesis: `${head}, con ${c.name} detrás. Una parte de ti quiere ${ARCHETYPE_DRIVES[a.id]}; otra, ${ARCHETYPE_DRIVES[b.id]}.`,
+    synthesis: `${head}${detras}. Una parte de ti quiere ${ARCHETYPE_DRIVES[a.id]}; otra, ${ARCHETYPE_DRIVES[b.id]}.`,
     strengths: [`Fuerza ${withDe(a.name)}: ${a.strength}`, `Fuerza ${withDe(b.name)}: ${b.strength}`],
     risksAndShadows: [`Sombra ${withDe(a.name)}: ${a.shadow}`, `Sombra ${withDe(b.name)}: ${b.shadow}`],
     developmentArchetypes,

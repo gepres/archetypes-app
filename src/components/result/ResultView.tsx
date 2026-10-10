@@ -77,7 +77,9 @@ export const ResultView: React.FC<ResultViewProps> = ({
   // segundo si no. Con empate de tres no se esconde a ninguno.
   const companions = (empate && compositeProfile.tiedLeaders
     ? compositeProfile.tiedLeaders.filter(id => id !== dominant.id)
-    : [result.ranking[1].archetypeId]
+    : compositeProfile.pair
+      ? [result.ranking[1].archetypeId]
+      : [] // un líder con varias empatadas detrás: no hay un único acompañante
   ).map(id => getArchetype(id, gender));
   // Con muchos a la par se nombran unos pocos y se dice cuántos más hay.
   const shownCompanions = companions.slice(0, 4);
@@ -146,6 +148,9 @@ export const ResultView: React.FC<ResultViewProps> = ({
                   «{dominant.mantra}»
                 </blockquote>
 
+                {companions.length === 0 ? (
+                  <p className="text-xs text-[#7B8880]">Detrás, varias figuras van a la par.</p>
+                ) : (
                 <p className="text-xs text-[#7B8880]">
                   {empate ? 'A la par con' : 'Te acompaña'}{' '}
                   {shownCompanions.map((arch, i) => (
@@ -162,6 +167,7 @@ export const ResultView: React.FC<ResultViewProps> = ({
                   ))}
                   {hiddenCompanions > 0 && ` y ${hiddenCompanions} más`}
                 </p>
+                )}
 
                 {dominantEvidence.length > 0 && (
                   <div className="rounded-2xl border border-[#23332D] bg-[#101917]/80 p-4 space-y-3 text-left">

@@ -70,13 +70,42 @@ describe('perfil por pareja', () => {
   const lideres = (res: AssessmentResult) =>
     res.ranking.filter(s => res.ranking[0].normalizedScore - s.normalizedScore <= TIE_MAX_GAP);
 
-  it('con uno o dos en cabeza, el título es la pareja que encabeza el ranking', () => {
+  it('con uno o dos en cabeza, el título es la pareja; o solo el líder si detrás van varias a la par', () => {
     for (const res of resultados.filter(x => !x.compositeProfile.isFlat && lideres(x).length <= 2)) {
       const [a, b] = res.ranking;
+      const segundos = res.ranking.slice(1).filter(s => b.normalizedScore - s.normalizedScore <= TIE_MAX_GAP);
+      const rango = a.normalizedScore - res.ranking[res.ranking.length - 1].normalizedScore;
+      if (lideres(res).length === 1 && segundos.length >= 2 && (rango <= FLAT_MAX_RANGE || segundos.length >= 3)) {
+        assert.equal(res.compositeProfile.title, a.name);
+        assert.equal(res.compositeProfile.pair, undefined, 'no se elige pareja entre empatadas');
+        continue;
+      }
       assert.equal(res.compositeProfile.title, `${a.name} + ${b.name}`);
       assert.deepEqual(res.compositeProfile.pair, [a.archetypeId, b.archetypeId]);
       assert.ok(res.compositeProfile.tension && res.compositeProfile.tension.length > 0);
     }
+  });
+
+  it('«lo que menos apareció» nunca elige entre figuras empatadas', () => {
+    for (const res of resultados) {
+      const elegidas = res.compositeProfile.developmentArchetypes.map(d => d.archetypeId);
+      for (const id of elegidas) {
+        const puntos = res.ranking.find(s => s.archetypeId === id)!.normalizedScore;
+        const empatadas = res.ranking.filter(s => Math.abs(s.normalizedScore - puntos) <= TIE_MAX_GAP).map(s => s.archetypeId);
+        for (const e of empatadas) assert.ok(elegidas.includes(e), `${id} elegida, pero ${e} está empatada y no`);
+      }
+    }
+  });
+
+  it('un líder con muchas empatadas detrás y abajo (caso de la tercera revisión de Codex)', () => {
+    // Todo a 2 salvo la afirmación 33 a 3: 30, 26, 26 y quince figuras empatadas a 25.
+    const res = calculateAssessmentResult(QUESTIONS_DATA.map(q => ({ questionId: q.id, value: q.id === 33 ? 3 : 2 })), 'full', 'male');
+    const p = res.compositeProfile;
+    assert.equal(p.isFlat, false);
+    assert.equal(p.pair, undefined);
+    assert.equal(p.title, res.ranking[0].name);
+    assert.deepEqual(p.developmentArchetypes, [], 'no se recomienda entre quince empatadas');
+    assert.doesNotMatch(p.synthesis, /detrás\.$|con .* detrás/);
   });
 
   it('el empate se marca exactamente cuando dos o más figuras están a la par en cabeza', () => {
