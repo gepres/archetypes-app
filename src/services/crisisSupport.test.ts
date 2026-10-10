@@ -130,6 +130,11 @@ describe('detectCrisis', () => {
     'Me corté las muñecas',
     'Me corto para sentir algo',
     'Me hago daño para castigarme',
+    // Undécima revisión de Codex: la autolesión en curso
+    'Me estoy cortando las muñecas',
+    'Me estoy cortando para sentir algo',
+    'Estoy cortándome a propósito',
+    'Me estoy haciendo daño a propósito',
   ];
 
   for (const frase of crisis) {
@@ -187,6 +192,10 @@ describe('detectCrisis', () => {
     'Me corté el pelo para sentirme mejor',
     'Me corté el flequillo para sentir algo distinto',
     'No me corté las muñecas',
+    // Undécima revisión de Codex: aliviar el dolor de un accidente no es una finalidad de autolesión
+    'Me lastimé la rodilla entrenando y tomé ibuprofeno para aliviar el dolor',
+    'Me corté cocinando y me puse hielo para aliviar el dolor',
+    'Me estoy cortando el pelo a propósito',
   ];
 
   for (const frase of sinCrisis) {

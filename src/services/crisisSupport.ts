@@ -55,9 +55,10 @@ const CORTE_INOCUO =
   '(yo mism[oa] )?' +
   '(un poco (el|la|los|las|de)|el|la|los|las|mi|mis|tu|tus|su|sus|un|una|unos|unas) ' +
   `(pelo|cabello|flequillo|fleco|melena|puntas|mechon|mechones|rizos?|coleta|trenza|barba|bigote|patillas?|una|unas)\\b(?!.{0,30}\\b${CUERPO}\\b)`;
-const CORTE = 'me (corte|corto|cortaba|he cortado)';
+// También en curso: «me estoy cortando», «estoy cortándome».
+const CORTE = '(me (corte|corto|cortaba|he cortado|estoy cortando)|estoy cortandome)';
 const ACTO_DANO =
-  `(me (hice|hago|hacia|he hecho) dano|me (lastime|lastimo|lastimaba|he lastimado|golpee|golpeo|he golpeado|queme|quemo|he quemado)|me (corte|corto|cortaba|he cortado)(?! ${CORTE_INOCUO}))`;
+  `(me (hice|hago|hacia|he hecho|estoy haciendo) dano|estoy haciendome dano|me (lastime|lastimo|lastimaba|he lastimado|estoy lastimando|golpee|golpeo|he golpeado|estoy golpeando|queme|quemo|he quemado|estoy quemando)|estoy (lastimandome|golpeandome|quemandome)|${CORTE}(?! ${CORTE_INOCUO}))`;
 const INTENCION = '(a proposito|adrede|aposta|queriendo|intencionadamente)';
 // La intención tiene que estar afirmada: «no a propósito», «no lo hice adrede» la niegan.
 const INTENCION_AFIRMADA = `(?<!\\b(no|nunca|jamas|ni|sin|no lo hice|no lo hago|no fue) )\\b${INTENCION}\\b`;
@@ -107,10 +108,11 @@ const SENALES: RegExp[] = [
   // Cortarse las muñecas o las venas es una señal por sí sola, diga o no la intención: «me corté
   // las muñecas, no queriendo morir sino sentir algo» niega la finalidad, no la lesión.
   new RegExp(`${SIN_NEGAR}\\b${CORTE} (las|mis) (munecas|venas)\\b`),
-  // Hacerse daño para sentir, para castigarse o para aliviar lo que duele por dentro: la
-  // finalidad delata que no fue un accidente. Lo cosmético sigue fuera («me corté el pelo para
-  // sentirme mejor»).
-  new RegExp(`${SIN_NEGAR}\\b${ACTO_DANO}.{0,60}\\b(para|sino|solo para) (sentir algo|sentir dolor|no sentir nada|castigarme|desahogarme|aliviar(me)?|calmar(me)? (el dolor|la ansiedad))\\b`),
+  // Hacerse daño para sentir algo o para castigarse: la finalidad delata que no fue un
+  // accidente. Solo finalidades inequívocas: «aliviar el dolor» también es lo que se hace
+  // después de un accidente («me corté cocinando y me puse hielo para aliviar el dolor»). Lo
+  // cosmético sigue fuera («me corté el pelo para sentirme mejor»).
+  new RegExp(`${SIN_NEGAR}\\b${ACTO_DANO}.{0,40}\\b(para|sino|solo para) (sentir algo|sentir dolor|no sentir nada|castigarme|desahogarme)\\b`),
   // Violencia y peligro, también mientras ocurre
   /\bme (pega|golpea|maltrata|amenaza|viola|pegan|golpean|maltratan|amenazan)\b/,
   /\bme (esta|estan) (pegando|golpeando|maltratando|amenazando|violando|haciendo dano)\b/,

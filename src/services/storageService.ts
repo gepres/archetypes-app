@@ -396,21 +396,24 @@ export const StorageService = {
   /**
    * Reiniciar la conversación es un cambio deliberado: se guarda y se sube, para que la
    * conversación borrada no vuelva desde la nube en otro dispositivo (ni reabra una crisis).
+   * Devuelve también si se pudo guardar.
    */
-  clearChatMessages(): ChatMessage[] {
-    const vacia = [welcomeMessage()];
-    this.saveChatMessages(vacia);
-    return vacia;
+  clearChatMessages(): { messages: ChatMessage[]; guardada: boolean } {
+    const messages = [welcomeMessage()];
+    return { messages, guardada: this.saveChatMessages(messages) };
   },
 
-  /** La persona dice que está a salvo: se cierra la crisis sin borrar el historial. */
-  closeCrisis(): ChatMessage[] {
+  /**
+   * La persona dice que está a salvo: se cierra la crisis sin borrar el historial. Se cierra
+   * sobre la conversación que tiene delante (la de la vista), no sobre la del disco: si algo no
+   * se pudo guardar, cerrar no lo borra. Devuelve también si se pudo guardar.
+   */
+  closeCrisis(actual?: ChatMessage[]): { messages: ChatMessage[]; guardada: boolean } {
     const messages = [
-      ...this.getChatMessages(),
+      ...(actual ?? this.getChatMessages()),
       { id: `msg-safe-${Date.now()}`, role: 'model' as const, content: CRISIS_CLOSED_NOTE, timestamp: new Date().toISOString(), crisisClosed: true },
     ];
-    this.saveChatMessages(messages);
-    return messages;
+    return { messages, guardada: this.saveChatMessages(messages) };
   },
 
   /**

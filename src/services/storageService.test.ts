@@ -31,10 +31,11 @@ describe('chat: reiniciar y cerrar una crisis', () => {
     try {
       StorageService.saveChatMessages([{ id: 'm1', role: 'user', content: 'Quiero suicidarme', timestamp: '' }]);
       subidas.length = 0;
-      const vacia = StorageService.clearChatMessages();
+      const { messages: vacia, guardada } = StorageService.clearChatMessages();
       assert.equal(subidas.length, 1);
       assert.deepEqual(subidas[0].chatMessages.map((m: any) => m.id), ['msg-welcome-1']);
       assert.deepEqual(vacia.map(m => m.id), ['msg-welcome-1']);
+      assert.equal(guardada, true);
     } finally {
       restaurar();
     }
@@ -46,9 +47,31 @@ describe('chat: reiniciar y cerrar una crisis', () => {
       const { crisisInConversation } = await import('./crisisSupport');
       StorageService.saveChatMessages([{ id: 'm1', role: 'user', content: 'Quiero suicidarme', timestamp: '' }]);
       assert.equal(crisisInConversation(StorageService.getChatMessages()), true);
-      const despues = StorageService.closeCrisis();
+      const { messages: despues } = StorageService.closeCrisis();
       assert.equal(crisisInConversation(despues), false);
       assert.equal(despues[0].content, 'Quiero suicidarme', 'el historial se conserva');
+    } finally {
+      restaurar();
+    }
+  });
+
+  it('cerrar la crisis sobre lo que se ve no borra lo que no se pudo guardar (undécima revisión de Codex)', async () => {
+    const { restaurar } = montar();
+    try {
+      const { crisisInConversation } = await import('./crisisSupport');
+      const enDisco = [{ id: 'w', role: 'model' as const, content: 'Hola', timestamp: '' }];
+      StorageService.saveChatMessages(enDisco);
+      // La vista tiene la pregunta y la respuesta que no llegaron a guardarse.
+      const enLaVista = [
+        ...enDisco,
+        { id: 'q1', role: 'user' as const, content: 'Quiero suicidarme', timestamp: '' },
+        { id: 'r1', role: 'model' as const, content: 'Lo que me cuentas importa', timestamp: '' },
+      ];
+      const { messages, guardada } = StorageService.closeCrisis(enLaVista);
+      assert.deepEqual(messages.slice(0, 3).map(m => m.id), ['w', 'q1', 'r1']);
+      assert.equal(crisisInConversation(messages), false);
+      assert.equal(guardada, true);
+      assert.deepEqual(StorageService.getChatMessages().slice(0, 3).map(m => m.id), ['w', 'q1', 'r1'], 'y así se guarda');
     } finally {
       restaurar();
     }

@@ -231,6 +231,9 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
     };
 
     const newMessages = [...messages, userMsg];
+    // Al momento, sin esperar al render: una respuesta inmediata (motor local, cupo agotado)
+    // puede llegar antes, y tiene que encontrar aquí su pregunta.
+    mensajesRef.current = newMessages;
     setMessages(newMessages);
     setSinGuardar(!StorageService.saveChatMessages(newMessages));
     setInputText('');
@@ -274,7 +277,9 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
 
   const handleClearHistory = () => {
     if (window.confirm('¿Deseas reiniciar la conversación de reflexión?')) {
-      setMessages(StorageService.clearChatMessages());
+      const { messages: vacia, guardada } = StorageService.clearChatMessages();
+      setMessages(vacia);
+      setSinGuardar(!guardada);
     }
   };
 
@@ -545,7 +550,11 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
           </p>
           <button
             type="button"
-            onClick={() => setMessages(StorageService.closeCrisis())}
+            onClick={() => {
+              const { messages: cerrada, guardada } = StorageService.closeCrisis(messages);
+              setMessages(cerrada);
+              setSinGuardar(!guardada);
+            }}
             className="shrink-0 px-3.5 py-2 rounded-xl bg-[#315C45] hover:bg-[#3D7055] text-xs font-semibold text-[#F2EFE6] transition-colors"
           >
             Ya estoy a salvo, volver al mapa
