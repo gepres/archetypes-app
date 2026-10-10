@@ -465,6 +465,10 @@ export const StorageService = {
         if (!parsed.gender) {
           parsed.gender = DEFAULT_GENDER;
         }
+        // El formulario del perfil de antes convertía en «cuenta» al invitado que guardaba su
+        // correo, sin dejar de tener el id del invitado. Sigue siendo un invitado: así su
+        // perspectiva y sus datos se aparcan al entrar en una cuenta y vuelven al salir.
+        if (parsed.id === 'user-guest' && !parsed.isGuest) parsed.isGuest = true;
         return parsed;
       }
 

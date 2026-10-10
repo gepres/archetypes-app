@@ -600,6 +600,19 @@ describe('perspectiva de quien llega por primera vez', () => {
     assert.equal(StorageService.getUserProfile().gender, 'female');
   });
 
+  it('un invitado guardado como «cuenta» por el formulario anterior sigue siendo invitado (Codex)', () => {
+    for (const recorrido of ['cerrar sesión', 'entrar con su correo y cerrar sesión']) {
+      const mem = vacio();
+      mem.set('archetypes_user_profile', JSON.stringify({ id: 'user-guest', name: 'Ana', email: 'a@x.com', isGuest: false, gender: 'female', createdAt: '', lastActive: '' }));
+      assert.equal(StorageService.getUserProfile().isGuest, true, recorrido);
+      if (recorrido !== 'cerrar sesión') {
+        StorageService.enterAccount({ id: 'uidA', name: 'A', email: 'a@x.com', isGuest: false, createdAt: '', lastActive: '', gender: 'male' }, null);
+      }
+      StorageService.switchToGuestMode();
+      assert.equal(StorageService.getUserProfile().gender, 'female', recorrido);
+    }
+  });
+
   it('quien ya eligió una perspectiva la conserva', () => {
     const mem = vacio();
     mem.set('archetypes_user_profile', JSON.stringify({ id: 'u', name: 'A', email: '', isGuest: true, gender: 'male', createdAt: '', lastActive: '' }));
