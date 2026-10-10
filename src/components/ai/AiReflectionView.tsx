@@ -200,7 +200,8 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
   // solo se da por consumida cuando se aceptó: si había una respuesta en camino, espera a que
   // llegue en vez de perderse. Una vez enviada, al remontar el chat no se reenvía.
   useEffect(() => {
-    if (initialPrompt && !isLoading && handleSend(initialPrompt)) {
+    // Con la voz que la acompaña: setActivePersona aún no se ha aplicado en este render.
+    if (initialPrompt && !isLoading && handleSend(initialPrompt, initialPersona)) {
       onInitialPromptConsumed?.();
     }
   }, [initialPrompt, isLoading]);
@@ -233,8 +234,11 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
   // Cierra el paso a un segundo envío en el mismo instante, antes de que el estado se entere.
   const enviandoRef = useRef(false);
 
-  /** Envía un mensaje. Devuelve si se aceptó: no se acepta vacío ni con otra respuesta en camino. */
-  const handleSend = (textToSend?: string): boolean => {
+  /**
+   * Envía un mensaje, con la voz activa o con la que se indique. Devuelve si se aceptó: no se
+   * acepta vacío ni con otra respuesta en camino.
+   */
+  const handleSend = (textToSend?: string, persona: string = activePersona): boolean => {
     const text = (textToSend || inputText).trim();
     if (!text || isLoading || enviandoRef.current) return false;
     enviandoRef.current = true;
@@ -242,12 +246,13 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
     // respuesta no se guarda: sería guardar la conversación de una cuenta en otra.
     const dueno = StorageService.getUserProfile().id;
 
+    const voz = personaOptions.find(p => p.id === persona) ?? selectedPersonaObj;
     const userMsg: ChatMessage = {
       id: `msg-${Date.now()}`,
       role: 'user',
       content: text,
       timestamp: new Date().toISOString(),
-      personaUsed: activePersona !== 'general' ? selectedPersonaObj.name : undefined,
+      personaUsed: voz.id !== 'general' ? voz.name : undefined,
     };
 
     const newMessages = [...messages, userMsg];
@@ -258,17 +263,17 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
     setSinGuardar(!StorageService.saveChatMessages(newMessages));
     setInputText('');
     setIsLoading(true);
-    void pedirRespuesta(text, dueno, userMsg.id);
+    void pedirRespuesta(text, dueno, userMsg.id, voz);
     return true;
   };
 
-  const pedirRespuesta = async (text: string, dueno: string, preguntaId: string) => {
+  const pedirRespuesta = async (text: string, dueno: string, preguntaId: string, voz: { id: string; name: string }) => {
     try {
       const reply = await GeminiService.sendMessage(
         text,
         messages,
         currentResult,
-        activePersona,
+        voz.id,
         userProfile,
         currentGender
       );
@@ -278,7 +283,7 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
         role: 'model',
         content: reply,
         timestamp: new Date().toISOString(),
-        personaUsed: activePersona !== 'general' ? selectedPersonaObj.name : undefined,
+        personaUsed: voz.id !== 'general' ? voz.name : undefined,
       };
 
       // Se añade a la conversación guardada, no a la copia de este envío: entretanto la vista

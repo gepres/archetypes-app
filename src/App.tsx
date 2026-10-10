@@ -31,7 +31,10 @@ export default function App() {
   const [currentTab, setCurrentTab] = useState<NavTab>('landing');
   const [testType, setTestType] = useState<'full' | 'quick'>('full');
   const [selectedArchetypeId, setSelectedArchetypeId] = useState<ArchetypeId | null>(null);
-  const [aiInitialPrompt, setAiInitialPrompt] = useState<string | undefined>(undefined);
+  // La consulta que llega de fuera al chat (Carta del Día, Comparador, una ficha), con la cuenta
+  // y la vida del chat en que se pidió: si entretanto se cambia de cuenta o se reinician los
+  // datos, no se envía en nombre de quien no la pidió.
+  const [aiPeticion, setAiPeticion] = useState<{ texto: string; dueno: string; epoch: number } | null>(null);
   const [aiInitialPersona, setAiInitialPersona] = useState<string>('general');
   // El chat se queda montado (oculto) una vez abierto: al navegar por la app no se pierde lo que
   // no se pudo guardar, ni una respuesta que llega mientras tanto. Se monta de nuevo al cambiar
@@ -71,6 +74,12 @@ export default function App() {
   const [userProfile, setUserProfile] = useState<UserProfile>(() =>
     StorageService.getUserProfile()
   );
+  // Al cambiar de cuenta, la consulta pendiente y la voz que la acompañaba se quedan con quien
+  // las pidió (el chat de la nueva cuenta ya no la recibe, ver aiPeticion): aquí se olvidan.
+  useEffect(() => {
+    setAiPeticion(null);
+    setAiInitialPersona('general');
+  }, [userProfile.id]);
   const [dailyCard] = useState<DailyOracleCard>(() =>
     StorageService.getDailyOracleCard()
   );
@@ -111,7 +120,7 @@ export default function App() {
   };
 
   const handleDiscussWithAi = (prompt: string, personaId?: string) => {
-    setAiInitialPrompt(prompt);
+    setAiPeticion({ texto: prompt, dueno: userProfile.id, epoch: chatEpoch });
     setAiInitialPersona(personaId || 'general');
     setCurrentTab('ai');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -192,9 +201,11 @@ export default function App() {
       )
     ) {
       localStorage.clear();
-      // Lo que el chat tenía en pantalla tampoco sobrevive al reinicio.
+      // Lo que el chat tenía en pantalla tampoco sobrevive al reinicio, ni una consulta pendiente.
       setChatAbierto(false);
       setChatEpoch(e => e + 1);
+      setAiPeticion(null);
+      setAiInitialPersona('general');
       setCurrentResult(null);
       setHistory([]);
       setChallenges(StorageService.getChallenges());
@@ -214,34 +225,33 @@ export default function App() {
   // El test se hace a pantalla completa, sin barra lateral, cabecera ni
   // navegacion inferior. Responder sesenta afirmaciones con el menu de la app
   // alrededor invita a irse; sin el, lo unico que hay que hacer es contestar.
-  if (currentTab === 'test') {
-    return (
+  // La bienvenida también es una página completa, no una ventana sobre la app.
+  // Las dos se ponen encima de la app, que se queda montada y oculta debajo: si la sustituyeran,
+  // el chat se desmontaría y se perdería lo que no se pudo guardar.
+  const pantallaCompleta =
+    currentTab === 'test' ? (
       <TestView
         testType={testType}
         onComplete={handleCompleteTest}
         onCancel={() => setCurrentTab(currentResult ? 'dashboard' : 'landing')}
       />
-    );
-  }
-
-  // La bienvenida es una página completa, no una ventana sobre la app.
-  if (isOnboardingOpen) {
-    return (
+    ) : isOnboardingOpen ? (
       <OnboardingView
         initialGender={userProfile.gender || 'universal'}
         onComplete={handleFinishOnboarding}
       />
-    );
-  }
+    ) : null;
 
   // El asistente es un chat: se le da altura definida y desplaza por dentro, en
   // vez de crecer hacia abajo y dejar el compositor al final del documento.
   const esChat = currentTab === 'ai';
 
   return (
+    <>
+    {pantallaCompleta}
     <div
       className={`bg-[#0B1110] text-[#F2EFE6] font-sans antialiased flex flex-col md:flex-row selection:bg-[#315C45] selection:text-[#F2EFE6] ${
-        esChat ? 'h-[100dvh] overflow-hidden' : 'min-h-screen'
+        pantallaCompleta ? 'hidden' : esChat ? 'h-[100dvh] overflow-hidden' : 'min-h-screen'
       }`}
     >
       {/* Desktop Sidebar */}
@@ -386,8 +396,12 @@ export default function App() {
               key={`${userProfile.id}:${chatEpoch}`}
               isActive={esChat}
               currentResult={currentResult}
-              initialPrompt={aiInitialPrompt}
-              onInitialPromptConsumed={() => setAiInitialPrompt(undefined)}
+              initialPrompt={
+                aiPeticion && aiPeticion.dueno === userProfile.id && aiPeticion.epoch === chatEpoch
+                  ? aiPeticion.texto
+                  : undefined
+              }
+              onInitialPromptConsumed={() => setAiPeticion(null)}
               initialPersona={aiInitialPersona}
               gender={userProfile.gender || 'male'}
               onGenderChange={handleGenderChange}
@@ -462,5 +476,6 @@ export default function App() {
         }}
       />
     </div>
+    </>
   );
 }
