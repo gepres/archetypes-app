@@ -234,7 +234,10 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
       if (!conRespuesta) return;
       mensajesRef.current = conRespuesta;
       setMessages(prev => insertarRespuesta(prev, preguntaId, respuesta) ?? prev);
-      setSinGuardar(!guardada);
+      // Puede poner la marca, nunca quitarla: que se guardara la respuesta no dice que se haya
+      // guardado todo lo que esta vista tiene (otra pregunta pudo quedarse sin guardar). Solo la
+      // quita guardar la conversación entera: enviar, reiniciar o cerrar la crisis.
+      if (!guardada) setSinGuardar(true);
     };
     vistasDelChat.add(recibir);
     return () => {
