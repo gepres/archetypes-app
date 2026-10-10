@@ -117,6 +117,11 @@ describe('detectCrisis', () => {
     'Me corté una vez a propósito',
     'Me corté un brazo adrede',
     'Me he cortado yo misma los brazos a propósito',
+    // Octava revisión de Codex: lo que no es inequívocamente cosmético, y la sangre
+    'Me corté la punta del dedo a propósito',
+    'Me corté una ceja adrede hasta sangrar',
+    'Me corté las puntas de los dedos a propósito',
+    'Me corté las uñas a propósito hasta sangrar',
   ];
 
   for (const frase of crisis) {
@@ -164,6 +169,8 @@ describe('detectCrisis', () => {
     'Me corté un poco el flequillo adrede',
     'Me he cortado yo misma el pelo a propósito',
     'Me corté las puntas a propósito',
+    'Me corté las puntas del pelo a propósito',
+    'Me corté cocinando hasta sangrar',
   ];
 
   for (const frase of sinCrisis) {

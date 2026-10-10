@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { StorageService, backupBelongsTo, emptyAccountData, hasOwnData, mergeAccountData, mergeChallengeProgress } from './storageService';
+import { StorageService, backupBelongsTo, emptyAccountData, hasOwnData, mergeAccountData, mergeChallengeProgress, ordenarConversacion } from './storageService';
 import { FirebaseService } from './firebaseService';
 import { calculateAssessmentResult } from './scoringEngine';
 import { QUESTIONS_DATA } from '../data/questionsData';
@@ -70,15 +70,24 @@ describe('chat: una respuesta tardía no pisa ni se pierde', () => {
     FirebaseService.syncFullDataToCloud = async () => true;
     return () => { FirebaseService.syncFullDataToCloud = original; };
   };
-  const msg = (id: string, role: 'user' | 'model', content = id) => ({ id, role, content, timestamp: '' });
+  const msg = (id: string, role: 'user' | 'model', minuto = 0, extra: object = {}) => ({
+    id,
+    role,
+    content: id,
+    timestamp: `2026-10-10T10:${String(minuto).padStart(2, '0')}:00.000Z`,
+    ...extra,
+  });
+  const ids = (xs?: { id: string }[] | null) => xs?.map(m => m.id);
 
   it('se guarda detrás de su pregunta aunque entretanto se haya escrito otra (volver a la pestaña)', () => {
     const restaurar = montar();
     try {
       StorageService.saveChatMessages([msg('msg-welcome-1', 'model'), msg('q1', 'user'), msg('q2', 'user')]);
       const tras = StorageService.addChatReply('uidX', 'q1', msg('r1', 'model'));
-      assert.deepEqual(tras?.map(m => m.id), ['msg-welcome-1', 'q1', 'r1', 'q2']);
-      assert.deepEqual(StorageService.getChatMessages().map(m => m.id), ['msg-welcome-1', 'q1', 'r1', 'q2']);
+      assert.deepEqual(ids(tras?.messages), ['msg-welcome-1', 'q1', 'r1', 'q2']);
+      assert.equal(tras?.guardada, true);
+      assert.deepEqual(ids(StorageService.getChatMessages()), ['msg-welcome-1', 'q1', 'r1', 'q2']);
+      assert.equal(StorageService.getChatMessages()[2].replyTo, 'q1', 'la respuesta recuerda su pregunta');
     } finally {
       restaurar();
     }
@@ -115,6 +124,83 @@ describe('chat: una respuesta tardía no pisa ni se pierde', () => {
     } finally {
       restaurar();
     }
+  });
+
+  it('si no se puede guardar, la respuesta se devuelve igual para que se vea (octava revisión de Codex)', () => {
+    const restaurar = montar();
+    try {
+      StorageService.saveChatMessages([msg('msg-welcome-1', 'model'), msg('q1', 'user')]);
+      const ls = (globalThis as any).localStorage;
+      const setItem = ls.setItem;
+      ls.setItem = (k: string, v: string) => {
+        if (k === 'archetypes_chat_messages') throw new Error('QuotaExceededError');
+        setItem(k, v);
+      };
+      const tras = StorageService.addChatReply('uidX', 'q1', msg('r1', 'model'));
+      ls.setItem = setItem;
+      assert.equal(tras?.guardada, false);
+      assert.deepEqual(ids(tras?.messages), ['msg-welcome-1', 'q1', 'r1']);
+      // Y la siguiente escritura, con esa conversación, la guarda.
+      assert.equal(StorageService.saveChatMessages(tras!.messages), true);
+      assert.deepEqual(ids(StorageService.getChatMessages()), ['msg-welcome-1', 'q1', 'r1']);
+    } finally {
+      restaurar();
+    }
+  });
+
+  it('una respuesta tardía sigue detrás de su pregunta al salir y volver a la cuenta (octava revisión de Codex)', () => {
+    const restaurar = montar();
+    try {
+      const A: UserProfile = { id: 'uidA', name: 'A', email: 'a@x.com', isGuest: false, createdAt: '', lastActive: '' };
+      const B: UserProfile = { id: 'uidB', name: 'B', email: 'b@x.com', isGuest: false, createdAt: '', lastActive: '' };
+      StorageService.enterAccount(A, null);
+      // q1 a las 10:01; q2 a las 10:02 con su respuesta a las 10:03; la de q1 llega a las 10:04.
+      StorageService.saveChatMessages([msg('w', 'model', 0), msg('q1', 'user', 1), msg('q2', 'user', 2), msg('r2', 'model', 3, { replyTo: 'q2' })]);
+      StorageService.addChatReply('uidA', 'q1', msg('r1', 'model', 4));
+      const esperado = ['w', 'q1', 'r1', 'q2', 'r2'];
+      assert.deepEqual(ids(StorageService.getChatMessages()), esperado);
+
+      StorageService.enterAccount(B, null);
+      StorageService.enterAccount(A, null);
+      assert.deepEqual(ids(StorageService.getChatMessages()), esperado, 'al volver de otra cuenta');
+
+      // Y combinada con la copia de la nube, que llega con el mismo historial.
+      const nube = { ...emptyAccountData(), chatMessages: StorageService.getChatMessages() };
+      StorageService.enterAccount(A, nube);
+      assert.deepEqual(ids(StorageService.getChatMessages()), esperado, 'al combinar con la nube');
+    } finally {
+      restaurar();
+    }
+  });
+});
+
+describe('ordenarConversacion', () => {
+  const m = (id: string, role: 'user' | 'model', minuto: number, replyTo?: string) => ({
+    id,
+    role,
+    content: id,
+    timestamp: `2026-10-10T10:${String(minuto).padStart(2, '0')}:00.000Z`,
+    ...(replyTo ? { replyTo } : {}),
+  });
+  const ids = (xs: { id: string }[]) => xs.map(x => x.id);
+
+  it('ordena por hora lo que no dice a qué contesta (conversaciones de antes)', () => {
+    assert.deepEqual(ids(ordenarConversacion([m('r1', 'model', 2), m('q1', 'user', 1)])), ['q1', 'r1']);
+  });
+
+  it('cada respuesta va detrás de su pregunta aunque llegara la última', () => {
+    const lista = [m('q1', 'user', 1), m('q2', 'user', 2), m('r2', 'model', 3, 'q2'), m('r1', 'model', 4, 'q1')];
+    assert.deepEqual(ids(ordenarConversacion(lista)), ['q1', 'r1', 'q2', 'r2']);
+  });
+
+  it('una respuesta cuya pregunta no está se queda en su hora, y no se pierde nada', () => {
+    const lista = [m('q2', 'user', 2), m('r1', 'model', 4, 'q1'), m('r2', 'model', 3, 'q2')];
+    assert.deepEqual(ids(ordenarConversacion(lista)), ['q2', 'r2', 'r1']);
+  });
+
+  it('un replyTo que apunta a otra respuesta no la saca de la conversación', () => {
+    const lista = [m('q1', 'user', 1), m('r1', 'model', 2, 'q1'), m('rr', 'model', 3, 'r1')];
+    assert.deepEqual(ids(ordenarConversacion(lista)), ['q1', 'r1', 'rr']);
   });
 });
 

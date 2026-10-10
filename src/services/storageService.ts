@@ -127,10 +127,26 @@ export function mergeAccountData(a: AccountData, b: AccountData): AccountData {
     const fecha = [x.completedAt, y.completedAt].filter(Boolean).sort().pop();
     return hecho && fecha ? { ...base, completed: true, completedAt: fecha } : { ...base, completed: hecho };
   });
-  const chatMessages = unirPorId(a.chatMessages ?? [], b.chatMessages ?? [], (_x, y) => y).sort(
-    (x, y) => instante(x.timestamp) - instante(y.timestamp)
-  );
+  const chatMessages = ordenarConversacion(unirPorId(a.chatMessages ?? [], b.chatMessages ?? [], (_x, y) => y));
   return { currentResult, history, journalEntries, challenges, chatMessages };
+}
+
+/**
+ * Ordena una conversación por hora, salvo las respuestas que saben a qué pregunta contestan
+ * (`replyTo`): esas van justo detrás de su pregunta. Una respuesta que tardó en llegar no se
+ * desplaza detrás de preguntas posteriores al combinar copias.
+ */
+export function ordenarConversacion(mensajes: ChatMessage[]): ChatMessage[] {
+  const porHora = [...mensajes].sort((x, y) => instante(x.timestamp) - instante(y.timestamp));
+  const preguntas = new Set(porHora.filter(m => m.role === 'user').map(m => m.id));
+  const enlazada = (m: ChatMessage) => m.role === 'model' && !!m.replyTo && preguntas.has(m.replyTo);
+  const resultado: ChatMessage[] = [];
+  for (const m of porHora) {
+    if (enlazada(m)) continue;
+    resultado.push(m);
+    if (m.role === 'user') resultado.push(...porHora.filter(r => enlazada(r) && r.replyTo === m.id));
+  }
+  return resultado;
 }
 
 /**
@@ -351,12 +367,15 @@ export const StorageService = {
     }
   },
 
-  saveChatMessages(messages: ChatMessage[]): void {
+  /** Devuelve si quedó guardada: con el almacenamiento lleno, la escritura falla. */
+  saveChatMessages(messages: ChatMessage[]): boolean {
     try {
       localStorage.setItem(STORAGE_KEYS.CHAT_MESSAGES, JSON.stringify(messages));
       this.syncActiveAccountData();
+      return true;
     } catch (e) {
       console.error("Error saving chat messages:", e);
+      return false;
     }
   },
 
@@ -383,18 +402,23 @@ export const StorageService = {
   /**
    * Guarda la respuesta a una pregunta en la conversación vigente, justo detrás de su pregunta,
    * sin pisar lo que se haya escrito mientras llegaba (la vista que la pidió puede llevar rato
-   * desmontada, y su copia de la conversación ser antigua). Se descarta, devolviendo null, si
-   * la cuenta abierta ya no es la que preguntó o si la pregunta ya no está porque se reinició
-   * la conversación.
+   * desmontada, y su copia de la conversación ser antigua). La respuesta recuerda su pregunta
+   * (`replyTo`), para seguir detrás de ella al combinar copias. Se descarta, devolviendo null,
+   * si la cuenta abierta ya no es la que preguntó o si la pregunta ya no está porque se reinició
+   * la conversación. Si no se pudo guardar, la conversación se devuelve igual con `guardada`
+   * en false: la respuesta no se pierde de la vista y se guarda con la siguiente escritura.
    */
-  addChatReply(dueno: string, preguntaId: string, respuesta: ChatMessage): ChatMessage[] | null {
+  addChatReply(
+    dueno: string,
+    preguntaId: string,
+    respuesta: ChatMessage
+  ): { messages: ChatMessage[]; guardada: boolean } | null {
     if (this.getUserProfile().id !== dueno) return null;
     const actual = this.getChatMessages();
     const i = actual.findIndex(m => m.id === preguntaId && m.role === 'user');
     if (i === -1) return null;
-    const messages = [...actual.slice(0, i + 1), respuesta, ...actual.slice(i + 1)];
-    this.saveChatMessages(messages);
-    return messages;
+    const messages = [...actual.slice(0, i + 1), { ...respuesta, replyTo: preguntaId }, ...actual.slice(i + 1)];
+    return { messages, guardada: this.saveChatMessages(messages) };
   },
 
   // User Profile & Account Management

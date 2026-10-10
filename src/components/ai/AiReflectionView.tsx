@@ -40,7 +40,7 @@ interface AiReflectionViewProps {
 
 // Las vistas del chat montadas ahora mismo. Una respuesta que llega cuando su vista ya se
 // desmontó (se fue a otra pestaña y volvió) avisa a la que esté montada para que la muestre.
-const vistasDelChat = new Set<() => void>();
+const vistasDelChat = new Set<(messages: ChatMessage[], guardada: boolean) => void>();
 
 /** El nombre legible del modelo activo, no su identificador. */
 function nombreDelModelo(): string {
@@ -75,6 +75,8 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
   const [inputText, setInputText] = useState('');
   const [activePersona, setActivePersona] = useState<string>(initialPersona);
   const [isLoading, setIsLoading] = useState(false);
+  // La última escritura de la conversación falló (almacenamiento lleno): se ve, pero no se guardó.
+  const [sinGuardar, setSinGuardar] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   // La eleccion de voz se hace en un selector aparte, no ocupando media pantalla.
   const [isPersonaPickerOpen, setIsPersonaPickerOpen] = useState(false);
@@ -188,7 +190,12 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
   const montadoRef = useRef(true);
   useEffect(() => {
     montadoRef.current = true;
-    const recargar = () => setMessages(StorageService.getChatMessages());
+    // Recibe la conversación ya con la respuesta, no la relee: si no se pudo guardar, al menos
+    // se ve, y se guarda con la siguiente escritura.
+    const recargar = (lista: ChatMessage[], guardada: boolean) => {
+      setMessages(lista);
+      setSinGuardar(!guardada);
+    };
     vistasDelChat.add(recargar);
     return () => {
       montadoRef.current = false;
@@ -218,7 +225,7 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
 
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
-    StorageService.saveChatMessages(newMessages);
+    setSinGuardar(!StorageService.saveChatMessages(newMessages));
     setInputText('');
     setIsLoading(true);
     void pedirRespuesta(text, dueno, userMsg.id);
@@ -246,8 +253,9 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
 
       // Se añade a la conversación guardada, no a la copia de este envío: entretanto la vista
       // pudo desmontarse y volver, o la persona pudo escribir otra cosa.
-      if (StorageService.addChatReply(dueno, preguntaId, aiMsg)) {
-        vistasDelChat.forEach(recargar => recargar());
+      const conRespuesta = StorageService.addChatReply(dueno, preguntaId, aiMsg);
+      if (conRespuesta) {
+        vistasDelChat.forEach(recargar => recargar(conRespuesta.messages, conRespuesta.guardada));
         if (montadoRef.current) refreshAiStatus();
       }
     } catch (err) {
@@ -515,6 +523,13 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
 
         <div ref={messagesEndRef} />
       </div>
+
+      {/* ── La conversación no se pudo guardar en este dispositivo ───────── */}
+      {sinGuardar && (
+        <p role="status" className="shrink-0 mx-3 sm:mx-4 mb-2 px-3.5 py-2.5 rounded-2xl bg-[#121A17] border border-[#5C4A31] text-[11px] text-[#D6A84F] leading-relaxed">
+          No pude guardar la conversación en este dispositivo: puede que el almacenamiento esté lleno. Sigue aquí mientras no cierres la app, y se guardará con tu próximo mensaje si hay espacio.
+        </p>
+      )}
 
       {/* ── Crisis abierta: una salida explícita que no obliga a borrar nada ─ */}
       {crisisAbierta && !isLoading && (

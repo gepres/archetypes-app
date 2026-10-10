@@ -219,6 +219,8 @@ export interface ChatMessage {
   personaUsed?: string;
   /** Lo pone solo el botón «Ya estoy a salvo»: cierra una crisis. Ningún texto generado lo tiene. */
   crisisClosed?: boolean;
+  /** En una respuesta, el id de la pregunta a la que contesta: va detrás de ella aunque llegue tarde. */
+  replyTo?: string;
 }
 
 export interface UserProfile {

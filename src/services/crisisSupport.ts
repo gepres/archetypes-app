@@ -45,11 +45,14 @@ const MODISMOS: RegExp[] = [
 // cortado", "me lastimaba"…
 // Cortarse el pelo o las uñas no es hacerse daño; cortarse el brazo o las muñecas, sí. Por
 // eso se excluyen solo esos objetos, no cualquier cosa que venga detrás del verbo. El artículo
-// es obligatorio: sin él, «me corté una vez» se leería como «me corté una (uña)».
+// es obligatorio: sin él, «me corté una vez» se leería como «me corté una (uña)». Solo entra
+// lo inequívocamente cosmético: «la punta» o «una ceja» pueden ser una lesión, y «las puntas»
+// solo cuentan si no son «de los dedos».
 const CORTE_INOCUO =
   '(yo mism[oa] )?' +
   '(un poco (el|la|los|las|de)|el|la|los|las|mi|mis|tu|tus|su|sus|un|una|unos|unas) ' +
-  '(pelo|cabello|flequillo|fleco|melena|puntas?|mechon|mechones|rizos?|coleta|trenza|barba|bigote|patillas?|cejas?|una|unas)\\b';
+  '(pelo|cabello|flequillo|fleco|melena|puntas(?! de\\b)|mechon|mechones|rizos?|coleta|trenza|barba|bigote|patillas?|una|unas)\\b';
+const CORTE = 'me (corte|corto|cortaba|he cortado)';
 const ACTO_DANO =
   `(me (hice|hago|hacia|he hecho) dano|me (lastime|lastimo|lastimaba|he lastimado|golpee|golpeo|he golpeado|queme|quemo|he quemado)|me (corte|corto|cortaba|he cortado)(?! ${CORTE_INOCUO}))`;
 const INTENCION = '(a proposito|adrede|aposta|queriendo|intencionadamente)';
@@ -87,6 +90,9 @@ const SENALES: RegExp[] = [
   // La intención de no despertar, aunque no diga cantidades: "tomarme las pastillas para no
   // despertar".
   /\bpara no (despertar|volver a despertar|seguir aqui)\b/,
+  // Hacerse sangre a propósito es una lesión, se corte lo que se corte: aquí no vale la
+  // excepción de lo cosmético. Sin intención («me corté cocinando hasta sangrar») no cuenta.
+  new RegExp(`^(?=.*\\b${INTENCION}\\b).*${SIN_NEGAR}\\b${CORTE}\\b.{0,60}\\bhasta (sangrar|hacerme sangre|que (me )?sangr)`),
   /\bdormir(me)? para siempre\b/,
   // Lo accidental ("me hice daño en la rodilla", "me lastimé entrenando") no cuenta.
   /\bme hago dano\b(?! (en|al|entrenando|jugando|corriendo|haciendo))/,
