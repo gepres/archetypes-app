@@ -6,7 +6,7 @@
  *
  * Todo es puro: recibe el resultado y devuelve la elección, sin tocar el almacenamiento.
  */
-import { getArchetype, withA, withDe } from '../data/archetypesData';
+import { ARCHETYPES_LIST, getArchetype, withA, withDe } from '../data/archetypesData';
 import { ArchetypeId, AssessmentResult, Challenge, GenderMode } from '../types';
 import { listNames } from './scoringEngine';
 
@@ -31,7 +31,7 @@ export function growthArchetypes(result: AssessmentResult): ArchetypeId[] {
 }
 
 /** Un nombre dentro de una frase: «el Rey», «la Reina», «el arquetipo Rey / Reina». */
-function enFrase(name: string): string {
+export function enFrase(name: string): string {
   if (name.startsWith('El ')) return `el ${name.slice(3)}`;
   if (name.startsWith('La ')) return `la ${name.slice(3)}`;
   return `el arquetipo ${name}`;
@@ -73,6 +73,27 @@ export function recommendChallenges(challenges: Challenge[], result: AssessmentR
   elegir(c => !c.completed);
   elegir(() => true);
   return elegidas;
+}
+
+/**
+ * El arquetipo de la Carta del Día. Sin mapa, el mismo para todo el mundo, rotando por los 18.
+ * Con mapa, la carta alterna entre las figuras que lo encabezan y las que menos aparecieron;
+ * uno de cada tres días trae el del ciclo general, para que también lleguen las demás.
+ * `dia`: el número del día local (numeroDeDia).
+ */
+export function arquetipoDelDia(dia: number, result: AssessmentResult | null): ArchetypeId {
+  const general = ARCHETYPES_LIST[((dia % ARCHETYPES_LIST.length) + ARCHETYPES_LIST.length) % ARCHETYPES_LIST.length].id;
+  if (!result || dia % 3 === 0) return general;
+  const propias = [...new Set([...leadingArchetypes(result), ...growthArchetypes(result)])];
+  return propias.length ? propias[dia % propias.length] : general;
+}
+
+/** De dónde sale la carta de hoy respecto a tu mapa, si sale de él. */
+export function relacionConTuMapa(id: ArchetypeId, result: AssessmentResult | null): 'cabeza' | 'crecer' | null {
+  if (!result) return null;
+  if (leadingArchetypes(result).includes(id)) return 'cabeza';
+  if (growthArchetypes(result).includes(id)) return 'crecer';
+  return null;
 }
 
 /**

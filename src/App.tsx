@@ -80,9 +80,6 @@ export default function App() {
     setAiPeticion(null);
     setAiInitialPersona('general');
   }, [userProfile.id]);
-  const [dailyCard] = useState<DailyOracleCard>(() =>
-    StorageService.getDailyOracleCard()
-  );
 
   // Quien llega desde la V2 acaba de hacer el test: tiene que aterrizar en su
   // mapa, no en la portada. Sin esto el resultado queda guardado pero invisible,
@@ -245,6 +242,10 @@ export default function App() {
   // El asistente es un chat: se le da altura definida y desplaza por dentro, en
   // vez de crecer hacia abajo y dejar el compositor al final del documento.
   const esChat = currentTab === 'ai';
+
+  // La Carta del Día se calcula al abrirla, no al arrancar la app: así cambia pasada la
+  // medianoche aunque la app siga abierta, y se elige para el mapa que hay ahora.
+  const dailyCard = isDailyOracleOpen ? StorageService.getDailyOracleCard(currentResult) : null;
 
   return (
     <>
@@ -463,6 +464,7 @@ export default function App() {
         isOpen={isDailyOracleOpen}
         onClose={() => setIsDailyOracleOpen(false)}
         card={dailyCard}
+        currentResult={currentResult}
         gender={userProfile.gender || DEFAULT_GENDER}
         onGoToJournalWithPrompt={(prompt, archId) => {
           handleAddJournalEntry({

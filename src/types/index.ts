@@ -268,7 +268,8 @@ export interface DailyOracleCard {
   archetypeId: ArchetypeId;
   mantra: string;
   affirmation: string;
-  dailyFocus: string;
+  /** El resultado para el que se eligió la carta; null si se eligió sin mapa. */
+  basadaEn?: string | null;
   morningReflection: string;
   eveningInquiry: string;
 }

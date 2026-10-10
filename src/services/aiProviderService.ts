@@ -18,7 +18,8 @@ import {
   crisisInConversation,
   detectCrisis,
 } from './crisisSupport';
-import { fechaLocal, motivoAmable, notaConsultasAgotadas } from './estadoAsistente';
+import { motivoAmable, notaConsultasAgotadas } from './estadoAsistente';
+import { fechaLocal } from './fechaLocal';
 export { describirEstadoIA } from './estadoAsistente';
 
 // Cómo se llama cada perspectiva en el prompt. Es una preferencia de lenguaje para nombrar los

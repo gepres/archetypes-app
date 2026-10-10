@@ -1,4 +1,4 @@
-import { ARCHETYPES_LIST, withDe } from '../data/archetypesData';
+import { ARCHETYPES_LIST } from '../data/archetypesData';
 import { INITIAL_CHALLENGES } from '../data/challengesData';
 import {
   AccountRecord,
@@ -16,6 +16,10 @@ import {
 import { FirebaseService } from './firebaseService';
 import { adaptAssessmentResultToGender } from './scoringEngine';
 import { CRISIS_CLOSED_NOTE } from './crisisSupport';
+import { ARCHETYPE_DRIVES } from '../data/archetypePairs';
+import { ORACLE_TEXTS } from '../data/oracleTexts';
+import { fechaLocal, numeroDeDia } from './fechaLocal';
+import { arquetipoDelDia } from './personalization';
 
 // Mientras se aplican de golpe los datos de una cuenta no se sube nada a la nube (ver
 // `applyAccountData`).
@@ -189,13 +193,19 @@ export function ordenarConversacion(mensajes: ChatMessage[]): ChatMessage[] {
  * La carta guardada se escribió con el nombre universal («Sanador / Sanadora»), así que quien
  * la muestra los vuelve a componer con el arquetipo en la perspectiva elegida.
  */
+/**
+ * Los textos de la Carta del Día: la afirmación sale de lo que empuja a hacer cada arquetipo, y
+ * la pregunta de la mañana y la de la noche son propias de cada uno (ORACLE_TEXTS). Antes eran
+ * tres plantillas iguales para los 18 («la energía luminosa del…»).
+ */
 export function composeDailyOracleTexts(
   archetype: Archetype
 ): Pick<DailyOracleCard, 'affirmation' | 'morningReflection' | 'eveningInquiry'> {
+  const id = archetype.id as ArchetypeId;
   return {
-    affirmation: `Hoy elijo manifestar la energía luminosa ${withDe(archetype.name)}: ${archetype.strength}`,
-    morningReflection: `Al iniciar tu día: ¿cómo puedes responder a tus compromisos con el espíritu ${withDe(archetype.name)}?`,
-    eveningInquiry: `Al cerrar tu jornada: ¿en qué momentos te mantuviste fiel a tu centro, y dónde asomó su sombra (${archetype.shadow})?`,
+    affirmation: `Hoy elijo ${ARCHETYPE_DRIVES[id]}.`,
+    morningReflection: ORACLE_TEXTS[id].manana,
+    eveningInquiry: ORACLE_TEXTS[id].noche,
   };
 }
 
@@ -835,29 +845,34 @@ export const StorageService = {
   },
 
   // Daily Archetype Oracle Card
-  getDailyOracleCard(): DailyOracleCard {
-    const todayStr = new Date().toISOString().split('T')[0];
+  /**
+   * La Carta del Día. Cambia a medianoche local (antes, a la de UTC: a las 19:00 en Perú, porque
+   * se comparaba la fecha UTC con un arquetipo elegido por el día local) y se elige para el mapa
+   * actual (arquetipoDelDia). Se guarda para que no cambie durante el día, salvo que cambie el
+   * mapa en que se basa.
+   */
+  getDailyOracleCard(result: AssessmentResult | null = null, ahora: Date = new Date()): DailyOracleCard {
+    const hoy = fechaLocal(ahora);
+    const basadaEn = result?.id ?? null;
     try {
       const stored = localStorage.getItem(STORAGE_KEYS.SAVED_DAILY_CARD);
       if (stored) {
         const parsed: DailyOracleCard = JSON.parse(stored);
-        if (parsed.date === todayStr) {
+        if (parsed.date === hoy && (parsed.basadaEn ?? null) === basadaEn && ORACLE_TEXTS[parsed.archetypeId]) {
           return parsed;
         }
       }
     } catch (e) {
-      // generate fresh
+      // se calcula de nuevo
     }
 
-    // Pick deterministic or rotating archetype for the day based on day of year
-    const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 1000 / 60 / 60 / 24);
-    const archetype = ARCHETYPES_LIST[dayOfYear % ARCHETYPES_LIST.length];
+    const archetype = ARCHETYPES_LIST.find(a => a.id === arquetipoDelDia(numeroDeDia(ahora), result)) ?? ARCHETYPES_LIST[0];
 
     const oracleCard: DailyOracleCard = {
-      date: todayStr,
+      date: hoy,
       archetypeId: archetype.id,
       mantra: archetype.mantra,
-      dailyFocus: archetype.centralQuestion,
+      basadaEn,
       ...composeDailyOracleTexts(archetype),
     };
 

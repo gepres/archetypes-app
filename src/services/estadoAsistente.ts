@@ -3,6 +3,8 @@
  * dependencias del entorno, para poder probarlo.
  */
 
+export { fechaLocal } from './fechaLocal';
+
 /** Lo que devuelve AIProviderService.getUsageStatus: aquí sin importar el servicio, que lee el entorno de Vite. */
 export interface EstadoIA {
   activeKeySource: 'custom' | 'app' | 'local' | 'none';
@@ -66,15 +68,6 @@ export function motivoAmable(err: unknown, clavePropia = false): string {
     return 'El asistente de IA está saturado ahora mismo, así que te respondo desde tu mapa simbólico. Prueba de nuevo en un rato.';
   }
   return 'No pude conectar con el asistente de IA ahora mismo, así que te respondo desde tu mapa simbólico. Prueba de nuevo en un rato.';
-}
-
-/**
- * La fecha de hoy en el calendario de quien usa la app (AAAA-MM-DD). Con toISOString sería la de
- * UTC, y las consultas se renovarían a las 19:00 en Perú en vez de a medianoche.
- */
-export function fechaLocal(d: Date = new Date()): string {
-  const dos = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${dos(d.getMonth() + 1)}-${dos(d.getDate())}`;
 }
 
 /** La nota que acompaña a la respuesta cuando ya se usaron las consultas incluidas de hoy. */
