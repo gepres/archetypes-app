@@ -20,7 +20,7 @@ import { getMapLead } from '../../services/scoringEngine';
 import { crisisInConversation } from '../../services/crisisSupport';
 import { GeminiService } from '../../services/geminiService';
 import { AIProviderService, PROVIDER_OPTIONS } from '../../services/aiProviderService';
-import { StorageService, insertarRespuesta } from '../../services/storageService';
+import { StorageService, insertarRespuesta, unirConversaciones } from '../../services/storageService';
 import { suggestedPrompts } from '../../services/personalization';
 import { ArchetypeId, AssessmentResult, ChatMessage, GenderMode, UserProfile } from '../../types';
 import { ArchetypeIllustratedArtwork } from '../archetypes/ArchetypeIllustratedArtwork';
@@ -87,6 +87,18 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
     mensajesRef.current = lista;
     setMessages(lista);
   };
+  // Un reinicio que no se pudo guardar: hasta que se guarde algo, lo que hay en el disco es
+  // justo lo que se quiso borrar, y no se une con nada.
+  const reinicioSinGuardarRef = useRef(false);
+  /**
+   * La conversación sobre la que se escribe entera (enviar, cerrar la crisis): la de la vista
+   * unida a la del disco, para no pisar lo que entró por otro lado mientras tanto (mensajes
+   * recuperados de la nube al volver a entrar en la misma cuenta).
+   */
+  const conversacionVigente = () =>
+    reinicioSinGuardarRef.current
+      ? mensajesRef.current
+      : unirConversaciones(StorageService.getChatMessages(), mensajesRef.current);
   const [inputText, setInputText] = useState('');
   const [activePersona, setActivePersona] = useState<string>(initialPersona);
   const [isLoading, setIsLoading] = useState(false);
@@ -197,8 +209,9 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
     const antes = activoAntesRef.current;
     activoAntesRef.current = isActive;
     if (!isActive || antes) return;
-    // Antes que la consulta de fuera que pueda llegar con la vuelta: se envía sobre esta.
-    if (!sinGuardar) ponerMensajes(StorageService.getChatMessages());
+    // Antes que la consulta de fuera que pueda llegar con la vuelta: se envía sobre esta. Si
+    // todo estaba guardado, la del disco; si no, la del disco unida a lo que solo tiene la vista.
+    ponerMensajes(sinGuardar ? conversacionVigente() : StorageService.getChatMessages());
     refreshAiStatus();
   }, [isActive]);
 
@@ -270,11 +283,14 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
       personaUsed: voz.id !== 'general' ? voz.name : undefined,
     };
 
-    // Sobre la conversación vigente, no sobre la del último render (ver mensajesRef).
-    const historial = mensajesRef.current;
+    // Sobre la conversación vigente, no sobre la del último render (ver mensajesRef), y unida
+    // a la del disco para no pisar lo que entró por otro lado.
+    const historial = conversacionVigente();
     const newMessages = [...historial, userMsg];
     ponerMensajes(newMessages);
-    setSinGuardar(!StorageService.saveChatMessages(newMessages));
+    const guardada = StorageService.saveChatMessages(newMessages);
+    if (guardada) reinicioSinGuardarRef.current = false;
+    setSinGuardar(!guardada);
     setInputText('');
     setIsLoading(true);
     void pedirRespuesta(text, dueno, userMsg.id, voz, historial);
@@ -323,6 +339,7 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
   const handleClearHistory = () => {
     if (window.confirm('¿Deseas reiniciar la conversación de reflexión?')) {
       const { messages: vacia, guardada } = StorageService.clearChatMessages();
+      reinicioSinGuardarRef.current = !guardada;
       ponerMensajes(vacia);
       setSinGuardar(!guardada);
     }
@@ -596,7 +613,8 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
           <button
             type="button"
             onClick={() => {
-              const { messages: cerrada, guardada } = StorageService.closeCrisis(mensajesRef.current);
+              const { messages: cerrada, guardada } = StorageService.closeCrisis(conversacionVigente());
+              if (guardada) reinicioSinGuardarRef.current = false;
               ponerMensajes(cerrada);
               setSinGuardar(!guardada);
             }}

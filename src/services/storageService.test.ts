@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { StorageService, backupBelongsTo, emptyAccountData, hasOwnData, insertarRespuesta, mergeAccountData, mergeChallengeProgress, ordenarConversacion } from './storageService';
+import { StorageService, backupBelongsTo, emptyAccountData, hasOwnData, insertarRespuesta, mergeAccountData, mergeChallengeProgress, ordenarConversacion, unirConversaciones } from './storageService';
 import { FirebaseService } from './firebaseService';
 import { calculateAssessmentResult } from './scoringEngine';
 import { QUESTIONS_DATA } from '../data/questionsData';
@@ -283,6 +283,28 @@ describe('chat: una respuesta tardía no pisa ni se pierde', () => {
     } finally {
       restaurar();
     }
+  });
+});
+
+describe('unirConversaciones: lo que solo tiene la vista y lo que entró en el disco, juntos', () => {
+  const m = (id: string, role: 'user' | 'model', minuto: number, replyTo?: string) => ({
+    id,
+    role,
+    content: id,
+    timestamp: `2026-10-10T10:${String(minuto).padStart(2, '0')}:00.000Z`,
+    ...(replyTo ? { replyTo } : {}),
+  });
+  const ids = (xs: { id: string }[]) => xs.map(x => x.id);
+
+  it('el caso de Codex: la vista no pudo guardar r1 y la nube trajo q2/r2; se conservan todos', () => {
+    const disco = [m('w', 'model', 0), m('q1', 'user', 1), m('nube-q', 'user', 3), m('nube-r', 'model', 4, 'nube-q')];
+    const vista = [m('w', 'model', 0), m('q1', 'user', 1), m('r1', 'model', 2, 'q1')];
+    assert.deepEqual(ids(unirConversaciones(disco, vista)), ['w', 'q1', 'r1', 'nube-q', 'nube-r']);
+  });
+
+  it('lo que está en las dos copias aparece una vez', () => {
+    const una = [m('w', 'model', 0), m('q1', 'user', 1), m('r1', 'model', 2, 'q1')];
+    assert.deepEqual(ids(unirConversaciones(una, una)), ['w', 'q1', 'r1']);
   });
 });
 

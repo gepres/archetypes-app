@@ -146,6 +146,16 @@ export function insertarRespuesta(
 }
 
 /**
+ * La conversación del disco y la de una vista, juntas: lo que la vista añadió sin poder
+ * guardarlo y lo que entró en el disco por otro lado (mensajes recuperados de la nube al volver
+ * a entrar en la misma cuenta) se conservan los dos, sin repetir, con cada respuesta detrás de
+ * su pregunta. Se usa antes de guardar la conversación entera, para no pisar ninguna de las dos.
+ */
+export function unirConversaciones(guardada: ChatMessage[], enVista: ChatMessage[]): ChatMessage[] {
+  return ordenarConversacion(unirPorId(guardada, enVista, (_x, y) => y));
+}
+
+/**
  * Ordena una conversación por hora, salvo las respuestas que saben a qué pregunta contestan
  * (`replyTo`): esas van justo detrás de su pregunta. Una respuesta que tardó en llegar no se
  * desplaza detrás de preguntas posteriores al combinar copias.
