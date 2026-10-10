@@ -31,6 +31,9 @@ export const RevealScreen: React.FC<RevealScreenProps> = ({
   const prefersReducedMotion = useReducedMotion();
   const [revelado, setRevelado] = useState(false);
   const [copiado, setCopiado] = useState(false);
+  // Si ni compartir ni copiar funcionaron, el texto queda a la vista para copiarlo a mano, con
+  // un botón propio (un gesto nuevo: el del primer toque ya se gastó).
+  const [paraCopiar, setParaCopiar] = useState<string | null>(null);
   const yaHabloRef = useRef(false);
 
   const dominante = getArchetype(resultado.dominantArchetype.archetypeId, 'universal');
@@ -147,26 +150,33 @@ Descubre el tuyo escuchando:`;
       if (desenlace !== 'fallo') return;
     }
 
-    // 2. El portapapeles.
-    try {
-      await navigator.clipboard.writeText(completo);
-      avisarCopiado();
-      return;
-    } catch {}
+    // 2 y 3. El portapapeles; y si tampoco (en Safari exige el gesto, que la hoja de compartir
+    // pudo gastar), el texto a la vista para copiarlo con un toque nuevo. Solo se dice
+    // «copiado» si de verdad se copió.
+    if (await copiarTexto(completo)) avisarCopiado();
+    else setParaCopiar(completo);
+  };
 
-    // 3. Ultimo recurso, para navegadores sin permiso de portapapeles.
+  /** Copia al portapapeles; devuelve si lo consiguió de verdad. */
+  const copiarTexto = async (texto: string): Promise<boolean> => {
+    try {
+      await navigator.clipboard.writeText(texto);
+      return true;
+    } catch {}
     try {
       const area = document.createElement('textarea');
-      area.value = completo;
+      area.value = texto;
       area.setAttribute('readonly', '');
       area.style.position = 'fixed';
       area.style.opacity = '0';
       document.body.appendChild(area);
       area.select();
-      document.execCommand('copy');
+      const ok = document.execCommand('copy');
       document.body.removeChild(area);
-      avisarCopiado();
-    } catch {}
+      return ok;
+    } catch {
+      return false;
+    }
   };
 
   // La revelacion se cuenta sola, una vez.
@@ -330,6 +340,33 @@ Descubre el tuyo escuchando:`;
               </>
             )}
           </button>
+
+          {paraCopiar && (
+            <div className="rounded-2xl border border-[#23332D] bg-[#101917] p-3 space-y-2 text-left" role="status">
+              <p className="text-xs text-[#C5CFC7]">No pude compartirlo desde aquí. Copia el texto y pégalo donde quieras:</p>
+              <textarea
+                readOnly
+                value={paraCopiar}
+                rows={4}
+                onFocus={e => e.currentTarget.select()}
+                aria-label="Texto para compartir"
+                className="w-full rounded-xl bg-[#0B1110] border border-[#23332D] p-2 text-xs text-[#F2EFE6]"
+              />
+              <button
+                type="button"
+                onClick={async () => {
+                  if (await copiarTexto(paraCopiar)) {
+                    setParaCopiar(null);
+                    setCopiado(true);
+                    window.setTimeout(() => setCopiado(false), 2400);
+                  }
+                }}
+                className="w-full px-4 py-2.5 rounded-xl bg-[#1A2521] border border-[#315C45] text-xs font-semibold text-[#D6A84F]"
+              >
+                Copiar
+              </button>
+            </div>
+          )}
 
           <div className="flex items-center justify-center gap-4 text-[11px] text-[#4E5C55]">
             <button
