@@ -14,7 +14,7 @@ import {
 import { getArchetype, getArchetypeName } from '../../data/archetypesData';
 import { getMapLead } from '../../services/scoringEngine';
 import { recommendChallenges } from '../../services/personalization';
-import { ArchetypeId, AssessmentResult, Challenge, GenderMode, JournalEntry } from '../../types';
+import { ArchetypeId, AssessmentResult, Challenge, GenderMode, JournalEntry, DEFAULT_GENDER } from '../../types';
 import { DimensionBar } from '../common/DimensionBar';
 import { RadarChartComponent } from '../common/RadarChartComponent';
 import { NavTab } from '../layout/Sidebar';
@@ -45,10 +45,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onStartTest,
   onToggleChallenge,
   onOpenAiSettings,
-  gender = 'male',
+  gender = DEFAULT_GENDER,
   onGenderChange,
 }) => {
-  const currentGender = gender || 'male';
+  const currentGender = gender || DEFAULT_GENDER;
 
   // Las prácticas que se recomiendan, elegidas para este mapa. Se eligen al abrir la pantalla y
   // al cambiar de resultado, no a cada marca: la que se marca como hecha no desaparece de debajo
@@ -61,16 +61,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   if (!currentResult) {
     return (
       <div className="max-w-2xl mx-auto text-center py-16 space-y-6">
-        {onGenderChange && (
-          <div className="flex justify-center mb-4">
-            <PerspectiveSwitcher
-              gender={currentGender}
-              onGenderChange={onGenderChange}
-              size="sm"
-              showLabel={true}
-            />
-          </div>
-        )}
         <div className="w-16 h-16 rounded-2xl bg-[#121A17] border border-[#315C45] flex items-center justify-center mx-auto text-[#D6A84F]">
           <Compass className="w-8 h-8" />
         </div>
@@ -115,24 +105,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   return (
     <div id="dashboard-view" className="max-w-5xl mx-auto space-y-8 pb-24 pt-2">
       {/* Top Perspective Switcher Banner */}
-      {onGenderChange && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 bg-[#121A17] border border-[#23332D] rounded-2xl shadow-sm">
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-[#D6A84F]">✦</span>
-            <span className="text-xs text-[#C5CFC7] font-medium">
-              Perspectiva de tu Mapa Arquetípico:
-            </span>
-          </div>
-          <PerspectiveSwitcher
-            gender={currentGender}
-            onGenderChange={onGenderChange}
-            size="sm"
-            showLabel={false}
-          />
-        </div>
-      )}
-
-      {/* Top Banner */}
+      {/* Top Banner. La perspectiva no ocupa lo alto: se cambia al final de la pantalla. */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#1E2A25] pb-6">
         <div>
           <div className="flex items-center gap-2 text-xs text-[#D6A84F] font-semibold tracking-wide">
@@ -475,6 +448,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </button>
         </div>
       </div>
+
+      {onGenderChange && (
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-2 pt-2">
+          <span className="text-[11px] text-[#8A968D]">Ver tu mapa en otra perspectiva</span>
+          <PerspectiveSwitcher gender={currentGender} onGenderChange={onGenderChange} size="sm" showLabel={false} />
+        </div>
+      )}
     </div>
   );
 };

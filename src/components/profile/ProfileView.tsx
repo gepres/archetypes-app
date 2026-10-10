@@ -31,7 +31,7 @@ import { getMapLead } from '../../services/scoringEngine';
 import { StorageService, backupBelongsTo } from '../../services/storageService';
 import { FirebaseService } from '../../services/firebaseService';
 import { AIProviderService } from '../../services/aiProviderService';
-import { AccountRecord, AssessmentResult, GenderMode, UserProfile } from '../../types';
+import { AccountRecord, AssessmentResult, GenderMode, UserProfile, DEFAULT_GENDER } from '../../types';
 import { NavTab } from '../layout/Sidebar';
 import { AiSettingsModal } from '../ai/AiSettingsModal';
 import { InstallAppCard } from '../pwa/InstallAppCard';
@@ -98,7 +98,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 }) => {
   const [name, setName] = useState(userProfile.name);
   const [email, setEmail] = useState(userProfile.email || '');
-  const [gender, setGender] = useState<GenderMode>(userProfile.gender || 'male');
+  const [gender, setGender] = useState<GenderMode>(userProfile.gender || DEFAULT_GENDER);
   const [avatarEmoji, setAvatarEmoji] = useState(userProfile.avatarEmoji || '👑');
   const [bio, setBio] = useState(userProfile.bio || '');
   const [savedSuccess, setSavedSuccess] = useState(false);
@@ -535,7 +535,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                         {(() => {
                           // Un resultado antiguo o roto no debe tumbar la lista.
                           try {
-                            const lead = getMapLead(item, userProfile.gender || 'male');
+                            const lead = getMapLead(item, userProfile.gender || DEFAULT_GENDER);
                             return lead.kind === 'single' ? `Dominante: ${lead.label}` : lead.label;
                           } catch {
                             return item.dominantArchetype?.name ?? '';

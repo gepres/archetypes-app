@@ -14,7 +14,7 @@ import {
 import { ARCHETYPES, getArchetype } from '../../data/archetypesData';
 import { ARCHETYPE_VISUALS } from '../../data/archetypeImages';
 import { composeDailyOracleTexts } from '../../services/storageService';
-import { DailyOracleCard, GenderMode, UserProfile } from '../../types';
+import { DailyOracleCard, GenderMode, UserProfile, DEFAULT_GENDER } from '../../types';
 
 /** «sábado 10 de octubre» a partir de la fecha de la carta, que se guarda como 2026-10-10. */
 function formatCardDate(isoDate: string): string {
@@ -39,7 +39,7 @@ interface DailyOracleModalProps {
 
 export const DailyOracleModal: React.FC<DailyOracleModalProps> = ({
   isOpen,
-  gender = 'male',
+  gender = DEFAULT_GENDER,
   onClose,
   card,
   onGoToJournalWithPrompt,

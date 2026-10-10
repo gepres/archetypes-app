@@ -1,6 +1,6 @@
 import React from 'react';
 import { ARCHETYPES, DIMENSIONS, getArchetypeName } from '../../data/archetypesData';
-import { ArchetypeId, DimensionId, GenderMode } from '../../types';
+import { ArchetypeId, DimensionId, GenderMode, DEFAULT_GENDER } from '../../types';
 
 interface ArchetypeBadgeProps {
   id: ArchetypeId;
@@ -14,7 +14,7 @@ interface ArchetypeBadgeProps {
 
 export const ArchetypeBadge: React.FC<ArchetypeBadgeProps> = ({
   id,
-  gender = 'male',
+  gender = DEFAULT_GENDER,
   size = 'md',
   showDimension = false,
   onClick,

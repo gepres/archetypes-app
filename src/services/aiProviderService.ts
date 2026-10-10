@@ -7,6 +7,7 @@ import {
   ChatMessage,
   GenderMode,
   UserProfile,
+  DEFAULT_GENDER,
 } from '../types';
 import { getMapLead } from './scoringEngine';
 import {
@@ -287,7 +288,7 @@ export const AIProviderService = {
     userProfile?: UserProfile | null,
     gender: GenderMode = 'male'
   ): string {
-    const userGender: GenderMode = userProfile?.gender || gender || 'male';
+    const userGender: GenderMode = userProfile?.gender || gender || DEFAULT_GENDER;
     const perspective = PERSPECTIVE_LABEL[userGender] || PERSPECTIVE_LABEL.male;
     const perspectiveExamples = PERSPECTIVE_EXAMPLES.map(id => getArchetypeName(id, userGender)).join(', ');
 

@@ -17,7 +17,7 @@ import {
 import { ARCHETYPES, DIMENSIONS, getArchetype } from '../../data/archetypesData';
 import { getMapLead } from '../../services/scoringEngine';
 import { ARCHETYPE_VISUALS } from '../../data/archetypeImages';
-import { ArchetypeId, AssessmentResult, GenderMode } from '../../types';
+import { ArchetypeId, AssessmentResult, GenderMode, DEFAULT_GENDER } from '../../types';
 import { ArchetypeIllustratedArtwork } from '../archetypes/ArchetypeIllustratedArtwork';
 
 interface ShareResultImageModalProps {
@@ -33,7 +33,7 @@ type CardTheme = 'emerald-gold' | 'obsidian-cosmic' | 'crimson-amber';
 
 export const ShareResultImageModal: React.FC<ShareResultImageModalProps> = ({
   result,
-  gender = 'male',
+  gender = DEFAULT_GENDER,
   isOpen,
   onClose,
 }) => {

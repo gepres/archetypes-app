@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { ArchetypeId, AssessmentResult, Challenge, DailyOracleCard, GenderMode, JournalEntry, UserProfile } from './types';
+import { ArchetypeId, AssessmentResult, Challenge, DailyOracleCard, GenderMode, JournalEntry, UserProfile, DEFAULT_GENDER } from './types';
 import { StorageService } from './services/storageService';
 import { adaptAssessmentResultToGender } from './services/scoringEngine';
 import { Sidebar, NavTab } from './components/layout/Sidebar';
@@ -305,7 +305,7 @@ export default function App() {
               onSelectTab={setCurrentTab}
               onSelectArchetype={handleSelectArchetype}
               currentResult={currentResult}
-              gender={userProfile.gender || 'male'}
+              gender={userProfile.gender || DEFAULT_GENDER}
               onGenderChange={handleGenderChange}
               onOpenIntro={() => setIsOnboardingOpen(true)}
             />
@@ -317,7 +317,7 @@ export default function App() {
               onSelectTab={setCurrentTab}
               onSelectArchetype={handleSelectArchetype}
               onRetakeTest={() => handleStartTest('full')}
-              gender={userProfile.gender || 'male'}
+              gender={userProfile.gender || DEFAULT_GENDER}
             />
           )}
 
@@ -332,7 +332,7 @@ export default function App() {
               onStartTest={handleStartTest}
               onToggleChallenge={handleToggleChallenge}
               onOpenAiSettings={() => setIsAiSettingsOpen(true)}
-              gender={userProfile.gender || 'male'}
+              gender={userProfile.gender || DEFAULT_GENDER}
               onGenderChange={handleGenderChange}
             />
           )}
@@ -343,7 +343,7 @@ export default function App() {
               onSelectArchetype={setSelectedArchetypeId}
               onSelectTab={setCurrentTab}
               onDiscussWithAi={handleDiscussWithAi}
-              gender={userProfile.gender || 'male'}
+              gender={userProfile.gender || DEFAULT_GENDER}
               onGenderChange={handleGenderChange}
             />
           )}
@@ -353,7 +353,7 @@ export default function App() {
               currentResult={currentResult}
               onGoToAiWithPrompt={handleDiscussWithAi}
               onGoToDetail={handleSelectArchetype}
-              gender={userProfile.gender || 'male'}
+              gender={userProfile.gender || DEFAULT_GENDER}
               onGenderChange={handleGenderChange}
             />
           )}
@@ -362,7 +362,7 @@ export default function App() {
             <SynergiesExplorerView
               currentResult={currentResult}
               onSelectArchetype={handleSelectArchetype}
-              gender={userProfile.gender || 'male'}
+              gender={userProfile.gender || DEFAULT_GENDER}
               onGenderChange={handleGenderChange}
             />
           )}
@@ -372,7 +372,7 @@ export default function App() {
               entries={journalEntries}
               onAddEntry={handleAddJournalEntry}
               onDeleteEntry={handleDeleteJournalEntry}
-              gender={userProfile.gender || 'male'}
+              gender={userProfile.gender || DEFAULT_GENDER}
             />
           )}
 
@@ -381,7 +381,7 @@ export default function App() {
               challenges={challenges}
               onToggleChallenge={handleToggleChallenge}
               onSelectArchetype={handleSelectArchetype}
-              gender={userProfile.gender || 'male'}
+              gender={userProfile.gender || DEFAULT_GENDER}
               onGenderChange={handleGenderChange}
             />
           )}
@@ -403,7 +403,7 @@ export default function App() {
               }
               onInitialPromptConsumed={() => setAiPeticion(null)}
               initialPersona={aiInitialPersona}
-              gender={userProfile.gender || 'male'}
+              gender={userProfile.gender || DEFAULT_GENDER}
               onGenderChange={handleGenderChange}
             />
             </div>
@@ -460,7 +460,7 @@ export default function App() {
         isOpen={isDailyOracleOpen}
         onClose={() => setIsDailyOracleOpen(false)}
         card={dailyCard}
-        gender={userProfile.gender || 'male'}
+        gender={userProfile.gender || DEFAULT_GENDER}
         onGoToJournalWithPrompt={(prompt, archId) => {
           handleAddJournalEntry({
             title: `Reflexión: Carta del Día`,

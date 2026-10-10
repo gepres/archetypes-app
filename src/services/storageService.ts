@@ -11,6 +11,7 @@ import {
   GenderMode,
   JournalEntry,
   UserProfile,
+  DEFAULT_GENDER,
 } from '../types';
 import { FirebaseService } from './firebaseService';
 import { adaptAssessmentResultToGender } from './scoringEngine';
@@ -210,7 +211,7 @@ export const StorageService = {
    */
   refreshResult(result: AssessmentResult): AssessmentResult {
     try {
-      return adaptAssessmentResultToGender(result, this.getUserProfile().gender || 'male');
+      return adaptAssessmentResultToGender(result, this.getUserProfile().gender || DEFAULT_GENDER);
     } catch (e) {
       console.warn('No se pudo recomponer un resultado guardado:', e);
       return result;
@@ -453,7 +454,7 @@ export const StorageService = {
       if (data) {
         const parsed = JSON.parse(data);
         if (!parsed.gender) {
-          parsed.gender = 'male';
+          parsed.gender = DEFAULT_GENDER;
         }
         return parsed;
       }
@@ -463,7 +464,7 @@ export const StorageService = {
         name: 'Explorador Invitado',
         email: '',
         isGuest: true,
-        gender: 'male',
+        gender: DEFAULT_GENDER,
         avatarEmoji: '🧭',
         bio: 'Modo invitado activo. Los datos se guardan en este navegador.',
         createdAt: new Date().toISOString(),
@@ -477,7 +478,7 @@ export const StorageService = {
         name: 'Explorador Invitado',
         email: '',
         isGuest: true,
-        gender: 'male',
+        gender: DEFAULT_GENDER,
         avatarEmoji: '🧭',
         bio: 'Modo invitado activo.',
         createdAt: new Date().toISOString(),
@@ -489,7 +490,7 @@ export const StorageService = {
   saveUserProfile(profile: UserProfile): void {
     try {
       profile.lastActive = new Date().toISOString();
-      if (!profile.gender) profile.gender = 'male';
+      if (!profile.gender) profile.gender = DEFAULT_GENDER;
       localStorage.setItem(STORAGE_KEYS.USER_PROFILE, JSON.stringify(profile));
       this.syncActiveAccountData();
     } catch (e) {
@@ -556,7 +557,7 @@ export const StorageService = {
       name: targetAccount.name,
       email: targetAccount.email,
       isGuest: false,
-      gender: accountData.gender || currentSaved.gender || 'male',
+      gender: accountData.gender || currentSaved.gender || DEFAULT_GENDER,
       avatarEmoji: targetAccount.avatarEmoji,
       pinCode: accountData.pinCode,
       createdAt: targetAccount.createdAt,

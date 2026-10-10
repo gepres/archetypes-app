@@ -15,7 +15,7 @@ import {
   Cpu,
   Settings,
 } from 'lucide-react';
-import { AssessmentResult, UserProfile } from '../../types';
+import { AssessmentResult, UserProfile, DEFAULT_GENDER } from '../../types';
 import { getArchetypeName } from '../../data/archetypesData';
 import { getMapLead } from '../../services/scoringEngine';
 import { BrandLogo } from '../common/BrandLogo';
@@ -55,7 +55,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenAiSettings,
   userProfile,
 }) => {
-  const lead = currentResult ? getMapLead(currentResult, userProfile.gender || 'male') : null;
+  const lead = currentResult ? getMapLead(currentResult, userProfile.gender || DEFAULT_GENDER) : null;
   const mainNavItems = [
     { id: 'landing', label: 'Inicio', icon: Compass },
     { id: 'dashboard', label: 'Mi Mapa', icon: LayoutDashboard },
@@ -147,7 +147,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <div className="flex items-center gap-2">
                   <span className="text-xl">{currentResult.dominantArchetype.emoji}</span>
                   <span className="font-serif font-bold text-sm text-[#F2EFE6]">
-                    {getArchetypeName(currentResult.dominantArchetype.archetypeId, userProfile.gender || 'male')}
+                    {getArchetypeName(currentResult.dominantArchetype.archetypeId, userProfile.gender || DEFAULT_GENDER)}
                   </span>
                 </div>
               </>

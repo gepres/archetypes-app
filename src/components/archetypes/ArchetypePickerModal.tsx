@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { X, Search, Sparkles, Check, Filter, Layers, Ban } from 'lucide-react';
 import { ARCHETYPES_LIST, getArchetypeList, getDimensionShortName } from '../../data/archetypesData';
 import { ARCHETYPE_VISUALS } from '../../data/archetypeImages';
-import { ArchetypeId, GenderMode } from '../../types';
+import { ArchetypeId, GenderMode, DEFAULT_GENDER } from '../../types';
 import { ArchetypeIllustratedArtwork } from './ArchetypeIllustratedArtwork';
 
 interface ArchetypePickerModalProps {
@@ -29,7 +29,7 @@ export const ArchetypePickerModal: React.FC<ArchetypePickerModalProps> = ({
   allowNone = false,
   noneLabel = 'Desactivar 3er Arquetipo',
   disabledIds = [],
-  gender = 'male',
+  gender = DEFAULT_GENDER,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDimension, setSelectedDimension] = useState<string>('todos');

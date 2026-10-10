@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 import { ARCHETYPES, ARCHETYPES_LIST, DIMENSIONS, getArchetype, getArchetypeList, withDe } from '../../data/archetypesData';
 import { ARCHETYPE_VISUALS } from '../../data/archetypeImages';
-import { Archetype, ArchetypeId, DimensionId, GenderMode, LifeDomainKey } from '../../types';
+import { Archetype, ArchetypeId, DimensionId, GenderMode, LifeDomainKey, DEFAULT_GENDER } from '../../types';
 import { NavTab } from '../layout/Sidebar';
 import { ArchetypePortraitCard } from './ArchetypePortraitCard';
 
@@ -52,7 +52,7 @@ export const ArchetypesListView: React.FC<ArchetypesListViewProps> = ({
   onSelectArchetype,
   onSelectTab,
   onDiscussWithAi,
-  gender = 'male',
+  gender = DEFAULT_GENDER,
   onGenderChange,
 }) => {
   const [selectedDimension, setSelectedDimension] = useState<DimensionId | 'todos'>('todos');
@@ -60,7 +60,7 @@ export const ArchetypesListView: React.FC<ArchetypesListViewProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [detailActiveTab, setDetailActiveTab] = useState<'esencia' | 'luz_sombra' | 'ambitos' | 'ejercicios' | 'sinergias'>('esencia');
 
-  const currentGender = gender || 'male';
+  const currentGender = gender || DEFAULT_GENDER;
   const archetypesList = getArchetypeList(currentGender);
 
   const filteredArchetypes = archetypesList.filter(arch => {

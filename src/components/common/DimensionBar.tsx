@@ -1,6 +1,6 @@
 import React from 'react';
 import { DIMENSIONS, getArchetypeName } from '../../data/archetypesData';
-import { DimensionId, GenderMode } from '../../types';
+import { DimensionId, GenderMode, DEFAULT_GENDER } from '../../types';
 
 interface DimensionBarProps {
   scores: Record<DimensionId, number>;
@@ -11,7 +11,7 @@ interface DimensionBarProps {
 // «Mago», no el id «mago» ni «mistico» sin tilde; sin el artículo, que en una lista sobra.
 const sinArticulo = (name: string) => name.replace(/^(El|La) /, '');
 
-export const DimensionBar: React.FC<DimensionBarProps> = ({ scores, compact = false, gender = 'male' }) => {
+export const DimensionBar: React.FC<DimensionBarProps> = ({ scores, compact = false, gender = DEFAULT_GENDER }) => {
   const dimensionsList: DimensionId[] = ['mente', 'accion', 'corazon', 'construccion'];
 
   return (

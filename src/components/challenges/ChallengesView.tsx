@@ -10,9 +10,8 @@ import {
   Shield,
 } from 'lucide-react';
 import { getArchetype, getArchetypeList, getDimensionShortName } from '../../data/archetypesData';
-import { ArchetypeId, Challenge, GenderMode } from '../../types';
+import { ArchetypeId, Challenge, GenderMode, DEFAULT_GENDER } from '../../types';
 import { ArchetypeBadge } from '../common/ArchetypeBadge';
-import { PerspectiveSwitcher } from '../common/PerspectiveSwitcher';
 
 interface ChallengesViewProps {
   challenges: Challenge[];
@@ -26,10 +25,10 @@ export const ChallengesView: React.FC<ChallengesViewProps> = ({
   challenges,
   onToggleChallenge,
   onSelectArchetype,
-  gender = 'male',
+  gender = DEFAULT_GENDER,
   onGenderChange,
 }) => {
-  const currentGender = gender || 'male';
+  const currentGender = gender || DEFAULT_GENDER;
   const archetypeList = getArchetypeList(currentGender);
 
   const [filterStatus, setFilterStatus] = useState<'todos' | 'pendientes' | 'completados'>('todos');
@@ -76,16 +75,6 @@ export const ChallengesView: React.FC<ChallengesViewProps> = ({
           Los arquetipos se fortalecen mediante la acción deliberada en el mundo real. Elige una práctica para expandir tus capacidades.
         </p>
 
-        {onGenderChange && (
-          <div className="flex justify-center pt-2">
-            <PerspectiveSwitcher
-              gender={currentGender}
-              onGenderChange={onGenderChange}
-              size="sm"
-              showLabel={true}
-            />
-          </div>
-        )}
       </div>
 
       {/* Progress Card */}

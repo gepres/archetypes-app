@@ -16,7 +16,7 @@ import {
 import { ARCHETYPES, ARCHETYPES_LIST } from '../../data/archetypesData';
 import { FirebaseService } from '../../services/firebaseService';
 import { JOURNAL_PROMPTS, StorageService } from '../../services/storageService';
-import { ArchetypeId, JournalEntry, GenderMode } from '../../types';
+import { ArchetypeId, JournalEntry, GenderMode, DEFAULT_GENDER } from '../../types';
 import { ArchetypeBadge } from '../common/ArchetypeBadge';
 
 interface JournalViewProps {
@@ -29,7 +29,7 @@ interface JournalViewProps {
 
 export const JournalView: React.FC<JournalViewProps> = ({
   entries,
-  gender = 'male',
+  gender = DEFAULT_GENDER,
   onAddEntry,
   onDeleteEntry,
 }) => {

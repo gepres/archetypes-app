@@ -3,7 +3,7 @@ import { GitMerge, Shuffle, ChevronRight, SlidersHorizontal } from 'lucide-react
 import { ARCHETYPES, ARCHETYPES_LIST, getArchetype, getDimensionShortName, withDe } from '../../data/archetypesData';
 import { ARCHETYPE_VISUALS } from '../../data/archetypeImages';
 import { initialArchetypes } from '../../services/personalization';
-import { ArchetypeId, AssessmentResult, GenderMode } from '../../types';
+import { ArchetypeId, AssessmentResult, GenderMode, DEFAULT_GENDER } from '../../types';
 import { ArchetypeIllustratedArtwork } from './ArchetypeIllustratedArtwork';
 import { ArchetypePickerModal } from './ArchetypePickerModal';
 
@@ -20,7 +20,7 @@ type ActivePickerSlot = 'first' | 'second' | null;
 export const SynergiesExplorerView: React.FC<SynergiesExplorerViewProps> = ({
   currentResult = null,
   onSelectArchetype,
-  gender = 'male',
+  gender = DEFAULT_GENDER,
   onGenderChange,
 }) => {
   // Arranca con las dos figuras que encabezan tu mapa; sin mapa, con las de siempre.
@@ -28,7 +28,7 @@ export const SynergiesExplorerView: React.FC<SynergiesExplorerViewProps> = ({
   const [secondId, setSecondId] = useState<ArchetypeId>(() => initialArchetypes(currentResult, 2)[1]);
   const [pickerSlot, setPickerSlot] = useState<ActivePickerSlot>(null);
 
-  const currentGender = gender || 'male';
+  const currentGender = gender || DEFAULT_GENDER;
   const arch1 = getArchetype(firstId, currentGender);
   const arch2 = getArchetype(secondId, currentGender);
 

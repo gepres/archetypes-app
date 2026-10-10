@@ -22,7 +22,7 @@ import { GeminiService } from '../../services/geminiService';
 import { AIProviderService, PROVIDER_OPTIONS } from '../../services/aiProviderService';
 import { StorageService, insertarRespuesta, unirConversaciones } from '../../services/storageService';
 import { suggestedPrompts } from '../../services/personalization';
-import { ArchetypeId, AssessmentResult, ChatMessage, GenderMode, UserProfile } from '../../types';
+import { ArchetypeId, AssessmentResult, ChatMessage, GenderMode, UserProfile, DEFAULT_GENDER } from '../../types';
 import { ArchetypeIllustratedArtwork } from '../archetypes/ArchetypeIllustratedArtwork';
 import { MarkdownRenderer } from '../common/MarkdownRenderer';
 import { AiSettingsModal } from './AiSettingsModal';
@@ -71,7 +71,7 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
   isActive = true,
 }) => {
   const [userProfile, setUserProfile] = useState<UserProfile>(() => StorageService.getUserProfile());
-  const currentGender: GenderMode = propGender || userProfile.gender || 'male';
+  const currentGender: GenderMode = propGender || userProfile.gender || DEFAULT_GENDER;
 
   const [messages, setMessages] = useState<ChatMessage[]>(() =>
     StorageService.getChatMessages()

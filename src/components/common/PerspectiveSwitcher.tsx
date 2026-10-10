@@ -1,5 +1,5 @@
 import React from 'react';
-import { GenderMode } from '../../types';
+import { GenderMode, DEFAULT_GENDER } from '../../types';
 
 interface PerspectiveSwitcherProps {
   gender: GenderMode;
@@ -48,13 +48,13 @@ const OPTIONS: {
  * opciones en columnas iguales; desde sm vuelve a ser la pastilla en linea.
  */
 export const PerspectiveSwitcher: React.FC<PerspectiveSwitcherProps> = ({
-  gender = 'male',
+  gender = DEFAULT_GENDER,
   onGenderChange,
   size = 'md',
   showLabel = true,
   className = '',
 }) => {
-  const current = gender || 'male';
+  const current = gender || DEFAULT_GENDER;
 
   const isSmall = size === 'sm';
   const isLarge = size === 'lg';

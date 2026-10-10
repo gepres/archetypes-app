@@ -468,6 +468,30 @@ describe('cuentas: cada una ve y sube solo lo suyo', () => {
   });
 });
 
+describe('perspectiva de quien llega por primera vez', () => {
+  const vacio = () => {
+    const mem = new Map<string, string>();
+    (globalThis as any).localStorage = {
+      getItem: (k: string) => mem.get(k) ?? null,
+      setItem: (k: string, v: string) => void mem.set(k, String(v)),
+      removeItem: (k: string) => void mem.delete(k),
+      clear: () => mem.clear(),
+    };
+    return mem;
+  };
+
+  it('un perfil nuevo arranca en Universal, no en Masculina', () => {
+    vacio();
+    assert.equal(StorageService.getUserProfile().gender, 'universal');
+  });
+
+  it('quien ya eligió una perspectiva la conserva', () => {
+    const mem = vacio();
+    mem.set('archetypes_user_profile', JSON.stringify({ id: 'u', name: 'A', email: '', isGuest: true, gender: 'male', createdAt: '', lastActive: '' }));
+    assert.equal(StorageService.getUserProfile().gender, 'male');
+  });
+});
+
 describe('mergeAccountData', () => {
   const vacio = () => emptyAccountData();
   it('un reto completado en cualquiera de las dos copias queda completado, con su fecha', () => {

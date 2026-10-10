@@ -19,7 +19,7 @@ import {
 import { ARCHETYPES, ARCHETYPES_LIST, getArchetype, getDimensionShortName, withDe } from '../../data/archetypesData';
 import { ARCHETYPE_VISUALS } from '../../data/archetypeImages';
 import { initialArchetypes } from '../../services/personalization';
-import { ArchetypeId, AssessmentResult, GenderMode, LifeDomainKey } from '../../types';
+import { ArchetypeId, AssessmentResult, GenderMode, LifeDomainKey, DEFAULT_GENDER } from '../../types';
 import { ArchetypePortraitCard } from './ArchetypePortraitCard';
 import { ArchetypeIllustratedArtwork } from './ArchetypeIllustratedArtwork';
 import { ArchetypePickerModal } from './ArchetypePickerModal';
@@ -47,7 +47,7 @@ export const ArchetypeComparisonView: React.FC<ArchetypeComparisonViewProps> = (
   currentResult = null,
   onGoToAiWithPrompt,
   onGoToDetail,
-  gender = 'male',
+  gender = DEFAULT_GENDER,
   onGenderChange,
 }) => {
   // Arranca con las tres figuras que encabezan tu mapa; sin mapa, con las de siempre.
@@ -57,7 +57,7 @@ export const ArchetypeComparisonView: React.FC<ArchetypeComparisonViewProps> = (
   const [activeDomain, setActiveDomain] = useState<LifeDomainKey>('liderazgo');
   const [pickerSlot, setPickerSlot] = useState<ActivePickerSlot>(null);
 
-  const currentGender = gender || 'male';
+  const currentGender = gender || DEFAULT_GENDER;
   const arch1 = getArchetype(selectedFirst, currentGender);
   const arch2 = getArchetype(selectedSecond, currentGender);
   const arch3 = selectedThird !== 'none' ? getArchetype(selectedThird, currentGender) : null;

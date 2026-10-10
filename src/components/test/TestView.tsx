@@ -18,7 +18,7 @@ import {
 } from '../../data/questionsData';
 import { calculateAssessmentResult } from '../../services/scoringEngine';
 import { StorageService } from '../../services/storageService';
-import { AssessmentAnswer, AssessmentResult, DimensionId } from '../../types';
+import { AssessmentAnswer, AssessmentResult, DimensionId, DEFAULT_GENDER } from '../../types';
 
 interface TestViewProps {
   testType: 'full' | 'quick';
@@ -106,7 +106,7 @@ export const TestView: React.FC<TestViewProps> = ({
       }));
 
       const userProfile = StorageService.getUserProfile();
-      const result = calculateAssessmentResult(answerList, testType, userProfile.gender || 'male');
+      const result = calculateAssessmentResult(answerList, testType, userProfile.gender || DEFAULT_GENDER);
       StorageService.saveCurrentResult(result);
       StorageService.clearTestProgress();
       setIsCalculating(false);

@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { getArchetype, getArchetypeName, getArchetypeList, DIMENSIONS, withDe } from '../../data/archetypesData';
 import { ARCHETYPE_VISUALS } from '../../data/archetypeImages';
-import { ArchetypeId, AssessmentResult, GenderMode } from '../../types';
+import { ArchetypeId, AssessmentResult, GenderMode, DEFAULT_GENDER } from '../../types';
 import { NavTab } from '../layout/Sidebar';
 import { ArchetypePortraitCard } from '../archetypes/ArchetypePortraitCard';
 import { ArchetypeIllustratedArtwork } from '../archetypes/ArchetypeIllustratedArtwork';
@@ -39,55 +39,21 @@ export const LandingView: React.FC<LandingViewProps> = ({
   onSelectTab,
   onSelectArchetype,
   currentResult,
-  gender = 'male',
+  gender = DEFAULT_GENDER,
   onGenderChange,
   onOpenIntro,
 }) => {
   const [activeSpotlight, setActiveSpotlight] = useState<ArchetypeId>('rey');
 
-  const currentGender = gender || 'male';
+  const currentGender = gender || DEFAULT_GENDER;
   const spotlightArchetype = getArchetype(activeSpotlight, currentGender);
   const spotlightVisual = ARCHETYPE_VISUALS[activeSpotlight];
   const archetypesList = getArchetypeList(currentGender);
 
   return (
     <div id="landing-view" className="space-y-12 pb-20 max-w-5xl mx-auto">
-      {/* Top Interactive Perspective Bar */}
-      {onGenderChange && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 p-3 sm:p-3.5 bg-[#121A17] border border-[#23332D] rounded-2xl shadow-sm">
-          {/* Etiqueta. En movil comparte fila con el acceso a la introduccion. */}
-          <div className="flex items-center justify-between gap-2 min-w-0">
-            <span className="flex items-center gap-2 min-w-0">
-              <span className="text-xs text-[#D6A84F] shrink-0">✦</span>
-              <span className="text-xs text-[#C5CFC7] font-medium">
-                <span className="sm:hidden">Tu perspectiva de exploración</span>
-                <span className="hidden sm:inline">Explora el mapa en tu perspectiva preferida:</span>
-              </span>
-            </span>
-            {onOpenIntro && (
-              <button
-                type="button"
-                onClick={onOpenIntro}
-                title="Ver de nuevo la introducción a los arquetipos"
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-[#23332D] bg-[#0E1513] text-[11px] text-[#8A968D] hover:text-[#D6A84F] hover:border-[#315C45] transition-colors shrink-0"
-              >
-                <BookOpen className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Ver introducción</span>
-              </button>
-            )}
-          </div>
-
-          <PerspectiveSwitcher
-            gender={currentGender}
-            onGenderChange={onGenderChange}
-            size="sm"
-            showLabel={true}
-            className="sm:shrink-0"
-          />
-        </div>
-      )}
-
-      {/* Hero Section */}
+      {/* Hero Section. La perspectiva ya se eligió en la bienvenida: no se vuelve a preguntar
+          aquí arriba, se puede cambiar al final de la página o en el perfil. */}
       <section className="relative pt-4 md:pt-8 text-center space-y-6">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#D6A84F]/40 bg-[#121A17] text-xs text-[#D6A84F] tracking-wide shadow-md">
           <Sparkles className="w-3.5 h-3.5 text-[#D6A84F]" />
@@ -154,6 +120,17 @@ export const LandingView: React.FC<LandingViewProps> = ({
             <ArrowRight className="w-4 h-4 shrink-0 text-[#D6A84F] group-hover:translate-x-0.5 transition-transform" />
           </div>
         </a>
+
+        {onOpenIntro && (
+          <button
+            type="button"
+            onClick={onOpenIntro}
+            className="mt-4 inline-flex items-center gap-1.5 text-xs text-[#8A968D] hover:text-[#D6A84F] transition-colors"
+          >
+            <BookOpen className="w-3.5 h-3.5" />
+            ¿Qué es un arquetipo? Ver la introducción
+          </button>
+        )}
 
         {/* Current Result banner if exists */}
         {currentResult && (
@@ -492,6 +469,14 @@ export const LandingView: React.FC<LandingViewProps> = ({
           </button>
         </div>
       </section>
+
+      {/* La perspectiva, al final: se elige en la bienvenida y aquí solo se cambia. */}
+      {onGenderChange && (
+        <div className="flex flex-col items-center gap-2 text-center">
+          <span className="text-[11px] text-[#8A968D]">Explora los arquetipos en otra perspectiva</span>
+          <PerspectiveSwitcher gender={currentGender} onGenderChange={onGenderChange} size="sm" showLabel={true} />
+        </div>
+      )}
     </div>
   );
 };

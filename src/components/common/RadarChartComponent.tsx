@@ -9,7 +9,7 @@ import {
   Tooltip,
 } from 'recharts';
 import { ARCHETYPES, DIMENSIONS, getArchetypeName } from '../../data/archetypesData';
-import { ArchetypeId, ArchetypeScore, DimensionId, GenderMode } from '../../types';
+import { ArchetypeId, ArchetypeScore, DimensionId, GenderMode, DEFAULT_GENDER } from '../../types';
 
 interface RadarChartComponentProps {
   ranking: ArchetypeScore[];
@@ -58,7 +58,7 @@ export const RadarChartComponent: React.FC<RadarChartComponentProps> = ({
   compareRanking,
   compareLabel = 'Anterior',
   size = 'md',
-  gender = 'male',
+  gender = DEFAULT_GENDER,
 }) => {
   const orden = useMemo<ArchetypeId[]>(
     () => ORDEN_DIMENSIONES.flatMap(d => DIMENSIONS[d].archetypes),

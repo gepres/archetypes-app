@@ -13,7 +13,7 @@ import {
 import { DIMENSIONS, getArchetype, getDimensionShortName, withDe } from '../../data/archetypesData';
 import { LIKERT_OPTIONS, QUESTIONS_DATA } from '../../data/questionsData';
 import { TIE_MAX_GAP } from '../../services/scoringEngine';
-import { AnswerEvidence, ArchetypeId, AssessmentResult, GenderMode } from '../../types';
+import { AnswerEvidence, ArchetypeId, AssessmentResult, GenderMode, DEFAULT_GENDER } from '../../types';
 import { DimensionBar } from '../common/DimensionBar';
 import { RadarChartComponent } from '../common/RadarChartComponent';
 import { ArchetypeIllustratedArtwork } from '../archetypes/ArchetypeIllustratedArtwork';
@@ -50,7 +50,7 @@ export const ResultView: React.FC<ResultViewProps> = ({
   onSelectTab,
   onSelectArchetype,
   onRetakeTest,
-  gender = 'male',
+  gender = DEFAULT_GENDER,
 }) => {
   const { compositeProfile } = result;
   const plano = !!compositeProfile.isFlat;

@@ -1,5 +1,11 @@
 export type GenderMode = 'male' | 'female' | 'universal';
 
+/**
+ * La perspectiva de quien todavía no ha elegido ninguna. Universal, para no dar por hecho un
+ * género: antes era la masculina, y la bienvenida abría con «Masculina» marcada para todos.
+ */
+export const DEFAULT_GENDER: GenderMode = 'universal';
+
 export type ArchetypeId =
   | 'rey'
   | 'guerrero'
