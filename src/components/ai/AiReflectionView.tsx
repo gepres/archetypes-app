@@ -210,13 +210,15 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
 
   // La consulta que llega de fuera (Carta del Día…) se envía en cuanto el chat queda libre, y
   // solo se da por consumida cuando se aceptó: si había una respuesta en camino, espera a que
-  // llegue en vez de perderse. Una vez enviada, al remontar el chat no se reenvía.
+  // llegue en vez de perderse. Una vez enviada, al remontar el chat no se reenvía. Y solo con
+  // el chat a la vista: oculto, su conversación puede estar desfasada (se recuperó otra desde
+  // la nube); al volver, el efecto de reactivación la recarga antes que este envíe.
   useEffect(() => {
     // Con la voz que la acompaña: setActivePersona aún no se ha aplicado en este render.
-    if (initialPrompt && !isLoading && handleSend(initialPrompt, initialPersona)) {
+    if (initialPrompt && isActive && !isLoading && handleSend(initialPrompt, initialPersona)) {
       onInitialPromptConsumed?.();
     }
-  }, [initialPrompt, isLoading]);
+  }, [initialPrompt, isLoading, isActive]);
 
   // Mientras este chat esté montado. Una respuesta que llega después de desmontarlo no toca
   // esta vista: se guarda en la conversación vigente y avisa a la vista que haya montada.
