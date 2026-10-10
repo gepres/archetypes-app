@@ -1,25 +1,19 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
-  Compass,
   ArrowRight,
   Sparkles,
-  Layers,
   Brain,
   Zap,
   Heart,
   Hammer,
   ChevronRight,
   ShieldCheck,
-  ShieldAlert,
   BookOpen,
-  Eye,
   Headphones,
 } from 'lucide-react';
-import { getArchetype, getArchetypeName, getArchetypeList, DIMENSIONS, withDe } from '../../data/archetypesData';
-import { ARCHETYPE_VISUALS } from '../../data/archetypeImages';
-import { ArchetypeId, AssessmentResult, GenderMode, DEFAULT_GENDER } from '../../types';
+import { getArchetype, getArchetypeList, DIMENSIONS } from '../../data/archetypesData';
+import { ArchetypeId, AssessmentResult, DimensionId, GenderMode, DEFAULT_GENDER } from '../../types';
 import { NavTab } from '../layout/Sidebar';
-import { ArchetypePortraitCard } from '../archetypes/ArchetypePortraitCard';
 import { ArchetypeIllustratedArtwork } from '../archetypes/ArchetypeIllustratedArtwork';
 import { PerspectiveSwitcher } from '../common/PerspectiveSwitcher';
 
@@ -34,6 +28,20 @@ interface LandingViewProps {
   onOpenIntro?: () => void;
 }
 
+/** Las cuatro dimensiones, con su icono y su color. */
+const DIMENSIONES: { id: DimensionId; nombre: string; Icono: typeof Brain; color: string }[] = [
+  { id: 'mente', nombre: 'Mente & Trascendencia', Icono: Brain, color: '#3B82F6' },
+  { id: 'accion', nombre: 'Acción & Coraje', Icono: Zap, color: '#EF4444' },
+  { id: 'corazon', nombre: 'Corazón & Conexión', Icono: Heart, color: '#10B981' },
+  { id: 'construccion', nombre: 'Construcción & Soberanía', Icono: Hammer, color: '#D6A84F' },
+];
+
+/**
+ * La portada. Cabe en unas cuatro pantallas de móvil: antes eran unas trece (un panteón con
+ * selector de los 18 y, además, la galería entera de los 18), y la acción principal era el test
+ * de 60 preguntas. Ahora lo primero es el test rápido, con el completo al lado y la versión con
+ * voz bien visible; los arquetipos se asoman en una tira que lleva a su ficha.
+ */
 export const LandingView: React.FC<LandingViewProps> = ({
   onStartTest,
   onSelectTab,
@@ -43,21 +51,17 @@ export const LandingView: React.FC<LandingViewProps> = ({
   onGenderChange,
   onOpenIntro,
 }) => {
-  const [activeSpotlight, setActiveSpotlight] = useState<ArchetypeId>('rey');
-
   const currentGender = gender || DEFAULT_GENDER;
-  const spotlightArchetype = getArchetype(activeSpotlight, currentGender);
-  const spotlightVisual = ARCHETYPE_VISUALS[activeSpotlight];
   const archetypesList = getArchetypeList(currentGender);
 
   return (
     <div id="landing-view" className="space-y-12 pb-20 max-w-5xl mx-auto">
-      {/* Hero Section. La perspectiva ya se eligió en la bienvenida: no se vuelve a preguntar
-          aquí arriba, se puede cambiar al final de la página o en el perfil. */}
+      {/* Hero. La perspectiva ya se eligió en la bienvenida: no se vuelve a preguntar aquí
+          arriba, se puede cambiar al final de la página o en el perfil. */}
       <section className="relative pt-4 md:pt-8 text-center space-y-6">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#D6A84F]/40 bg-[#121A17] text-xs text-[#D6A84F] tracking-wide shadow-md">
           <Sparkles className="w-3.5 h-3.5 text-[#D6A84F]" />
-          <span>Psicología Simbólica · Ilustraciones Arquetípicas · Autoconocimiento</span>
+          <span>Autoconocimiento simbólico · 18 arquetipos</span>
         </div>
 
         <div className="space-y-4 max-w-3xl mx-auto">
@@ -65,45 +69,41 @@ export const LandingView: React.FC<LandingViewProps> = ({
             Conócete desde otra perspectiva.
           </h1>
           <p className="text-base sm:text-lg text-[#9DA79F] leading-relaxed max-w-2xl mx-auto font-light">
-            Explora los 18 arquetipos míticos y sus fuerzas universales. Descubre tu mapa de personalidad mediante símbolos, indagación psicológica y arte arquetípico.
+            Responde unas preguntas y descubre qué arquetipos encabezan tu mapa y cuáles piden más
+            espacio en tu vida.
           </p>
         </div>
 
-        {/* CTA Buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-2">
-          <button
-            id="landing-cta-full-test"
-            onClick={() => onStartTest('full')}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-[#315C45] to-[#254836] hover:from-[#3D7055] hover:to-[#315C45] text-[#F2EFE6] font-semibold text-sm transition-all shadow-xl hover:shadow-2xl active:scale-95 border border-[#4E8B69]/40"
-          >
-            <span>Descubrir mis arquetipos (60 preguntas)</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
-
+        {/* El test rápido es la puerta de entrada; el completo, al lado, para quien quiera más. */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 pt-2 max-w-xl mx-auto">
           <button
             id="landing-cta-quick-test"
             onClick={() => onStartTest('quick')}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl border border-[#23332D] bg-[#121A17] hover:bg-[#1A2521] text-[#C5CFC7] hover:text-[#F2EFE6] font-medium text-sm transition-all shadow-sm"
+            className="flex-1 inline-flex flex-col items-center justify-center px-6 py-3 rounded-2xl bg-gradient-to-r from-[#315C45] to-[#254836] hover:from-[#3D7055] hover:to-[#315C45] text-[#F2EFE6] transition-all shadow-xl hover:shadow-2xl active:scale-95 border border-[#4E8B69]/40"
           >
-            <span>Test Rápido (24 preguntas)</span>
+            <span className="inline-flex items-center gap-2 font-semibold text-sm">
+              Descubrir mi mapa
+              <ArrowRight className="w-4 h-4" />
+            </span>
+            <span className="text-[11px] text-[#C5CFC7] font-normal">Test rápido · 24 preguntas · unos 5 minutos</span>
           </button>
 
           <button
-            id="landing-cta-explore"
-            onClick={() => onSelectTab('archetypes')}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl border border-[#23332D] bg-transparent hover:bg-[#121A17] text-[#9DA79F] hover:text-[#F2EFE6] font-medium text-sm transition-all"
+            id="landing-cta-full-test"
+            onClick={() => onStartTest('full')}
+            className="sm:w-auto inline-flex flex-col items-center justify-center px-5 py-3 rounded-2xl border border-[#23332D] bg-[#121A17] hover:bg-[#1A2521] text-[#C5CFC7] hover:text-[#F2EFE6] transition-all shadow-sm"
           >
-            <BookOpen className="w-4 h-4 text-[#D6A84F]" />
-            <span>Explorar los 18 arquetipos</span>
+            <span className="font-medium text-sm">Test completo</span>
+            <span className="text-[11px] text-[#8A968D]">60 preguntas, más matices</span>
           </button>
         </div>
 
-        {/* Puente a la version en voz. No es otro boton mas: es otra forma de
-            hacer lo mismo, para quien no quiere leer. Por eso va aparte. */}
+        {/* Puente a la versión en voz. No es otro botón más: es otra forma de hacer lo mismo,
+            para quien no quiere leer. Por eso va aparte. */}
         <a
           href="/v2/"
           id="landing-cta-voz"
-          className="group block max-w-2xl mx-auto text-left rounded-2xl border border-[#D6A84F]/30 bg-gradient-to-r from-[#141F1A] to-[#121A17] hover:border-[#D6A84F]/60 transition-colors p-4 sm:p-5 shadow-lg"
+          className="group block max-w-xl mx-auto text-left rounded-2xl border border-[#D6A84F]/30 bg-gradient-to-r from-[#141F1A] to-[#121A17] hover:border-[#D6A84F]/60 transition-colors p-4 shadow-lg"
         >
           <div className="flex items-center gap-4">
             <span className="w-11 h-11 shrink-0 rounded-xl bg-[#1A2521] border border-[#D6A84F]/40 flex items-center justify-center text-[#D6A84F]">
@@ -114,7 +114,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
                 ¿Prefieres no leer? Escúchalo.
               </p>
               <p className="text-xs text-[#9DA79F] leading-relaxed mt-0.5">
-                Una frase, un gesto, dos minutos. La misma evaluación, sin leer nada.
+                Una frase, un gesto. La misma evaluación, sin leer nada.
               </p>
             </div>
             <ArrowRight className="w-4 h-4 shrink-0 text-[#D6A84F] group-hover:translate-x-0.5 transition-transform" />
@@ -125,30 +125,30 @@ export const LandingView: React.FC<LandingViewProps> = ({
           <button
             type="button"
             onClick={onOpenIntro}
-            className="mt-4 inline-flex items-center gap-1.5 text-xs text-[#8A968D] hover:text-[#D6A84F] transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs text-[#8A968D] hover:text-[#D6A84F] transition-colors"
           >
             <BookOpen className="w-3.5 h-3.5" />
             ¿Qué es un arquetipo? Ver la introducción
           </button>
         )}
 
-        {/* Current Result banner if exists */}
+        {/* Quien ya tiene un mapa, a un toque de él. */}
         {currentResult && (
-          <div className="mt-8 max-w-xl mx-auto p-4 rounded-2xl bg-[#121A17] border border-[#315C45] flex items-center justify-between text-left shadow-lg">
-            <div className="flex items-center gap-3">
+          <div className="max-w-xl mx-auto p-4 rounded-2xl bg-[#121A17] border border-[#315C45] flex items-center justify-between gap-3 text-left shadow-lg">
+            <div className="flex items-center gap-3 min-w-0">
               <div className="w-12 h-12 rounded-xl overflow-hidden border border-[#D6A84F]/60 shrink-0">
                 <ArchetypeIllustratedArtwork archetypeId={currentResult.dominantArchetype.archetypeId} className="w-full h-full object-cover" />
               </div>
-              <div>
-                <p className="text-xs text-[#9DA79F]">Tu mapa activo guardado:</p>
-                <p className="font-serif font-bold text-[#F2EFE6] text-base">
+              <div className="min-w-0">
+                <p className="text-xs text-[#9DA79F]">Tu mapa guardado</p>
+                <p className="font-serif font-bold text-[#F2EFE6] text-base truncate">
                   {currentResult.compositeProfile.title}
                 </p>
               </div>
             </div>
             <button
               onClick={() => onSelectTab('result')}
-              className="px-3.5 py-1.5 bg-[#315C45] hover:bg-[#3D7055] text-[#F2EFE6] text-xs font-semibold rounded-xl transition-colors"
+              className="shrink-0 px-3.5 py-1.5 bg-[#315C45] hover:bg-[#3D7055] text-[#F2EFE6] text-xs font-semibold rounded-xl transition-colors"
             >
               Ver mapa
             </button>
@@ -156,317 +156,81 @@ export const LandingView: React.FC<LandingViewProps> = ({
         )}
       </section>
 
-      {/* Featured Archetype Illustrated Spotlight */}
-      <section className="p-5 sm:p-8 rounded-3xl bg-[#121A17] border border-[#23332D] shadow-2xl relative overflow-hidden">
-        <div className="flex flex-col lg:flex-row items-center lg:items-start gap-6 sm:gap-8">
-          {/* Illustrated Card Preview */}
-          <div className="w-full max-w-[280px] sm:max-w-xs lg:w-72 h-72 sm:h-80 mx-auto lg:mx-0 shrink-0 rounded-3xl overflow-hidden shadow-2xl border-2 border-[#D6A84F]/60 relative">
-            <ArchetypePortraitCard
-              archetype={spotlightArchetype}
-              size="hero"
-              showBadge={true}
-              className="w-full h-full rounded-3xl"
-            />
+      {/* Los 18, en una tira: se asoman y llevan a su ficha, en vez de una galería que ocupaba
+          ocho pantallas por sí sola. */}
+      <section className="space-y-4">
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <p className="text-xs text-[#D6A84F] uppercase tracking-widest font-semibold">El panteón</p>
+            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#F2EFE6]">Conoce a los 18</h2>
           </div>
-
-          {/* Archetype Description & Selector */}
-          <div className="flex-1 w-full space-y-4 text-left">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="text-xs uppercase tracking-widest font-bold text-[#D6A84F]">
-                  Panteón Ilustrado
-                </span>
-                <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#1A2822] text-[#86EFAC] border border-[#315C45] font-semibold">
-                  {spotlightVisual.characterClass}
-                </span>
+          <button
+            onClick={() => onSelectTab('archetypes')}
+            className="shrink-0 text-xs font-semibold text-[#D6A84F] hover:text-[#E5BE72] inline-flex items-center gap-1 transition-colors px-3 py-1.5 rounded-xl bg-[#121A17] border border-[#23332D]"
+          >
+            <span>Ver todos</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+        <div className="-mx-4 px-4 sm:mx-0 sm:px-0 flex gap-3 overflow-x-auto touch-scroll-x scrollbar-persona pb-2 snap-x">
+          {archetypesList.map(arch => (
+            <button
+              key={arch.id}
+              type="button"
+              onClick={() => onSelectArchetype(arch.id)}
+              className="group shrink-0 w-28 snap-start text-left rounded-2xl overflow-hidden bg-[#121A17] border border-[#23332D] hover:border-[#D6A84F] transition-colors"
+            >
+              <div className="h-32 bg-[#0E1513] overflow-hidden">
+                <ArchetypeIllustratedArtwork archetypeId={arch.id} className="w-full h-full object-cover" />
               </div>
-              <h3 className="font-serif text-2xl sm:text-3xl font-bold text-[#F2EFE6]">
-                {spotlightArchetype.name}
-              </h3>
-              <p className="text-xs sm:text-sm text-[#D6A84F] font-medium">
-                {spotlightVisual.characterTitle}
-              </p>
-            </div>
-
-            <blockquote className="p-3 sm:p-3.5 rounded-2xl bg-[#0E1513] border border-[#1E2A25] font-serif italic text-xs sm:text-sm text-[#E5D7B7] leading-relaxed">
-              "{spotlightArchetype.mantra}"
-            </blockquote>
-
-            {/* Fortaleza Central & Sombra a Integrar Enhanced Cards - Stacked Vertically */}
-            <div className="flex flex-col gap-3.5 pt-1 w-full">
-              {/* Fortaleza Central Card */}
-              <div className="p-4 rounded-2xl bg-gradient-to-br from-[#13221C] to-[#0E1714] border border-[#2B4E3C] shadow-sm flex flex-col justify-start space-y-2 text-left">
-                <div className="flex items-center gap-2 text-[#86EFAC] text-xs font-bold uppercase tracking-wider">
-                  <div className="w-5 h-5 rounded-md bg-[#1D3629] border border-[#315C45] flex items-center justify-center shrink-0">
-                    <Sparkles className="w-3 h-3 text-[#86EFAC]" />
-                  </div>
-                  <span>Fortaleza Central</span>
-                </div>
-                <p className="text-xs sm:text-sm text-[#F2EFE6] leading-relaxed font-normal">
-                  {spotlightArchetype.strength}
+              <div className="p-2">
+                <p className="text-[11px] font-semibold text-[#F2EFE6] leading-tight line-clamp-2">
+                  {arch.emoji} {arch.name}
                 </p>
               </div>
-
-              {/* Sombra a Integrar Card */}
-              <div className="p-4 rounded-2xl bg-gradient-to-br from-[#1E1114] to-[#120A0D] border border-[#52242C] shadow-sm flex flex-col justify-start space-y-2.5 text-left">
-                <div className="flex items-center gap-2 text-[#FCA5A5] text-xs font-bold uppercase tracking-wider">
-                  <div className="w-5 h-5 rounded-md bg-[#381B20] border border-[#632933] flex items-center justify-center shrink-0">
-                    <ShieldAlert className="w-3 h-3 text-[#F87171]" />
-                  </div>
-                  <span>Sombra a Integrar</span>
-                </div>
-                <div className="space-y-1.5">
-                  <div className="inline-block px-2.5 py-1 rounded-lg bg-[#33141B] border border-[#5A222D] text-xs font-bold text-[#FCA5A5]">
-                    {spotlightArchetype.shadow}
-                  </div>
-                  <p className="text-xs text-[#E5B8BF] leading-relaxed font-light">
-                    {spotlightArchetype.shadowDescription}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Quick selector buttons - Fully visible responsive grid */}
-            <div className="pt-3 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] text-[#D6A84F] font-bold uppercase tracking-wider block">
-                  Selecciona un arquetipo para visualizar:
-                </span>
-                <span className="text-[10px] text-[#86968D]">18 de 18 arquetipos</span>
-              </div>
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-                {archetypesList.map(arch => {
-                  const isSel = arch.id === activeSpotlight;
-                  return (
-                    <button
-                      key={arch.id}
-                      onClick={() => setActiveSpotlight(arch.id)}
-                      className={`min-h-[42px] px-2.5 py-2 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 border select-none active:scale-95 ${
-                        isSel
-                          ? 'bg-[#315C45] text-[#F2EFE6] border-[#D6A84F] shadow-lg ring-1 ring-[#D6A84F]/60'
-                          : 'bg-[#0E1513] text-[#9DA79F] hover:text-[#F2EFE6] border-[#1E2A25] hover:border-[#315C45]/60'
-                      }`}
-                    >
-                      <span className="text-sm shrink-0">{arch.emoji}</span>
-                      <span className="truncate">{arch.name}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="pt-2 flex items-center gap-3">
-              <button
-                onClick={() => onSelectArchetype(spotlightArchetype.id)}
-                className="px-4 py-2 bg-[#315C45] hover:bg-[#3D7055] text-[#F2EFE6] text-xs font-semibold rounded-xl transition-all inline-flex items-center gap-1.5 active:scale-95"
-              >
-                <Eye className="w-3.5 h-3.5" />
-                <span>Ver ficha completa {withDe(spotlightArchetype.name)}</span>
-              </button>
-            </div>
-          </div>
+            </button>
+          ))}
         </div>
       </section>
 
-      {/* Philosophical Foundations Banner */}
-      <section className="p-6 rounded-2xl bg-[#121A17] border border-[#1E2A25] flex flex-col md:flex-row items-start md:items-center gap-4 text-left">
+      {/* Las cuatro dimensiones, compactas. */}
+      <section className="space-y-4">
+        <div>
+          <p className="text-xs text-[#D6A84F] uppercase tracking-widest font-semibold">Cómo se ordenan</p>
+          <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#F2EFE6]">Cuatro dimensiones</h2>
+          <p className="text-sm text-[#9DA79F] mt-1">
+            Los 18 se agrupan en cuatro energías. Tu mapa dice cuánto pesa cada una en ti.
+          </p>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {DIMENSIONES.map(({ id, nombre, Icono, color }) => (
+            <div key={id} className="p-3.5 rounded-2xl bg-[#121A17] border border-[#1E2A25] space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: `${color}1A`, color }}>
+                  <Icono className="w-3.5 h-3.5" />
+                </span>
+                <h3 className="font-serif text-sm font-bold text-[#F2EFE6] leading-tight">{nombre}</h3>
+              </div>
+              <p className="text-[11px] text-[#9DA79F] leading-snug">{DIMENSIONS[id].subtitle}</p>
+              <p className="text-base leading-none tracking-wide" aria-label={DIMENSIONS[id].archetypes.map(a => getArchetype(a, currentGender).name).join(', ')}>
+                {DIMENSIONS[id].archetypes.map(a => getArchetype(a, currentGender).emoji).join(' ')}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Lo que es y lo que no. */}
+      <section className="p-5 rounded-2xl bg-[#121A17] border border-[#1E2A25] flex items-start gap-4 text-left">
         <div className="w-10 h-10 rounded-xl bg-[#1E2A25] border border-[#23332D] flex items-center justify-center shrink-0 text-[#D6A84F]">
           <ShieldCheck className="w-5 h-5" />
         </div>
         <div className="space-y-1">
-          <h2 className="font-serif text-lg font-bold text-[#F2EFE6]">
-            Un modelo de reflexión, no un diagnóstico clínico
-          </h2>
+          <h2 className="font-serif text-lg font-bold text-[#F2EFE6]">Un modelo de reflexión, no un diagnóstico</h2>
           <p className="text-xs sm:text-sm text-[#9DA79F] leading-relaxed">
-            Tu mapa no te define ni te encasilla. Te muestra tendencias, fortalezas naturales y áreas de desarrollo para que tomes conciencia de qué partes de ti necesitan mayor espacio y contención.
+            Tu mapa no te define ni te encasilla: muestra tendencias de tus respuestas para que
+            pienses qué partes de ti quieres cuidar o hacer crecer.
           </p>
-        </div>
-      </section>
-
-      {/* 4 Dimensions Showcase */}
-      <section className="space-y-6">
-        <div className="text-center space-y-2">
-          <p className="text-xs text-[#D6A84F] uppercase tracking-widest font-semibold">
-            Estructura Psíquica
-          </p>
-          <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#F2EFE6]">
-            El Modelo de las 4 Dimensiones
-          </h2>
-          <p className="text-sm text-[#9DA79F] max-w-xl mx-auto">
-            Los 18 arquetipos se articulan en cuatro energías fundamentales para sostener una vida integrada.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Mente */}
-          <div className="p-5 rounded-2xl bg-[#121A17] border border-[#1E2A25] space-y-3 hover:border-[#3B82F6]/50 transition-all">
-            <div className="w-8 h-8 rounded-lg bg-[#3B82F6]/10 text-[#3B82F6] flex items-center justify-center">
-              <Brain className="w-4 h-4" />
-            </div>
-            <div>
-              <h3 className="font-serif text-lg font-bold text-[#F2EFE6]">Mente & Trascendencia</h3>
-              <p className="text-xs text-[#9DA79F] mt-1">{DIMENSIONS.mente.subtitle}</p>
-            </div>
-            <div className="pt-2 border-t border-[#1E2A25] flex flex-wrap gap-1.5">
-              {DIMENSIONS.mente.archetypes.map(id => {
-                const arch = getArchetype(id, currentGender);
-                return (
-                  <span key={id} className="text-xs px-2 py-0.5 rounded bg-[#1A2521] text-[#C5CFC7]">
-                    {arch.emoji} {arch.name}
-                  </span>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Acción */}
-          <div className="p-5 rounded-2xl bg-[#121A17] border border-[#1E2A25] space-y-3 hover:border-[#EF4444]/50 transition-all">
-            <div className="w-8 h-8 rounded-lg bg-[#EF4444]/10 text-[#EF4444] flex items-center justify-center">
-              <Zap className="w-4 h-4" />
-            </div>
-            <div>
-              <h3 className="font-serif text-lg font-bold text-[#F2EFE6]">Acción & Coraje</h3>
-              <p className="text-xs text-[#9DA79F] mt-1">{DIMENSIONS.accion.subtitle}</p>
-            </div>
-            <div className="pt-2 border-t border-[#1E2A25] flex flex-wrap gap-1.5">
-              {DIMENSIONS.accion.archetypes.map(id => {
-                const arch = getArchetype(id, currentGender);
-                return (
-                  <span key={id} className="text-xs px-1.5 py-0.5 rounded bg-[#1A2521] text-[#C5CFC7]">
-                    {arch.emoji} {arch.name}
-                  </span>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Corazón */}
-          <div className="p-5 rounded-2xl bg-[#121A17] border border-[#1E2A25] space-y-3 hover:border-[#10B981]/50 transition-all">
-            <div className="w-8 h-8 rounded-lg bg-[#10B981]/10 text-[#10B981] flex items-center justify-center">
-              <Heart className="w-4 h-4" />
-            </div>
-            <div>
-              <h3 className="font-serif text-lg font-bold text-[#F2EFE6]">Corazón & Conexión</h3>
-              <p className="text-xs text-[#9DA79F] mt-1">{DIMENSIONS.corazon.subtitle}</p>
-            </div>
-            <div className="pt-2 border-t border-[#1E2A25] flex flex-wrap gap-1.5">
-              {DIMENSIONS.corazon.archetypes.map(id => {
-                const arch = getArchetype(id, currentGender);
-                return (
-                  <span key={id} className="text-xs px-1.5 py-0.5 rounded bg-[#1A2521] text-[#C5CFC7]">
-                    {arch.emoji} {arch.name}
-                  </span>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Construcción */}
-          <div className="p-5 rounded-2xl bg-[#121A17] border border-[#1E2A25] space-y-3 hover:border-[#D6A84F]/50 transition-all">
-            <div className="w-8 h-8 rounded-lg bg-[#D6A84F]/10 text-[#D6A84F] flex items-center justify-center">
-              <Hammer className="w-4 h-4" />
-            </div>
-            <div>
-              <h3 className="font-serif text-lg font-bold text-[#F2EFE6]">Construcción & Soberanía</h3>
-              <p className="text-xs text-[#9DA79F] mt-1">{DIMENSIONS.construccion.subtitle}</p>
-            </div>
-            <div className="pt-2 border-t border-[#1E2A25] flex flex-wrap gap-1.5">
-              {DIMENSIONS.construccion.archetypes.map(id => {
-                const arch = getArchetype(id, currentGender);
-                return (
-                  <span key={id} className="text-xs px-1.5 py-0.5 rounded bg-[#1A2521] text-[#C5CFC7]">
-                    {arch.emoji} {arch.name}
-                  </span>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 18 Archetypes Illustrated Gallery on Home Screen */}
-      <section className="space-y-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4">
-          <div>
-            <p className="text-xs text-[#D6A84F] uppercase tracking-widest font-semibold">
-              El Panteón Ilustrado
-            </p>
-            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#F2EFE6]">
-              Los 18 Arquetipos Ilustrados
-            </h2>
-            <p className="text-xs sm:text-sm text-[#9DA79F] mt-1">
-              Haz clic en cualquier carta ilustrada para explorar su análisis y lecciones.
-            </p>
-          </div>
-          <button
-            onClick={() => onSelectTab('archetypes')}
-            className="text-xs font-semibold text-[#D6A84F] hover:text-[#E5BE72] inline-flex items-center gap-1 transition-colors px-3 py-1.5 rounded-xl bg-[#121A17] border border-[#23332D]"
-          >
-            <span>Ver detalles completos</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-          {archetypesList.map(arch => {
-            return (
-              <div
-                key={arch.id}
-                onClick={() => onSelectArchetype(arch.id)}
-                className="group bg-[#121A17] border border-[#23332D] hover:border-[#D6A84F] rounded-3xl overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-2xl hover:-translate-y-1.5 flex flex-col justify-between"
-              >
-                {/* Illustrated Portrait Header */}
-                <div className="relative h-44 w-full overflow-hidden bg-[#0E1513]">
-                  <ArchetypePortraitCard
-                    archetype={arch}
-                    size="md"
-                    showBadge={true}
-                    className="w-full h-full rounded-none border-0"
-                  />
-                </div>
-
-                {/* Card Content */}
-                <div className="p-4 space-y-2.5 flex-1 flex flex-col justify-between">
-                  <div>
-                    <p className="text-xs italic text-[#E5D7B7] font-serif line-clamp-2 leading-relaxed bg-[#0B1110] p-2.5 rounded-xl border border-[#1E2A25]">
-                      "{arch.mantra}"
-                    </p>
-                  </div>
-
-                  <div className="pt-2 border-t border-[#1E2A25] flex items-center justify-between text-xs text-[#9DA79F] group-hover:text-[#D6A84F] transition-colors">
-                    <span className="text-[11px] font-medium text-[#A6B2A8] truncate max-w-[130px]">
-                      {arch.strength.split(',')[0]}
-                    </span>
-                    <span className="flex items-center gap-1 font-bold text-xs text-[#D6A84F]">
-                      <span>Ver Ficha</span>
-                      <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                    </span>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* Interactive Microcopy & Call to Action */}
-      <section className="p-8 rounded-3xl bg-gradient-to-b from-[#121A17] to-[#0E1513] border border-[#23332D] text-center space-y-6 shadow-2xl">
-        <blockquote className="font-serif text-xl sm:text-2xl text-[#F2EFE6] italic max-w-2xl mx-auto leading-relaxed">
-          "No se trata de convertirte en alguien diferente, sino de integrar partes de ti que ya existen pero reclaman luz y orden."
-        </blockquote>
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-          <button
-            onClick={() => onStartTest('full')}
-            className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-[#315C45] to-[#254836] hover:from-[#3D7055] hover:to-[#315C45] text-[#F2EFE6] font-semibold text-sm transition-all shadow-lg active:scale-95 border border-[#4E8B69]/40"
-          >
-            Iniciar Evaluación Completa
-          </button>
-          <button
-            onClick={() => onSelectTab('ai')}
-            className="w-full sm:w-auto px-6 py-3.5 rounded-2xl border border-[#23332D] bg-[#121A17] hover:bg-[#1A2521] text-[#C5CFC7] font-medium text-sm transition-all shadow-sm"
-          >
-            Habla con el Asistente IA
-          </button>
         </div>
       </section>
 
@@ -480,4 +244,3 @@ export const LandingView: React.FC<LandingViewProps> = ({
     </div>
   );
 };
-
