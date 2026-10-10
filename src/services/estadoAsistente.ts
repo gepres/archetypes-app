@@ -43,14 +43,44 @@ export function describirEstadoIA(estado: EstadoIA): { etiqueta: string; detalle
   }
 }
 
-/** Por qué no respondió el asistente, sin códigos ni mensajes del proveedor en inglés. */
-export function motivoAmable(err: unknown): string {
+/**
+ * Por qué no respondió el asistente, sin códigos ni mensajes del proveedor en inglés, pero con
+ * lo que hay que hacer: no es lo mismo una saturación pasajera (esperar) que una cuenta sin
+ * saldo o con la clave mal (ir a arreglarlo). `clavePropia`: la cuenta de IA es de la persona
+ * (puede arreglarla ella); si no, es la incluida con la app.
+ */
+export function motivoAmable(err: unknown, clavePropia = false): string {
   const m = String((err as { message?: string })?.message || '');
-  if (/clave|key|401|403|unauthori[sz]ed|invalid/i.test(m)) {
-    return 'No pude conectar con el asistente de IA: revisa la conexión en **Ajustes de IA**. Mientras, te respondo desde tu mapa simbólico.';
+  // Sin saldo o sin cupo en la cuenta del proveedor: esperar no lo arregla.
+  if (/402|insufficient|quota|billing|credit|balance|payment|saldo/i.test(m)) {
+    return clavePropia
+      ? 'Tu cuenta de IA se quedó sin saldo o sin cupo: revisa su uso en el servicio que conectaste, o cambia la conexión en **Ajustes de IA**. Mientras, te respondo desde tu mapa simbólico.'
+      : 'El asistente incluido no está disponible ahora mismo, así que te respondo desde tu mapa simbólico. Si quieres, puedes conectar tu propia cuenta de IA en **Ajustes de IA**.';
   }
-  if (/429|quota|rate|limit/i.test(m)) {
+  if (/clave|api key|401|403|unauthori[sz]ed|invalid/i.test(m)) {
+    return clavePropia
+      ? 'No pude conectar con tu cuenta de IA: revisa la clave en **Ajustes de IA**. Mientras, te respondo desde tu mapa simbólico.'
+      : 'No pude conectar con el asistente de IA ahora mismo, así que te respondo desde tu mapa simbólico. Prueba de nuevo en un rato.';
+  }
+  if (/429|rate|too many|overloaded|503|unavailable/i.test(m)) {
     return 'El asistente de IA está saturado ahora mismo, así que te respondo desde tu mapa simbólico. Prueba de nuevo en un rato.';
   }
   return 'No pude conectar con el asistente de IA ahora mismo, así que te respondo desde tu mapa simbólico. Prueba de nuevo en un rato.';
+}
+
+/**
+ * La fecha de hoy en el calendario de quien usa la app (AAAA-MM-DD). Con toISOString sería la de
+ * UTC, y las consultas se renovarían a las 19:00 en Perú en vez de a medianoche.
+ */
+export function fechaLocal(d: Date = new Date()): string {
+  const dos = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${dos(d.getMonth() + 1)}-${dos(d.getDate())}`;
+}
+
+/** La nota que acompaña a la respuesta cuando ya se usaron las consultas incluidas de hoy. */
+export function notaConsultasAgotadas(maxDaily: number): string {
+  return (
+    `Hoy ya usaste tus ${maxDaily} consultas con el asistente: mañana se renuevan. Mientras, esta respuesta sale de tu mapa simbólico. ` +
+    'Si quieres seguir hoy con el asistente, en **Ajustes de IA** puedes conectar tu propia cuenta de un servicio de IA; varios tienen un uso gratuito.'
+  );
 }

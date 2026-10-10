@@ -18,7 +18,7 @@ import {
   crisisInConversation,
   detectCrisis,
 } from './crisisSupport';
-import { motivoAmable } from './estadoAsistente';
+import { fechaLocal, motivoAmable, notaConsultasAgotadas } from './estadoAsistente';
 export { describirEstadoIA } from './estadoAsistente';
 
 // Cómo se llama cada perspectiva en el prompt. Es una preferencia de lenguaje para nombrar los
@@ -178,7 +178,7 @@ export const AIProviderService = {
   },
 
   getDefaultSettings(): AISettings {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = fechaLocal();
     const hasDefaultOpenRouter = Boolean(APP_KEYS.openrouter);
     const defaultProvider: AIProviderId = hasDefaultOpenRouter ? 'openrouter' : 'local';
 
@@ -200,7 +200,7 @@ export const AIProviderService = {
 
   normalizeSettings(settings: Partial<AISettings>): AISettings {
     const defaults = this.getDefaultSettings();
-    const today = new Date().toISOString().slice(0, 10);
+    const today = fechaLocal();
 
     const quota = settings.courtesyQuota || defaults.courtesyQuota;
     if (quota.lastResetDate !== today) {
@@ -417,15 +417,16 @@ ${resultContext}
       };
     }
 
-    // Cupo diario agotado
+    // Consultas incluidas agotadas: se responde igual, desde el mapa simbólico, como promete el
+    // estado del asistente (describirEstadoIA), en vez de repetir un aviso a cada pregunta.
     if (status.activeKeySource === 'app' && status.remainingCourtesy <= 0) {
       if (crisisAbierta) return seguimientoDeCrisis;
       return {
         text:
-          `⏳ **Hoy ya usaste tus ${status.maxDaily} consultas.**\n\n` +
-          `Mañana se renuevan. Si quieres seguir hoy, en **Ajustes de IA (⚙️)** puedes conectar tu propia cuenta de un servicio de IA; varios tienen un uso gratuito.`,
+          this.getLocalArchetypeReflection(message, currentResult, archetypePersona, effectiveGender) +
+          `\n\n---\n*${notaConsultasAgotadas(status.maxDaily)}*`,
         modelUsed: 'Cupo diario agotado',
-        provider: settings.provider,
+        provider: 'local',
       };
     }
 
@@ -618,7 +619,7 @@ ${resultContext}
       console.warn('AI Provider fallback triggered:', err);
       if (crisisAbierta) return seguimientoDeCrisis;
       return {
-        text: `${this.getLocalArchetypeReflection(message, currentResult, archetypePersona, effectiveGender)}\n\n---\n*${motivoAmable(err)}*`,
+        text: `${this.getLocalArchetypeReflection(message, currentResult, archetypePersona, effectiveGender)}\n\n---\n*${motivoAmable(err, status.activeKeySource === 'custom')}*`,
         modelUsed: 'Fallback Local',
         provider: 'local',
       };
