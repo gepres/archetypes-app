@@ -101,18 +101,20 @@ const SENALES: RegExp[] = [
   // querer, no a propósito») no cuenta.
   new RegExp(`^(?=.*${INTENCION_AFIRMADA}).*${SIN_NEGAR}\\b${CORTE}\\b.{0,60}\\bhasta (sangrar|hacerme sangre|que (me )?sangr)`),
   /\bdormir(me)? para siempre\b/,
-  // Lo accidental ("me hice daño en la rodilla", "me lastimé entrenando") no cuenta.
-  /\bme hago dano\b(?! (en|al|entrenando|jugando|corriendo|haciendo))/,
-  /\bme (hago|hice|he hecho) dano en (los brazos|las munecas)\b/,
+  // Lo accidental ("me hice daño en la rodilla", "me lastimé entrenando") no cuenta. También en
+  // curso: «me estoy haciendo daño y no sé cómo parar».
+  /(?<!\bno )\b(me hago|me estoy haciendo|estoy haciendome) dano\b(?! (en|al|entrenando|jugando|corriendo|haciendo))/,
+  /\b(me (hago|hice|he hecho|estoy haciendo)|estoy haciendome) dano en (los brazos|las munecas)\b/,
   /\bcortarme (las venas|los brazos|las munecas|la piel)\b/,
   // Cortarse las muñecas o las venas es una señal por sí sola, diga o no la intención: «me corté
   // las muñecas, no queriendo morir sino sentir algo» niega la finalidad, no la lesión.
   new RegExp(`${SIN_NEGAR}\\b${CORTE} (las|mis) (munecas|venas)\\b`),
-  // Hacerse daño para sentir algo o para castigarse: la finalidad delata que no fue un
-  // accidente. Solo finalidades inequívocas: «aliviar el dolor» también es lo que se hace
-  // después de un accidente («me corté cocinando y me puse hielo para aliviar el dolor»). Lo
-  // cosmético sigue fuera («me corté el pelo para sentirme mejor»).
-  new RegExp(`${SIN_NEGAR}\\b${ACTO_DANO}.{0,40}\\b(para|sino|solo para) (sentir algo|sentir dolor|no sentir nada|castigarme|desahogarme)\\b`),
+  // Hacerse daño para sentir algo, para castigarse o para calmar lo que duele por dentro: la
+  // finalidad delata que no fue un accidente. «Aliviar el dolor» a secas no basta, porque
+  // también es lo que se hace después de un accidente («me corté cocinando y me puse hielo
+  // para aliviar el dolor»); «calmar la ansiedad» o «el dolor emocional», sí. Lo cosmético
+  // sigue fuera («me corté el pelo para sentirme mejor»).
+  new RegExp(`${SIN_NEGAR}\\b${ACTO_DANO}.{0,40}\\b(para|sino|solo para) (sentir algo|sentir dolor|no sentir( nada)?|castigarme|desahogarme|(calmar|aliviar|controlar|soltar|sacar)(me)? (la ansiedad|el dolor emocional|la angustia|la rabia|la tristeza|el vacio|el agobio|lo que siento))\\b`),
   // Violencia y peligro, también mientras ocurre
   /\bme (pega|golpea|maltrata|amenaza|viola|pegan|golpean|maltratan|amenazan)\b/,
   /\bme (esta|estan) (pegando|golpeando|maltratando|amenazando|violando|haciendo dano)\b/,

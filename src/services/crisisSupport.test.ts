@@ -135,6 +135,13 @@ describe('detectCrisis', () => {
     'Me estoy cortando para sentir algo',
     'Estoy cortándome a propósito',
     'Me estoy haciendo daño a propósito',
+    // Duodécima revisión de Codex: finalidades emocionales y la forma en curso sin intención
+    'Me corto para calmar la ansiedad',
+    'Me corté para aliviar el dolor emocional',
+    'Me corto para no sentir',
+    'Me estoy haciendo daño en los brazos',
+    'Me estoy haciendo daño y no sé cómo parar',
+    'Estoy haciéndome daño otra vez',
   ];
 
   for (const frase of crisis) {
@@ -196,6 +203,8 @@ describe('detectCrisis', () => {
     'Me lastimé la rodilla entrenando y tomé ibuprofeno para aliviar el dolor',
     'Me corté cocinando y me puse hielo para aliviar el dolor',
     'Me estoy cortando el pelo a propósito',
+    'No me hago daño, solo estoy cansada',
+    'Me estoy haciendo daño en la espalda entrenando',
   ];
 
   for (const frase of sinCrisis) {
