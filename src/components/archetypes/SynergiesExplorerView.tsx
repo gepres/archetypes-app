@@ -2,11 +2,14 @@ import React, { useState } from 'react';
 import { GitMerge, Shuffle, ChevronRight, SlidersHorizontal } from 'lucide-react';
 import { ARCHETYPES, ARCHETYPES_LIST, getArchetype, getDimensionShortName, withDe } from '../../data/archetypesData';
 import { ARCHETYPE_VISUALS } from '../../data/archetypeImages';
-import { ArchetypeId, GenderMode } from '../../types';
+import { initialArchetypes } from '../../services/personalization';
+import { ArchetypeId, AssessmentResult, GenderMode } from '../../types';
 import { ArchetypeIllustratedArtwork } from './ArchetypeIllustratedArtwork';
 import { ArchetypePickerModal } from './ArchetypePickerModal';
 
 interface SynergiesExplorerViewProps {
+  /** El mapa de la persona, si ya hizo el test: de él salen las figuras con las que se arranca. */
+  currentResult?: AssessmentResult | null;
   onSelectArchetype: (id: ArchetypeId) => void;
   gender?: GenderMode;
   onGenderChange?: (gender: GenderMode) => void;
@@ -15,12 +18,14 @@ interface SynergiesExplorerViewProps {
 type ActivePickerSlot = 'first' | 'second' | null;
 
 export const SynergiesExplorerView: React.FC<SynergiesExplorerViewProps> = ({
+  currentResult = null,
   onSelectArchetype,
   gender = 'male',
   onGenderChange,
 }) => {
-  const [firstId, setFirstId] = useState<ArchetypeId>('rey');
-  const [secondId, setSecondId] = useState<ArchetypeId>('guerrero');
+  // Arranca con las dos figuras que encabezan tu mapa; sin mapa, con las de siempre.
+  const [firstId, setFirstId] = useState<ArchetypeId>(() => initialArchetypes(currentResult, 2)[0]);
+  const [secondId, setSecondId] = useState<ArchetypeId>(() => initialArchetypes(currentResult, 2)[1]);
   const [pickerSlot, setPickerSlot] = useState<ActivePickerSlot>(null);
 
   const currentGender = gender || 'male';

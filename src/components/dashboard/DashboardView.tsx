@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   Compass,
   Sparkles,
@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { getArchetype, getArchetypeName } from '../../data/archetypesData';
 import { getMapLead } from '../../services/scoringEngine';
+import { recommendChallenges } from '../../services/personalization';
 import { ArchetypeId, AssessmentResult, Challenge, GenderMode, JournalEntry } from '../../types';
 import { DimensionBar } from '../common/DimensionBar';
 import { RadarChartComponent } from '../common/RadarChartComponent';
@@ -48,6 +49,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onGenderChange,
 }) => {
   const currentGender = gender || 'male';
+
+  // Las prácticas que se recomiendan, elegidas para este mapa. Se eligen al abrir la pantalla y
+  // al cambiar de resultado, no a cada marca: la que se marca como hecha no desaparece de debajo
+  // del dedo, se queda tachada, y en la próxima visita deja sitio a otra.
+  const idsRecomendados = useMemo(
+    () => (currentResult ? recommendChallenges(challenges, currentResult).map(c => c.id) : []),
+    [currentResult?.id, challenges.length]
+  );
 
   if (!currentResult) {
     return (
@@ -93,7 +102,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
   const completedChallenges = challenges.filter(c => c.completed).length;
   const recentEntries = journalEntries.slice(0, 3);
-  const activeChallenges = challenges.slice(0, 4);
+  const activeChallenges = idsRecomendados
+    .map(id => challenges.find(c => c.id === id))
+    .filter((c): c is Challenge => !!c);
 
   const dominantName = getArchetypeName(currentResult.dominantArchetype.archetypeId, currentGender);
   const lead = getMapLead(currentResult, currentGender);

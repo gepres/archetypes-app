@@ -57,6 +57,13 @@ export function withDe(name: string): string {
   return `del arquetipo ${name}`;
 }
 
+/** Lo mismo detrás de «a»: «al Rey», «a la Reina», «al arquetipo Rey / Reina». */
+export function withA(name: string): string {
+  if (name.startsWith('El ')) return `al ${name.slice(3)}`;
+  if (name.startsWith('La ')) return `a la ${name.slice(3)}`;
+  return `al arquetipo ${name}`;
+}
+
 export const ARCHETYPES: Record<ArchetypeId, Archetype> = {
   ...CORE_ARCHETYPES,
   ...RELATIONAL_ARCHETYPES,

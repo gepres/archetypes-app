@@ -18,12 +18,15 @@ import {
 } from 'lucide-react';
 import { ARCHETYPES, ARCHETYPES_LIST, getArchetype, getDimensionShortName, withDe } from '../../data/archetypesData';
 import { ARCHETYPE_VISUALS } from '../../data/archetypeImages';
-import { ArchetypeId, GenderMode, LifeDomainKey } from '../../types';
+import { initialArchetypes } from '../../services/personalization';
+import { ArchetypeId, AssessmentResult, GenderMode, LifeDomainKey } from '../../types';
 import { ArchetypePortraitCard } from './ArchetypePortraitCard';
 import { ArchetypeIllustratedArtwork } from './ArchetypeIllustratedArtwork';
 import { ArchetypePickerModal } from './ArchetypePickerModal';
 
 interface ArchetypeComparisonViewProps {
+  /** El mapa de la persona, si ya hizo el test: de él salen las figuras con las que se arranca. */
+  currentResult?: AssessmentResult | null;
   onGoToAiWithPrompt: (prompt: string, personaId: string) => void;
   onGoToDetail: (archetypeId: ArchetypeId) => void;
   gender?: GenderMode;
@@ -41,14 +44,16 @@ const DOMAIN_LABELS: Record<LifeDomainKey, string> = {
 type ActivePickerSlot = 'first' | 'second' | 'third' | null;
 
 export const ArchetypeComparisonView: React.FC<ArchetypeComparisonViewProps> = ({
+  currentResult = null,
   onGoToAiWithPrompt,
   onGoToDetail,
   gender = 'male',
   onGenderChange,
 }) => {
-  const [selectedFirst, setSelectedFirst] = useState<ArchetypeId>('rey');
-  const [selectedSecond, setSelectedSecond] = useState<ArchetypeId>('guerrero');
-  const [selectedThird, setSelectedThird] = useState<ArchetypeId | 'none'>('mago');
+  // Arranca con las tres figuras que encabezan tu mapa; sin mapa, con las de siempre.
+  const [selectedFirst, setSelectedFirst] = useState<ArchetypeId>(() => initialArchetypes(currentResult, 3)[0]);
+  const [selectedSecond, setSelectedSecond] = useState<ArchetypeId>(() => initialArchetypes(currentResult, 3)[1]);
+  const [selectedThird, setSelectedThird] = useState<ArchetypeId | 'none'>(() => initialArchetypes(currentResult, 3)[2]);
   const [activeDomain, setActiveDomain] = useState<LifeDomainKey>('liderazgo');
   const [pickerSlot, setPickerSlot] = useState<ActivePickerSlot>(null);
 

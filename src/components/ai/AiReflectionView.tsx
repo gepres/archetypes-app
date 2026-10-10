@@ -21,6 +21,7 @@ import { crisisInConversation } from '../../services/crisisSupport';
 import { GeminiService } from '../../services/geminiService';
 import { AIProviderService, PROVIDER_OPTIONS } from '../../services/aiProviderService';
 import { StorageService, insertarRespuesta } from '../../services/storageService';
+import { suggestedPrompts } from '../../services/personalization';
 import { ArchetypeId, AssessmentResult, ChatMessage, GenderMode, UserProfile } from '../../types';
 import { ArchetypeIllustratedArtwork } from '../archetypes/ArchetypeIllustratedArtwork';
 import { MarkdownRenderer } from '../common/MarkdownRenderer';
@@ -126,6 +127,9 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
   // Dynamic suggested prompts from the gender-specific narrative layer
   const currentSamplePrompts = useMemo(() => {
     if (activePersona === 'general') {
+      // Con un mapa, las preguntas salen de él; sin mapa, unas de ejemplo.
+      const delMapa = suggestedPrompts(currentResult, currentGender);
+      if (delMapa) return delMapa;
       return currentGender === 'female'
         ? [
             '¿Cómo puedo equilibrar la firmeza de mi Guerrera con la sensibilidad de la Amante?',
@@ -156,7 +160,7 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
         '¿Qué límites necesito clarificar hoy?',
       ];
     }
-  }, [activePersona, currentGender, selectedPersonaObj.name]);
+  }, [activePersona, currentGender, selectedPersonaObj.name, currentResult]);
 
   const scrollToBottom = () => {
     // Dentro de la lista, no de la pagina: en un chat de alto fijo, pedirle a

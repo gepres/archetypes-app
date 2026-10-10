@@ -1,7 +1,15 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { ARCHETYPES_LIST, DIMENSIONS, getArchetypeName, getDimensionShortName, withDe } from './archetypesData';
+import { ARCHETYPES_LIST, DIMENSIONS, getArchetypeName, getDimensionShortName, withA, withDe } from './archetypesData';
 import { DimensionId, GenderMode } from '../types';
+
+describe('withA', () => {
+  it('contrae como withDe: «al Rey», «a la Reina», «al arquetipo Rey / Reina»', () => {
+    assert.equal(withA('El Rey'), 'al Rey');
+    assert.equal(withA('La Reina'), 'a la Reina');
+    assert.equal(withA('Rey / Reina'), 'al arquetipo Rey / Reina');
+  });
+});
 
 describe('withDe', () => {
   it('contrae el artículo masculino y conserva el femenino', () => {

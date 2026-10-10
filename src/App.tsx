@@ -340,6 +340,7 @@ export default function App() {
 
           {currentTab === 'compare' && (
             <ArchetypeComparisonView
+              currentResult={currentResult}
               onGoToAiWithPrompt={handleDiscussWithAi}
               onGoToDetail={handleSelectArchetype}
               gender={userProfile.gender || 'male'}
@@ -349,6 +350,7 @@ export default function App() {
 
           {currentTab === 'synergies' && (
             <SynergiesExplorerView
+              currentResult={currentResult}
               onSelectArchetype={handleSelectArchetype}
               gender={userProfile.gender || 'male'}
               onGenderChange={handleGenderChange}
