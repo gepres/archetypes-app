@@ -34,9 +34,13 @@ interface AiReflectionViewProps {
   initialPersona?: string;
   gender?: GenderMode;
   onGenderChange?: (gender: GenderMode) => void;
-  /** Se avisa en cuanto se envía la pregunta inicial, para que no se vuelva a enviar al montar otra vez. */
+  /** Se avisa cuando la pregunta inicial se aceptó y se envió, para que no se reenvíe al montar otra vez. */
   onInitialPromptConsumed?: () => void;
 }
+
+// Las vistas del chat montadas ahora mismo. Una respuesta que llega cuando su vista ya se
+// desmontó (se fue a otra pestaña y volvió) avisa a la que esté montada para que la muestre.
+const vistasDelChat = new Set<() => void>();
 
 /** El nombre legible del modelo activo, no su identificador. */
 function nombreDelModelo(): string {
@@ -170,29 +174,36 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
     }
   }, [initialPersona]);
 
+  // La consulta que llega de fuera (Carta del Día…) se envía en cuanto el chat queda libre, y
+  // solo se da por consumida cuando se aceptó: si había una respuesta en camino, espera a que
+  // llegue en vez de perderse. Una vez enviada, al remontar el chat no se reenvía.
   useEffect(() => {
-    if (initialPrompt && initialPrompt !== inputText) {
-      handleSend(initialPrompt);
-      // Se consume una sola vez: al remontar el chat (otra cuenta, volver a la pestaña) no se
-      // reenvía, ni en nombre de quien no la eligió.
+    if (initialPrompt && !isLoading && handleSend(initialPrompt)) {
       onInitialPromptConsumed?.();
     }
-  }, [initialPrompt]);
+  }, [initialPrompt, isLoading]);
 
-  // Mientras este chat esté montado. Una respuesta que llega después de desmontarlo (por
-  // cambiar de cuenta, aunque luego se vuelva a la misma) no se guarda: su copia de la
-  // conversación es antigua y pisaría los mensajes escritos entretanto.
+  // Mientras este chat esté montado. Una respuesta que llega después de desmontarlo no toca
+  // esta vista: se guarda en la conversación vigente y avisa a la vista que haya montada.
   const montadoRef = useRef(true);
   useEffect(() => {
     montadoRef.current = true;
+    const recargar = () => setMessages(StorageService.getChatMessages());
+    vistasDelChat.add(recargar);
     return () => {
       montadoRef.current = false;
+      vistasDelChat.delete(recargar);
     };
   }, []);
 
-  const handleSend = async (textToSend?: string) => {
-    const text = textToSend || inputText;
-    if (!text.trim() || isLoading) return;
+  // Cierra el paso a un segundo envío en el mismo instante, antes de que el estado se entere.
+  const enviandoRef = useRef(false);
+
+  /** Envía un mensaje. Devuelve si se aceptó: no se acepta vacío ni con otra respuesta en camino. */
+  const handleSend = (textToSend?: string): boolean => {
+    const text = (textToSend || inputText).trim();
+    if (!text || isLoading || enviandoRef.current) return false;
+    enviandoRef.current = true;
     // De quién es esta conversación. Si mientras llega la respuesta se cambia de cuenta, la
     // respuesta no se guarda: sería guardar la conversación de una cuenta en otra.
     const dueno = StorageService.getUserProfile().id;
@@ -200,7 +211,7 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
     const userMsg: ChatMessage = {
       id: `msg-${Date.now()}`,
       role: 'user',
-      content: text.trim(),
+      content: text,
       timestamp: new Date().toISOString(),
       personaUsed: activePersona !== 'general' ? selectedPersonaObj.name : undefined,
     };
@@ -210,10 +221,14 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
     StorageService.saveChatMessages(newMessages);
     setInputText('');
     setIsLoading(true);
+    void pedirRespuesta(text, dueno, userMsg.id);
+    return true;
+  };
 
+  const pedirRespuesta = async (text: string, dueno: string, preguntaId: string) => {
     try {
       const reply = await GeminiService.sendMessage(
-        text.trim(),
+        text,
         messages,
         currentResult,
         activePersona,
@@ -229,15 +244,17 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
         personaUsed: activePersona !== 'general' ? selectedPersonaObj.name : undefined,
       };
 
-      if (!montadoRef.current || StorageService.getUserProfile().id !== dueno) return;
-      const updated = [...newMessages, aiMsg];
-      setMessages(updated);
-      StorageService.saveChatMessages(updated);
-      refreshAiStatus();
+      // Se añade a la conversación guardada, no a la copia de este envío: entretanto la vista
+      // pudo desmontarse y volver, o la persona pudo escribir otra cosa.
+      if (StorageService.addChatReply(dueno, preguntaId, aiMsg)) {
+        vistasDelChat.forEach(recargar => recargar());
+        if (montadoRef.current) refreshAiStatus();
+      }
     } catch (err) {
       console.error('Chat error:', err);
     } finally {
-      setIsLoading(false);
+      enviandoRef.current = false;
+      if (montadoRef.current) setIsLoading(false);
     }
   };
 

@@ -380,6 +380,23 @@ export const StorageService = {
     return messages;
   },
 
+  /**
+   * Guarda la respuesta a una pregunta en la conversación vigente, justo detrás de su pregunta,
+   * sin pisar lo que se haya escrito mientras llegaba (la vista que la pidió puede llevar rato
+   * desmontada, y su copia de la conversación ser antigua). Se descarta, devolviendo null, si
+   * la cuenta abierta ya no es la que preguntó o si la pregunta ya no está porque se reinició
+   * la conversación.
+   */
+  addChatReply(dueno: string, preguntaId: string, respuesta: ChatMessage): ChatMessage[] | null {
+    if (this.getUserProfile().id !== dueno) return null;
+    const actual = this.getChatMessages();
+    const i = actual.findIndex(m => m.id === preguntaId && m.role === 'user');
+    if (i === -1) return null;
+    const messages = [...actual.slice(0, i + 1), respuesta, ...actual.slice(i + 1)];
+    this.saveChatMessages(messages);
+    return messages;
+  },
+
   // User Profile & Account Management
   getUserProfile(): UserProfile {
     try {

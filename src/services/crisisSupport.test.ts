@@ -113,6 +113,10 @@ describe('detectCrisis', () => {
     'Me corté las muñecas adrede',
     'A propósito me corté la piel',
     'Adrede me he cortado los brazos',
+    // Séptima revisión de Codex: el artículo indefinido no vuelve inocuo cualquier corte
+    'Me corté una vez a propósito',
+    'Me corté un brazo adrede',
+    'Me he cortado yo misma los brazos a propósito',
   ];
 
   for (const frase of crisis) {
@@ -154,6 +158,12 @@ describe('detectCrisis', () => {
     'Me corté las uñas adrede',
     'A propósito me corté el flequillo',
     'Me corto la barba a propósito para el verano',
+    // Séptima revisión de Codex: cortes cotidianos con artículo indefinido
+    'Me corté un mechón de pelo a propósito',
+    'A propósito me corté una uña que estaba rota',
+    'Me corté un poco el flequillo adrede',
+    'Me he cortado yo misma el pelo a propósito',
+    'Me corté las puntas a propósito',
   ];
 
   for (const frase of sinCrisis) {

@@ -55,6 +55,69 @@ describe('chat: reiniciar y cerrar una crisis', () => {
   });
 });
 
+describe('chat: una respuesta tardía no pisa ni se pierde', () => {
+  const montar = () => {
+    const mem = new Map<string, string>();
+    (globalThis as any).localStorage = {
+      getItem: (k: string) => mem.get(k) ?? null,
+      setItem: (k: string, v: string) => void mem.set(k, String(v)),
+      removeItem: (k: string) => void mem.delete(k),
+      clear: () => mem.clear(),
+    };
+    const perfil: UserProfile = { id: 'uidX', name: 'Ana', email: 'ana@ejemplo.com', isGuest: false, createdAt: '', lastActive: '' };
+    mem.set('archetypes_user_profile', JSON.stringify(perfil));
+    const original = FirebaseService.syncFullDataToCloud;
+    FirebaseService.syncFullDataToCloud = async () => true;
+    return () => { FirebaseService.syncFullDataToCloud = original; };
+  };
+  const msg = (id: string, role: 'user' | 'model', content = id) => ({ id, role, content, timestamp: '' });
+
+  it('se guarda detrás de su pregunta aunque entretanto se haya escrito otra (volver a la pestaña)', () => {
+    const restaurar = montar();
+    try {
+      StorageService.saveChatMessages([msg('msg-welcome-1', 'model'), msg('q1', 'user'), msg('q2', 'user')]);
+      const tras = StorageService.addChatReply('uidX', 'q1', msg('r1', 'model'));
+      assert.deepEqual(tras?.map(m => m.id), ['msg-welcome-1', 'q1', 'r1', 'q2']);
+      assert.deepEqual(StorageService.getChatMessages().map(m => m.id), ['msg-welcome-1', 'q1', 'r1', 'q2']);
+    } finally {
+      restaurar();
+    }
+  });
+
+  it('se descarta si la conversación se reinició mientras llegaba', () => {
+    const restaurar = montar();
+    try {
+      StorageService.saveChatMessages([msg('msg-welcome-1', 'model'), msg('q1', 'user')]);
+      StorageService.clearChatMessages();
+      assert.equal(StorageService.addChatReply('uidX', 'q1', msg('r1', 'model')), null);
+      assert.deepEqual(StorageService.getChatMessages().map(m => m.id), ['msg-welcome-1']);
+    } finally {
+      restaurar();
+    }
+  });
+
+  it('se descarta si la cuenta abierta ya no es la que preguntó', () => {
+    const restaurar = montar();
+    try {
+      StorageService.saveChatMessages([msg('msg-welcome-1', 'model'), msg('q1', 'user')]);
+      assert.equal(StorageService.addChatReply('otraCuenta', 'q1', msg('r1', 'model')), null);
+      assert.deepEqual(StorageService.getChatMessages().map(m => m.id), ['msg-welcome-1', 'q1']);
+    } finally {
+      restaurar();
+    }
+  });
+
+  it('un mensaje del modelo con el mismo id no se toma por la pregunta', () => {
+    const restaurar = montar();
+    try {
+      StorageService.saveChatMessages([msg('q1', 'model')]);
+      assert.equal(StorageService.addChatReply('uidX', 'q1', msg('r1', 'model')), null);
+    } finally {
+      restaurar();
+    }
+  });
+});
+
 describe('cuentas: cada una ve y sube solo lo suyo', () => {
   type Mundo = { mem: Map<string, string>; subidas: { id: string; data: any }[]; fin: () => void };
   const mundo = (): Mundo => {
