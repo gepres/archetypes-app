@@ -529,6 +529,28 @@ describe('perspectiva de quien llega por primera vez', () => {
     assert.equal(deNuevoB.gender, 'female');
   });
 
+  it('cambiar la perspectiva dentro de la cuenta y volver a elegirla en «Cuentas» la conserva (Codex)', () => {
+    vacio();
+    const A = StorageService.loginOrCreateAccount({ name: 'A', email: 'a@x.com', gender: 'universal' });
+    StorageService.enterAccount(A, null);
+    StorageService.saveUserProfile({ ...StorageService.getUserProfile(), gender: 'female' });
+    const deNuevo = StorageService.loginOrCreateAccount({ name: 'A', email: 'a@x.com' });
+    StorageService.enterAccount(deNuevo, null);
+    assert.equal(StorageService.getUserProfile().gender, 'female');
+    assert.equal(StorageService.getSavedAccounts().find(a => a.email === 'a@x.com')?.gender, 'female');
+  });
+
+  it('y la recupera al volver a ella desde otra cuenta', () => {
+    vacio();
+    const A = StorageService.loginOrCreateAccount({ name: 'A', email: 'a@x.com', gender: 'universal' });
+    StorageService.enterAccount(A, null);
+    StorageService.saveUserProfile({ ...StorageService.getUserProfile(), gender: 'female' });
+    const B = StorageService.loginOrCreateAccount({ name: 'B', email: 'b@x.com', gender: 'male' });
+    StorageService.enterAccount(B, null);
+    const otraVezA = StorageService.loginOrCreateAccount({ name: 'A', email: 'a@x.com' });
+    assert.equal(otraVezA.gender, 'female');
+  });
+
   it('quien ya eligió una perspectiva la conserva', () => {
     const mem = vacio();
     mem.set('archetypes_user_profile', JSON.stringify({ id: 'u', name: 'A', email: '', isGuest: true, gender: 'male', createdAt: '', lastActive: '' }));

@@ -497,6 +497,16 @@ export const StorageService = {
         profile.gender = (anterior?.id === profile.id ? anterior.gender : undefined) ?? DEFAULT_GENDER;
       }
       localStorage.setItem(STORAGE_KEYS.USER_PROFILE, JSON.stringify(profile));
+      // La perspectiva también en la copia guardada de la cuenta, para que volver a entrar en
+      // ella (por la lista de cuentas, o sin la nube) no traiga una anterior.
+      if (!profile.isGuest && profile.gender) {
+        const cuentas = this.getSavedAccounts();
+        const i = cuentas.findIndex(a => a.id === profile.id);
+        if (i >= 0 && cuentas[i].gender !== profile.gender) {
+          cuentas[i] = { ...cuentas[i], gender: profile.gender };
+          this.saveAccountsVault(cuentas);
+        }
+      }
       this.syncActiveAccountData();
     } catch (e) {
       console.error("Error saving profile:", e);
@@ -557,13 +567,23 @@ export const StorageService = {
     this.saveAccountsVault(accounts);
 
     const currentSaved = this.getUserProfile();
+    const esLaActiva =
+      !currentSaved.isGuest &&
+      (currentSaved.id === targetAccount.id ||
+        (!!currentSaved.email && currentSaved.email.toLowerCase() === targetAccount.email.toLowerCase()));
     return {
       id: targetAccount.id,
       name: targetAccount.name,
       email: targetAccount.email,
       isGuest: false,
-      // La de la cuenta antes que la de quien estaba en el navegador.
-      gender: accountData.gender || targetAccount.gender || currentSaved.gender || DEFAULT_GENDER,
+      // Si es la cuenta que ya está abierta, la que tiene ahora (puede haberla cambiado después
+      // de entrar); si no, la de esa cuenta antes que la de quien estaba en el navegador.
+      gender:
+        accountData.gender ||
+        (esLaActiva ? currentSaved.gender : undefined) ||
+        targetAccount.gender ||
+        currentSaved.gender ||
+        DEFAULT_GENDER,
       avatarEmoji: targetAccount.avatarEmoji,
       pinCode: accountData.pinCode,
       createdAt: targetAccount.createdAt,
