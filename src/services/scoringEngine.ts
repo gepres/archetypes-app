@@ -187,7 +187,7 @@ export function calculateAssessmentResult(
   return {
     id: `eval-${Date.now()}`,
     date: new Date().toISOString(),
-    title: `Mapa Arquetípico - ${dominantArchetype.name}`,
+    title: resultTitle(compositeProfile, dominantArchetype.name),
     type: testType,
     scores: normalizedScores,
     ranking,
@@ -296,7 +296,7 @@ export function adaptAssessmentResultToGender(
 
   return {
     ...result,
-    title: `Mapa Arquetípico - ${dominantArchetype.name}`,
+    title: resultTitle(compositeProfile, dominantArchetype.name),
     dominantArchetype,
     ranking,
     top3,
@@ -304,6 +304,11 @@ export function adaptAssessmentResultToGender(
     developmentArchetypes,
     compositeProfile,
   };
+}
+
+/** El título de un resultado: no nombra un dominante si el mapa no lo tiene. */
+function resultTitle(profile: CompositeProfile, dominantName: string): string {
+  return `Mapa Arquetípico - ${profile.isFlat || profile.isTie ? profile.title : dominantName}`;
 }
 
 /** Dos figuras están a la par si las separa esta distancia o menos (en puntos de 10 a 98). */
@@ -316,6 +321,14 @@ export const TIE_MAX_GAP = 1;
  * mapa contrastado (una dimensión baja y el resto alto), aunque arriba haya muchos empatados.
  */
 export const FLAT_MAX_RANGE = 15;
+
+/**
+ * …y además nadie se despega: el primero no saca al segundo más de esto. Un perfil suave pero
+ * real (una figura diez puntos por delante en un mapa de poco contraste) no es plano: decir que
+ * ninguna destaca sería falso. Coincide con lo que la pantalla explica: uno o dos puntos no
+ * significan nada.
+ */
+export const FLAT_MAX_LEAD = 2;
 
 /** «A», «A y B», «A, B y C». */
 export function listNames(names: string[]): string {
@@ -374,7 +387,7 @@ function generateCompositeProfile(
 
   // Si todo el mapa cabe en unos pocos puntos, no se inventa una identidad: se dice.
   const range = first.normalizedScore - last.normalizedScore;
-  if (range <= FLAT_MAX_RANGE) {
+  if (range <= FLAT_MAX_RANGE && first.normalizedScore - second.normalizedScore <= FLAT_MAX_LEAD) {
     return {
       archetypeKey,
       title: 'Un mapa sin un polo claro',

@@ -87,7 +87,11 @@ Descubre el tuyo escuchando, en dos minutos:`;
         };
 
         navigator
-          .share({ title: `Mi arquetipo: ${dominante.name}`, text: texto, url })
+          .share({
+            title: plano ? 'Mi mapa de arquetipos' : empate ? 'Mis arquetipos, a la par' : `Mi arquetipo: ${dominante.name}`,
+            text: texto,
+            url,
+          })
           .then(
             () => cerrar('ok'),
             (e: any) => cerrar(e?.name === 'AbortError' ? 'cancelado' : 'fallo')

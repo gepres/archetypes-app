@@ -48,18 +48,27 @@ const SENALES: RegExp[] = [
   // "No quiero hacerme daño" o "no pienso en morirme" no son señales: la negación delante de
   // la intención la anula. Va como lookbehind para no tocar "no quiero vivir", que sí lo es.
   /(?<!\bno )\b(quiero|quisiera|voy a|pienso en|pensando en|ganas de|deseo|necesito)\s+(matarme|morirme|morir|suicidarme|desaparecer para siempre|hacerme dano|lastimarme)\b/,
-  /\bme quiero (morir|matar|suicidar|hacer dano)\b/,
-  /\bme voy a (matar|suicidar|morir|hacer dano|lastimar|quitar la vida)\b/,
-  /\bme mato\b/,
+  // La negación también vale aquí: "no me quiero hacer daño" no es una señal.
+  /(?<!\bno )\bme quiero (morir|matar|suicidar|hacer dano|lastimar)\b/,
+  /(?<!\bno )\bme voy a (matar|suicidar|morir|hacer dano|lastimar|quitar la vida)\b/,
+  /(?<!\bno )\bme mato\b/,
   /\bno quiero (vivir|seguir viviendo|estar viv[oa]|existir|despertar)\b/,
   /\b(estarian|estaria|seria|serian) mejor sin mi\b/,
   /\bmejor (estaria|estar) muert[oa]\b/,
   /\bojala (no despertar|no despertara|estar muert[oa]|morirme)\b/,
-  /\b(sobredosis|tomarme todas las pastillas|tengo las pastillas)\b/,
-  // Autolesión. Lo accidental ("me hice daño en la rodilla", "me lastimé entrenando") no cuenta.
+  // Las pastillas solo cuentan con señal de riesgo: "tengo las pastillas que me recetó el
+  // médico" no lo es; "tomarme todas" o "ya las tengo en la mano", sí.
+  /\bsobredosis\b/,
+  /\btomarme (todas )?las pastillas\b/,
+  /\b(ya )?tengo las pastillas (en la mano|preparadas|listas|aqui)\b/,
+  // Autolesión. La intención deliberada manda sobre cualquier filtro de lo accidental: "me
+  // hice daño a propósito" es una señal aunque esté en pasado o diga dónde.
   /\bautolesi/,
+  /\bme (hice|hago|hacia|he hecho) dano\b.{0,40}\b(a proposito|adrede|aposta|queriendo|intencionadamente)\b/,
+  /\bme (lastime|lastimo|lastimaba|he lastimado|corte|corto|cortaba|golpee|golpeo|queme|quemo)\b.{0,40}\b(a proposito|adrede|aposta|queriendo|intencionadamente)\b/,
+  // Lo accidental ("me hice daño en la rodilla", "me lastimé entrenando") no cuenta.
   /\bme hago dano\b(?! (en|al|entrenando|jugando|corriendo|haciendo))/,
-  /\bme (lastimo|corto|golpeo|quemo|hago dano) a proposito\b/,
+  /\bme (hago|hice|he hecho) dano en (los brazos|las munecas)\b/,
   /\bcortarme (las venas|los brazos|las munecas|la piel)\b/,
   // Violencia y peligro, también mientras ocurre
   /\bme (pega|golpea|maltrata|amenaza|viola|pegan|golpean|maltratan|amenazan)\b/,
@@ -88,13 +97,12 @@ export function detectCrisis(mensaje: string): boolean {
 }
 
 /**
- * Cuántos mensajes recientes del usuario mantienen el protocolo activo. Tras una señal, quien
- * sigue escribiendo («estoy solo y ya tengo las pastillas») no repite las palabras que la
- * activaron, y volver a interpretar arquetipos en ese momento sería abandonarle.
+ * ¿Hubo una señal de crisis en esta conversación? Tras una señal, quien sigue escribiendo
+ * («estoy sola», «tengo miedo») no repite las palabras que la activaron, y volver a interpretar
+ * arquetipos al cabo de unos mensajes sería abandonarle sin que nadie haya dicho que está a
+ * salvo. Por eso no caduca: dura lo que dura la conversación, también al recuperarla del
+ * almacenamiento, y se cierra solo al reiniciarla.
  */
-export const CRISIS_MEMORY = 3;
-
-/** ¿Hubo una señal de crisis en los últimos mensajes del usuario? */
-export function crisisInRecentMessages(mensajesDelUsuario: string[]): boolean {
-  return mensajesDelUsuario.slice(-CRISIS_MEMORY).some(detectCrisis);
+export function crisisInConversation(mensajesDelUsuario: string[]): boolean {
+  return mensajesDelUsuario.some(detectCrisis);
 }

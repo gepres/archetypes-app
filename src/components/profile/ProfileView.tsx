@@ -27,6 +27,7 @@ import {
   Check,
 } from 'lucide-react';
 import { withDe } from '../../data/archetypesData';
+import { getMapLead } from '../../services/scoringEngine';
 import { StorageService } from '../../services/storageService';
 import { FirebaseService } from '../../services/firebaseService';
 import { AIProviderService } from '../../services/aiProviderService';
@@ -195,10 +196,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
     reader.onload = event => {
       try {
         const json = JSON.parse(event.target?.result as string);
-        if (json.currentResult) StorageService.saveCurrentResult(json.currentResult);
-        if (json.journalEntries) StorageService.saveJournalEntries(json.journalEntries);
-        if (json.challenges) StorageService.saveChallenges(json.challenges);
-        if (json.chatMessages) StorageService.saveChatMessages(json.chatMessages);
+        // De una vez, con el historial incluido, y una sola subida al final.
+        StorageService.applyAccountData(json);
         if (json.profile) onUpdateProfile(json.profile);
         alert('Datos importados correctamente.');
         window.location.reload();
@@ -502,7 +501,9 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                 className="p-4 bg-[#0E1513] hover:bg-[#16221E] border border-[#23332D] hover:border-[#315C45] rounded-2xl transition-all cursor-pointer flex items-center justify-between group shadow-sm"
               >
                 <div className="flex items-center gap-3.5">
-                  <span className="text-3xl">{item.dominantArchetype?.emoji || '👑'}</span>
+                  <span className="text-3xl">
+                    {item.compositeProfile?.isFlat ? '🧭' : item.dominantArchetype?.emoji || '👑'}
+                  </span>
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="font-serif font-bold text-sm text-[#F2EFE6]">
@@ -516,7 +517,17 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                       <Calendar className="w-3 h-3" />
                       <span>{new Date(item.date).toLocaleDateString()}</span>
                       <span>•</span>
-                      <span>Dominante: {item.dominantArchetype?.name} ({item.dominantArchetype?.normalizedScore}%)</span>
+                      <span>
+                        {(() => {
+                          // Un resultado antiguo o roto no debe tumbar la lista.
+                          try {
+                            const lead = getMapLead(item, userProfile.gender || 'male');
+                            return lead.kind === 'single' ? `Dominante: ${lead.label}` : lead.label;
+                          } catch {
+                            return item.dominantArchetype?.name ?? '';
+                          }
+                        })()}
+                      </span>
                     </div>
                   </div>
                 </div>

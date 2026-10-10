@@ -115,7 +115,7 @@ export const ResultView: React.FC<ResultViewProps> = ({
               </button>
             </div>
           ) : (
-            <div className="grid gap-8 md:grid-cols-[260px_1fr] md:items-center">
+            <div className="grid gap-8 lg:grid-cols-[260px_1fr] lg:items-center">
               {/* El rostro */}
               <button
                 type="button"
@@ -136,7 +136,7 @@ export const ResultView: React.FC<ResultViewProps> = ({
               </button>
 
               {/* Lo justo: quién es, su mantra y por qué te salió */}
-              <div className="space-y-5 text-center md:text-left">
+              <div className="space-y-5 text-center lg:text-left">
                 <p className="text-sm sm:text-base text-[#C5CFC7] leading-relaxed">{dominant.shortDescription}</p>
 
                 <blockquote
@@ -209,7 +209,7 @@ export const ResultView: React.FC<ResultViewProps> = ({
           </div>
 
           {(compositeProfile.strengths.length > 0 || compositeProfile.risksAndShadows.length > 0) && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-[#1E2A25]">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pt-4 border-t border-[#1E2A25]">
               <div className="p-4 rounded-xl bg-[#16201D] border border-[#1E2A25] space-y-2.5">
                 <h4 className="text-xs uppercase tracking-wider font-bold text-[#10B981] flex items-center gap-1.5">
                   <Sparkles className="w-3.5 h-3.5" />
@@ -248,7 +248,7 @@ export const ResultView: React.FC<ResultViewProps> = ({
       {!plano && (
         <section className="space-y-4">
           <h3 className="font-serif text-xl sm:text-2xl font-bold text-[#F2EFE6]">Tus tres primeros</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
             {result.top3.map((item, index) => {
               const arch = getArchetype(item.archetypeId, gender);
               const next = result.top3[index + 1];
@@ -261,8 +261,8 @@ export const ResultView: React.FC<ResultViewProps> = ({
                   onClick={() => onSelectArchetype(item.archetypeId)}
                   className="group text-left rounded-2xl border border-[#23332D] bg-[#121A17] hover:border-[#D6A84F]/50 overflow-hidden transition-colors"
                 >
-                  <div className="flex sm:block">
-                    <div className="relative w-24 sm:w-full h-28 sm:h-40 shrink-0 bg-[#0B1110] overflow-hidden">
+                  <div className="flex lg:block">
+                    <div className="relative w-24 lg:w-full h-28 lg:h-40 shrink-0 bg-[#0B1110] overflow-hidden">
                       <ArchetypeIllustratedArtwork archetypeId={arch.id} className="w-full h-full object-cover" />
                     </div>
                     <div className="p-3.5 space-y-1.5 min-w-0">
@@ -346,7 +346,7 @@ export const ResultView: React.FC<ResultViewProps> = ({
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pt-2">
             {compositeProfile.developmentArchetypes.map(dev => {
               const arch = getArchetype(dev.archetypeId, gender);
               return (

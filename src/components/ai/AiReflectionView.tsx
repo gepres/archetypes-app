@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { ARCHETYPE_VISUALS } from '../../data/archetypeImages';
 import { getArchetypeList, getArchetypeName, getArchetypeNarrative, withDe } from '../../data/archetypesData';
+import { getMapLead } from '../../services/scoringEngine';
 import { GeminiService } from '../../services/geminiService';
 import { AIProviderService, PROVIDER_OPTIONS } from '../../services/aiProviderService';
 import { StorageService } from '../../services/storageService';
@@ -225,9 +226,8 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
     }
   };
 
-  const dominantName = currentResult
-    ? getArchetypeName(currentResult.dominantArchetype.archetypeId, currentGender)
-    : '';
+  // Cómo se nombra la cabeza del mapa en la cabecera: sin inventar un dominante si no lo hay.
+  const lead = currentResult ? getMapLead(currentResult, currentGender) : null;
 
   const sinMensajes = !messages.some(m => m.role === 'user');
   // Con clave propia no hay cupo que gastar; con la incluida, si.
@@ -384,10 +384,11 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
               <p className="text-xs text-[#9DA79F] leading-relaxed px-2">
                 {selectedPersonaObj.tone}
               </p>
-              {currentResult && (
+              {lead && (
                 <p className="text-[11px] text-[#718277] pt-1">
-                  Conoce tu mapa · dominante{' '}
-                  <span className="text-[#D6A84F]">{dominantName}</span>
+                  Conoce tu mapa ·{' '}
+                  {lead.kind === 'single' ? 'dominante ' : ''}
+                  <span className="text-[#D6A84F]">{lead.label}</span>
                 </p>
               )}
             </div>

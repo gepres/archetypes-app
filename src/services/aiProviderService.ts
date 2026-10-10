@@ -14,7 +14,7 @@ import {
   CRISIS_FOLLOWUP,
   CRISIS_PROTOCOL,
   CRISIS_RESPONSE,
-  crisisInRecentMessages,
+  crisisInConversation,
   detectCrisis,
 } from './crisisSupport';
 
@@ -395,7 +395,7 @@ ${resultContext}
     // Si la señal llegó en un mensaje anterior, la crisis sigue abierta: un modelo puede
     // acompañar (con el aviso en el prompt), pero ni el motor local, ni el cupo agotado, ni un
     // fallo de red vuelven a interpretar arquetipos.
-    const crisisAbierta = crisisInRecentMessages(history.filter(m => m.role === 'user').map(m => m.content));
+    const crisisAbierta = crisisInConversation(history.filter(m => m.role === 'user').map(m => m.content));
     const seguimientoDeCrisis = { text: CRISIS_FOLLOWUP, modelUsed: 'Protocolo de cuidado', provider: 'local' as AIProviderId };
 
     const settings = this.getSettings();
@@ -772,13 +772,27 @@ ${resultContext}
       );
     }
 
-    const domName = result.dominantArchetype.name;
-    const devNames = result.developmentArchetypes.map(d => d.name).join(' y ');
+    // Como en el prompt de los modelos: no se habla de un dominante que el mapa no tiene, ni se
+    // recomiendan figuras por un puesto que en un mapa plano decide el orden de los datos.
+    const lead = getMapLead(result, gender);
+    if (lead.kind === 'flat') {
+      return (
+        `Tu mapa no tiene un polo claro: tus respuestas puntúan parecido en todas las figuras, así que no hay una que hable más alto que las demás.\n\n` +
+        `En lugar de partir del mapa, partamos de la situación: ¿qué energía (la acción enfocada, la visión analítica, la conexión empática o la organización) te está pidiendo ahora, y cuál estás usando por costumbre?`
+      );
+    }
+
+    const lowNames = result.developmentArchetypes.map(d => getArchetypeName(d.archetypeId, gender));
+    const lowList = lowNames.length > 1 ? `${lowNames.slice(0, -1).join(', ')} y ${lowNames[lowNames.length - 1]}` : lowNames.join('');
+    const cabeza =
+      lead.kind === 'tie'
+        ? `donde van a la par **${lead.label.replace(/, a la par$/, '')}**`
+        : `donde predomina **${lead.label}**`;
 
     return (
-      `Considerando tu mapa arquetípico (donde predomina **${domName}** y tus arquetipos sugeridos de desarrollo son **${devNames}**), esta situación podría indicar que estás operando con mucha fuerza desde tus patrones habituales.\n\n` +
-      `¿Cómo cambiaría tu perspectiva si convocaras por un momento la energía y virtudes de **${result.developmentArchetypes[0]?.name || 'tu arquetipo complementario'}**?\n\n` +
-      `Este modelo sugiere que no se trata de anular tu ${domName}, sino de enriquecerlo con nuevos recursos de sabiduría y presencia consciente.`
+      `Considerando tu mapa arquetípico (${cabeza}, y lo que menos apareció en tus respuestas es **${lowList}**), esta situación podría indicar que estás operando con mucha fuerza desde tus patrones habituales.\n\n` +
+      `¿Cómo cambiaría tu perspectiva si convocaras por un momento la energía y virtudes de **${lowNames[0] || 'una figura que uses poco'}**?\n\n` +
+      `Este modelo sugiere que no se trata de anular lo que ya te mueve, sino de enriquecerlo con nuevos recursos.`
     );
   },
 };

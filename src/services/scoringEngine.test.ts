@@ -1,6 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  FLAT_MAX_LEAD,
   FLAT_MAX_RANGE,
   TIE_MAX_GAP,
   adaptAssessmentResultToGender,
@@ -87,11 +88,24 @@ describe('perfil por pareja', () => {
     }
   });
 
-  it('el mapa plano se marca exactamente cuando todo el mapa cabe en pocos puntos', () => {
+  it('el mapa plano se marca exactamente cuando todo cabe en pocos puntos y nadie se despega', () => {
     for (const res of resultados) {
-      const rango = res.ranking[0].normalizedScore - res.ranking[res.ranking.length - 1].normalizedScore;
-      assert.equal(!!res.compositeProfile.isFlat, rango <= FLAT_MAX_RANGE);
+      const s = res.ranking.map(x => x.normalizedScore);
+      const plano = s[0] - s[s.length - 1] <= FLAT_MAX_RANGE && s[0] - s[1] <= FLAT_MAX_LEAD;
+      assert.equal(!!res.compositeProfile.isFlat, plano);
     }
+  });
+
+  it('un perfil suave pero coherente no es plano (caso de la segunda revisión de Codex)', () => {
+    // 4 a las afirmaciones 6, 19, 20 y 23, y 3 al resto: el Explorador se despega diez puntos.
+    const res = calculateAssessmentResult(
+      QUESTIONS_DATA.map(q => ({ questionId: q.id, value: [6, 19, 20, 23].includes(q.id) ? 4 : 3 })),
+      'full',
+      'male'
+    );
+    assert.equal(res.compositeProfile.isFlat, false);
+    assert.equal(res.dominantArchetype.archetypeId, 'explorador');
+    assert.ok((res.evidence?.explorador ?? []).length > 0, 'cuenta por qué le salió');
   });
 
   // Los dos casos que encontró la revisión de Codex

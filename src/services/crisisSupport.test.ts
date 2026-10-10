@@ -2,25 +2,25 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   CRISIS_FOLLOWUP,
-  CRISIS_MEMORY,
   CRISIS_PROTOCOL,
   CRISIS_RESPONSE,
-  crisisInRecentMessages,
+  crisisInConversation,
   detectCrisis,
 } from './crisisSupport';
 
-describe('crisisInRecentMessages', () => {
+describe('crisisInConversation', () => {
   it('la crisis sigue abierta en los mensajes siguientes aunque no se repitan las palabras', () => {
-    assert.equal(crisisInRecentMessages(['Quiero suicidarme esta noche', 'Estoy en casa, a oscuras']), true);
+    assert.equal(crisisInConversation(['Quiero suicidarme esta noche', 'Estoy en casa, a oscuras']), true);
   });
 
-  it('se cierra cuando la señal queda atrás de la ventana', () => {
-    const despues = Array.from({ length: CRISIS_MEMORY }, (_, i) => `Hoy he hablado con mi hermana (${i})`);
-    assert.equal(crisisInRecentMessages(['Quiero suicidarme', ...despues]), false);
+  it('no caduca: sigue abierta aunque pasen muchos mensajes sin repetir la señal', () => {
+    // El caso de Codex: con una ventana de tres mensajes, el quinto volvía a recibir arquetipos.
+    const despues = ['Estoy solo', 'Tengo miedo', 'No sé qué hacer', 'Sigo aquí', 'No puedo dormir', 'Es tarde'];
+    assert.equal(crisisInConversation(['Quiero suicidarme esta noche', ...despues]), true);
   });
 
   it('una conversación normal no la abre', () => {
-    assert.equal(crisisInRecentMessages(['¿Cómo equilibro mi Guerrero?', 'Gracias, me sirve']), false);
+    assert.equal(crisisInConversation(['¿Cómo equilibro mi Guerrero?', 'Gracias, me sirve']), false);
   });
 
   it('el seguimiento tampoco inventa teléfonos ni habla del mapa', () => {
@@ -59,6 +59,13 @@ describe('detectCrisis', () => {
     'Si sigue así me mato',
     'Estoy solo y ya tengo las pastillas en la mano',
     'Me corto a propósito cuando me siento así',
+    // Segunda revisión de Codex: lo deliberado en pasado, o diciendo dónde
+    'Me hice daño a propósito anoche',
+    'Me lastimé a propósito',
+    'Me hago daño en los brazos a propósito',
+    'Me corté adrede',
+    'Me hago daño en los brazos cuando me agobio',
+    'Pienso en tomarme todas las pastillas',
   ];
 
   for (const frase of crisis) {
@@ -86,6 +93,10 @@ describe('detectCrisis', () => {
     'Esta semana me voy a matar a trabajar',
     'Me mato de risa con la Bufona',
     'No pienso en morirme, pienso en cambiar de trabajo',
+    // Segunda revisión de Codex
+    'Tengo las pastillas que me recetó el médico y quiero organizar mis rutinas',
+    'No me quiero hacer daño, quiero poner límites',
+    'No me voy a rendir aunque cueste',
   ];
 
   for (const frase of sinCrisis) {

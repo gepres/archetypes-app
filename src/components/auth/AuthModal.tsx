@@ -100,21 +100,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         }
       }
 
-      // Check if user has cloud data to restore
-      if (profile.id) {
-        const cloudData = await FirebaseService.loadFullDataFromCloud(profile.id);
-        if (cloudData) {
-          if (cloudData.currentResult) StorageService.saveCurrentResult(cloudData.currentResult);
-          if (cloudData.journalEntries?.length) StorageService.saveJournalEntries(cloudData.journalEntries);
-          if (cloudData.challenges?.length) StorageService.saveChallenges(cloudData.challenges);
-          if (cloudData.chatMessages?.length) StorageService.saveChatMessages(cloudData.chatMessages);
-        } else {
-          // Sync current session to cloud
-          StorageService.syncActiveAccountData();
-        }
-      }
-
-      StorageService.saveUserProfile(profile);
+      // Los datos de la nube (todos, también el historial) se aplican de una vez y se sube una
+      // sola vez el estado completo; si no hay nada en la nube, se sube la sesión actual.
+      const cloudData = profile.id ? await FirebaseService.loadFullDataFromCloud(profile.id) : null;
+      StorageService.applyAccountData(cloudData, profile);
       setSavedAccounts(StorageService.getSavedAccounts());
       onUserChange(profile);
       onClose();
@@ -131,18 +120,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     try {
       const profile = await FirebaseService.loginWithGoogle();
       
-      // Load cloud data if available
+      // Los datos de la nube se aplican de una vez (ver applyAccountData).
       const cloudData = await FirebaseService.loadFullDataFromCloud(profile.id);
-      if (cloudData) {
-        if (cloudData.currentResult) StorageService.saveCurrentResult(cloudData.currentResult);
-        if (cloudData.journalEntries?.length) StorageService.saveJournalEntries(cloudData.journalEntries);
-        if (cloudData.challenges?.length) StorageService.saveChallenges(cloudData.challenges);
-        if (cloudData.chatMessages?.length) StorageService.saveChatMessages(cloudData.chatMessages);
-      } else {
-        StorageService.syncActiveAccountData();
-      }
-
-      StorageService.saveUserProfile(profile);
+      StorageService.applyAccountData(cloudData, profile);
       setSavedAccounts(StorageService.getSavedAccounts());
       onUserChange(profile);
       onClose();

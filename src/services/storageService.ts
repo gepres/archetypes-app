@@ -15,6 +15,10 @@ import {
 import { FirebaseService } from './firebaseService';
 import { adaptAssessmentResultToGender } from './scoringEngine';
 
+// Mientras se aplican de golpe los datos de una cuenta no se sube nada a la nube (ver
+// `applyAccountData`).
+let syncPaused = false;
+
 const STORAGE_KEYS = {
   CURRENT_USER_ID: 'archetypes_active_user_id',
   ACCOUNTS_VAULT: 'archetypes_accounts_vault',
@@ -219,7 +223,9 @@ export const StorageService = {
     try {
       const data = localStorage.getItem(STORAGE_KEYS.CHALLENGES);
       if (data) return mergeChallengeProgress(INITIAL_CHALLENGES, JSON.parse(data));
-      this.saveChallenges(INITIAL_CHALLENGES);
+      // Leer no debe subir nada a la nube: el valor inicial se guarda solo en local. Con
+      // `saveChallenges` aquí, cada subida leía los retos y disparaba otra subida dentro.
+      localStorage.setItem(STORAGE_KEYS.CHALLENGES, JSON.stringify(INITIAL_CHALLENGES));
       return INITIAL_CHALLENGES;
     } catch (e) {
       console.error("Error reading challenges:", e);
@@ -262,7 +268,8 @@ export const StorageService = {
         content: 'Bienvenido al espacio de reflexión arquetípica. Estoy aquí para acompañarte a explorar tu mapa personal desde una mirada filosófica y simbólica. Puedes compartirme cualquier situación actual, conflicto decisional o solicitar hablar con la voz directa de un arquetipo específico.',
         timestamp: new Date().toISOString(),
       };
-      this.saveChatMessages([initialMessage]);
+      // Como en los retos: el valor inicial se guarda solo en local, sin subir nada al leer.
+      localStorage.setItem(STORAGE_KEYS.CHAT_MESSAGES, JSON.stringify([initialMessage]));
       return [initialMessage];
     } catch (e) {
       console.error("Error reading chat messages:", e);
@@ -460,7 +467,30 @@ export const StorageService = {
     return FirebaseService.isAuthResolved() ? 'local' : 'pending';
   },
 
+  /**
+   * Aplica de una vez los datos de una cuenta (de la nube o de una copia importada): resultado,
+   * historial, diario, retos y chat, y el perfil si viene. Mientras se aplican no se sube nada:
+   * cada `save…` dispara una subida, y a medio restaurar subía un estado a medias que pisaba en
+   * la nube lo que aún no se había bajado (el historial, que además nunca se aplicaba). Al final
+   * se sube una sola vez el estado completo.
+   */
+  applyAccountData(data: Partial<AccountRecord['data']> | null, profile?: UserProfile): void {
+    syncPaused = true;
+    try {
+      if (profile) this.saveUserProfile(profile);
+      if (data?.currentResult) this.saveCurrentResult(data.currentResult);
+      if (data?.history?.length) this.saveAssessmentHistory(data.history);
+      if (data?.journalEntries?.length) this.saveJournalEntries(data.journalEntries);
+      if (data?.challenges?.length) this.saveChallenges(data.challenges);
+      if (data?.chatMessages?.length) this.saveChatMessages(data.chatMessages);
+    } finally {
+      syncPaused = false;
+    }
+    this.syncActiveAccountData();
+  },
+
   syncActiveAccountData(): void {
+    if (syncPaused) return;
     try {
       const profile = this.getUserProfile();
       if (!profile || profile.isGuest || !profile.email) return;
