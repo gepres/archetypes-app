@@ -138,10 +138,6 @@ export function calculateAssessmentResult(
   const top3 = ranking.slice(0, 3);
   const top5 = ranking.slice(0, 5);
 
-  // Suggested development archetypes (balanced complement from lowest scores)
-  const developmentCandidates = ranking.slice(-3).reverse();
-  const developmentArchetypes = developmentCandidates;
-
   // Calculate Dimension Scores (0 - 100) across 4 pillars
   const dimensionScores: Record<DimensionId, number> = {
     mente: Math.round(
@@ -183,6 +179,10 @@ export function calculateAssessmentResult(
   top3.forEach(item => {
     evidence[item.archetypeId] = collectEvidence(item.archetypeId, activeQuestions, answerMap);
   });
+
+  // Una sola lista de lo que menos apareció para todo (perfil, Mi Mapa, IA), con la regla del
+  // perfil: nunca se elige por posición entre figuras empatadas.
+  const developmentArchetypes = developmentFromProfile(compositeProfile, ranking);
 
   return {
     id: `eval-${Date.now()}`,
@@ -282,17 +282,10 @@ export function adaptAssessmentResultToGender(
     };
   });
 
-  const developmentArchetypes = (result.developmentArchetypes || ranking.slice(-3).reverse()).map(item => {
-    const arch = getArchetype(item.archetypeId, gender);
-    return {
-      ...item,
-      name: arch.name,
-      emoji: arch.emoji,
-      dimension: arch.dimension,
-    };
-  });
-
   const compositeProfile = generateCompositeProfile(ranking, result.dimensionScores, gender);
+  // Se recalcula con la regla de ahora: los resultados guardados traían las tres últimas
+  // posiciones, elegidas aunque estuvieran empatadas con otras.
+  const developmentArchetypes = developmentFromProfile(compositeProfile, ranking);
 
   return {
     ...result,
@@ -304,6 +297,13 @@ export function adaptAssessmentResultToGender(
     developmentArchetypes,
     compositeProfile,
   };
+}
+
+/** Las puntuaciones de lo que menos apareció, en el orden en que las eligió el perfil. */
+function developmentFromProfile(profile: CompositeProfile, ranking: ArchetypeScore[]): ArchetypeScore[] {
+  return profile.developmentArchetypes
+    .map(d => ranking.find(s => s.archetypeId === d.archetypeId))
+    .filter((s): s is ArchetypeScore => !!s);
 }
 
 /** El título de un resultado: no nombra un dominante si el mapa no lo tiene. */
@@ -463,20 +463,38 @@ function generateCompositeProfile(
     };
   }
 
+  // Un líder con exactamente dos empatadas detrás: no se elige una de las dos para la pareja.
+  // Se nombran las dos, con lo que aporta y la sombra de cada una. La tensión solo se dice si
+  // las dos son de la misma dimensión; si no, cualquiera de las dos sería arbitraria.
+  if (leaders.length === 1 && segundos.length === 2) {
+    const [b1, b2] = segundos.map(s => getArchetype(s.archetypeId, gender));
+    const tension = b1.dimension === b2.dimension ? getDimensionTension(a.dimension, b1.dimension) : '';
+    return {
+      archetypeKey,
+      title: `${a.name}, con ${b1.name} y ${b2.name}`,
+      archetypeCombination: `${a.name} + ${b1.name} + ${b2.name}`,
+      synthesis:
+        `${a.name} encabeza tu mapa, con ${b1.name} y ${b2.name} a la par detrás. ` +
+        `Una parte de ti quiere ${ARCHETYPE_DRIVES[a.id]}; detrás, a la par, ${ARCHETYPE_DRIVES[b1.id]} y ${ARCHETYPE_DRIVES[b2.id]}.`,
+      strengths: [a, b1, b2].map(x => `Fuerza ${withDe(x.name)}: ${x.strength}`),
+      risksAndShadows: [a, b1, b2].map(x => `Sombra ${withDe(x.name)}: ${x.shadow}`),
+      developmentArchetypes,
+      companions: [b1.id, b2.id],
+      ...(tension ? { tension } : {}),
+      isTie: false,
+      isFlat: false,
+    };
+  }
+
   // El perfil se nombra por la pareja que lo encabeza: 306 combinaciones en vez de seis
   // títulos fijos, y cada una dice algo de esas dos figuras y no de cualquiera.
   const isTie = leaders.length === 2;
   const head = isTie
     ? `${a.name} y ${b.name} comparten el primer puesto de tu mapa`
     : `${a.name} y ${b.name} encabezan tu mapa`;
-  // El tercero: si va a la par del segundo, se dice; si no, solo se nombra cuando se distingue
-  // del cuarto.
+  // El tercero solo se nombra cuando se distingue del cuarto.
   const cuarto = ranking[3];
-  const detras = !isTie && segundos.length === 2
-    ? `, con ${c.name} a la par ${withDe(b.name)}`
-    : third.normalizedScore - cuarto.normalizedScore > TIE_MAX_GAP
-      ? `, con ${c.name} detrás`
-      : '';
+  const detras = third.normalizedScore - cuarto.normalizedScore > TIE_MAX_GAP ? `, con ${c.name} detrás` : '';
 
   return {
     archetypeKey,

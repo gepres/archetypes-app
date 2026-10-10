@@ -215,6 +215,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             Para Desarrollar
           </span>
           <div className="space-y-1.5 pt-1">
+            {currentResult.developmentArchetypes.length === 0 && (
+              <p className="text-xs text-[#7B8880]">Ninguna figura destaca por abajo: no hay una que recomendar.</p>
+            )}
             {currentResult.developmentArchetypes.slice(0, 2).map(a => (
               <div
                 key={a.archetypeId}

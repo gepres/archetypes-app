@@ -157,6 +157,8 @@ export interface CompositeProfile {
   tension?: string;
   /** Dos o más figuras comparten el primer puesto: no hay un dominante claro entre ellas. */
   isTie?: boolean;
+  /** Con un líder claro y exactamente dos empatadas detrás: esas dos (no se elige una). */
+  companions?: ArchetypeId[];
   /** Las figuras que comparten el primer puesto, cuando hay empate (dos o más). */
   tiedLeaders?: ArchetypeId[];
   /** Todo el mapa cabe en unos pocos puntos: no tiene un polo claro y no se le pone nombre. */

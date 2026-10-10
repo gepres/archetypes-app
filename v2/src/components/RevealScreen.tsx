@@ -34,9 +34,11 @@ export const RevealScreen: React.FC<RevealScreenProps> = ({
   const companeros = (
     empate
       ? lider.ids.filter(id => id !== dominante.id)
-      : resultado.compositeProfile.pair
-        ? [resultado.ranking[1].archetypeId]
-        : [] // un líder con varias empatadas detrás: no hay un único acompañante
+      : resultado.compositeProfile.companions
+        ? resultado.compositeProfile.companions // dos empatadas detrás del líder: las dos
+        : resultado.compositeProfile.pair
+          ? [resultado.ranking[1].archetypeId]
+          : [] // un líder con varias empatadas detrás: no hay un único acompañante
   ).map(id =>
     getArchetype(id, 'universal')
   );
@@ -250,7 +252,7 @@ Descubre el tuyo escuchando, en dos minutos:`;
               'Detrás, varias figuras van a la par.'
             ) : (
               <>
-                {empate ? 'A la par con' : 'Te acompaña'}{' '}
+                {empate ? 'A la par con' : companeros.length > 1 ? 'Te acompañan, a la par,' : 'Te acompaña'}{' '}
                 <span className="text-[#C5CFC7] font-semibold">
                   {companeros.length === 1 ? `${companeros[0].emoji} ${companeros[0].name}` : nombresCompaneros}
                 </span>

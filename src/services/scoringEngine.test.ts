@@ -80,10 +80,47 @@ describe('perfil por pareja', () => {
         assert.equal(res.compositeProfile.pair, undefined, 'no se elige pareja entre empatadas');
         continue;
       }
+      if (lideres(res).length === 1 && segundos.length === 2) {
+        // Dos empatadas detrás: se nombran las dos, sin elegir una para la pareja.
+        assert.equal(res.compositeProfile.pair, undefined);
+        assert.deepEqual([...(res.compositeProfile.companions ?? [])].sort(), segundos.map(s => s.archetypeId).sort());
+        continue;
+      }
       assert.equal(res.compositeProfile.title, `${a.name} + ${b.name}`);
       assert.deepEqual(res.compositeProfile.pair, [a.archetypeId, b.archetypeId]);
       assert.ok(res.compositeProfile.tension && res.compositeProfile.tension.length > 0);
     }
+  });
+
+  it('dos segundos empatados: intercambiarlos no cambia a quién se nombra (quinta revisión de Codex)', () => {
+    // Bufón 66, Sacerdote 63, Héroe 63 y Rebelde 61: rango 30.
+    const conPuntos = (orden: string[]) => {
+      const base = calculateAssessmentResult(respuestasAlAzar(azar(23)), 'full', 'male');
+      const puntos: Record<string, number> = { bufon: 66, [orden[0]]: 63, [orden[1]]: 63, rebelde: 61 };
+      const resto = base.ranking.filter(s => !(s.archetypeId in puntos));
+      const ranking = [
+        ...['bufon', orden[0], orden[1], 'rebelde'].map((id, i) => ({ ...base.ranking.find(s => s.archetypeId === id)!, normalizedScore: puntos[id], rank: i + 1 })),
+        ...resto.map((s, i) => ({ ...s, normalizedScore: 55 - i * 2, rank: i + 5 })),
+      ];
+      return adaptAssessmentResultToGender({ ...base, ranking, dominantArchetype: ranking[0], top3: ranking.slice(0, 3) }, 'male').compositeProfile;
+    };
+    const p1 = conPuntos(['sacerdote', 'heroe']);
+    const p2 = conPuntos(['heroe', 'sacerdote']);
+    assert.equal(p1.pair, undefined);
+    assert.deepEqual([...(p1.companions ?? [])].sort(), ['heroe', 'sacerdote']);
+    assert.deepEqual([...(p2.companions ?? [])].sort(), ['heroe', 'sacerdote']);
+    assert.deepEqual([...p1.strengths].sort(), [...p2.strengths].sort());
+    assert.deepEqual([...p1.risksAndShadows].sort(), [...p2.risksAndShadows].sort());
+    assert.equal(p1.tension ?? '', p2.tension ?? '');
+  });
+
+  it('la lista de arriba de «lo que menos apareció» es la misma que la del perfil', () => {
+    for (const res of resultados) {
+      assert.deepEqual(res.developmentArchetypes.map(s => s.archetypeId), res.compositeProfile.developmentArchetypes.map(d => d.archetypeId));
+    }
+    // Y en el caso de Codex (quince empatadas abajo) las dos están vacías.
+    const res = calculateAssessmentResult(QUESTIONS_DATA.map(q => ({ questionId: q.id, value: q.id === 33 ? 3 : 2 })), 'full', 'male');
+    assert.deepEqual(res.developmentArchetypes, []);
   });
 
   it('«lo que menos apareció» nunca elige entre figuras empatadas', () => {

@@ -352,7 +352,7 @@ ${
   * Desafío Central: ${dominantNarrative.centralQuestion}`
 }
 - Tríada (Top 3): ${top3Names}
-- Lo que menos apareció en sus respuestas (no es una carencia): ${devNames}
+- Lo que menos apareció en sus respuestas (no es una carencia): ${devNames || 'ninguna figura destaca por abajo; no recomiendes desarrollar ninguna en concreto'}
 - Balance Dimensional: ${dimensiones}
 - Perfil Compuesto: ${currentResult.compositeProfile?.title || 'Explorador reflexivo'}
 - Síntesis del Perfil: ${currentResult.compositeProfile?.synthesis || ''}
