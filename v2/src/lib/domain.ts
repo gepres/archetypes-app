@@ -23,6 +23,11 @@ export { calculateAssessmentResult, getMapLead, listNames } from '@v1/services/s
 
 export { ArchetypeIllustratedArtwork } from '@v1/components/archetypes/ArchetypeIllustratedArtwork';
 
+// La imagen para compartir: la misma tarjeta que en la V1, con estilos en línea para que salga
+// igual aunque cada app genere sus estilos por separado.
+export { contenidoParaCompartir } from '@v1/services/tarjetaCompartir';
+export { TarjetaParaCompartir, TEMAS_TARJETA } from '@v1/components/result/TarjetaParaCompartir';
+
 export type {
   Archetype,
   ArchetypeId,

@@ -1,7 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import { ArrowRight, Check, RotateCcw, Share2, Volume2, VolumeX } from 'lucide-react';
-import { ArchetypeIllustratedArtwork, DIMENSIONS, getArchetype, getMapLead, listNames } from '../lib/domain';
+import { toBlob } from 'html-to-image';
+import {
+  ArchetypeIllustratedArtwork,
+  DIMENSIONS,
+  TEMAS_TARJETA,
+  TarjetaParaCompartir,
+  contenidoParaCompartir,
+  getArchetype,
+  getMapLead,
+  listNames,
+} from '../lib/domain';
 import type { AssessmentResult } from '../lib/domain';
 import { callar, decir, vibrar } from '../lib/voice';
 
@@ -59,16 +69,34 @@ export const RevealScreen: React.FC<RevealScreenProps> = ({
     return () => window.clearTimeout(t);
   }, [prefersReducedMotion]);
 
+  // La imagen que se comparte (la misma tarjeta que la V1) se prepara al revelar, no al tocar
+  // «Compartir»: algunos navegadores solo abren la hoja de compartir si se llama en el mismo
+  // gesto, y generar la imagen entonces llegaría tarde.
+  const contenido = contenidoParaCompartir(resultado, 'universal');
+  const tarjetaRef = useRef<HTMLDivElement>(null);
+  const imagenRef = useRef<File | null>(null);
+  useEffect(() => {
+    let vigente = true;
+    (async () => {
+      try {
+        await document.fonts?.ready;
+        if (!tarjetaRef.current) return;
+        const blob = await toBlob(tarjetaRef.current, { cacheBust: true, pixelRatio: 2.5 });
+        if (vigente && blob) imagenRef.current = new File([blob], 'mi-mapa-de-arquetipos.png', { type: 'image/png' });
+      } catch {
+        // Sin imagen, se comparte el texto, como antes.
+      }
+    })();
+    return () => {
+      vigente = false;
+    };
+  }, [resultado.id]);
+
   const compartir = async () => {
     const url = typeof window !== 'undefined' ? window.location.origin + '/v2/' : '';
-    const cabecera = plano
-      ? 'Hice el test de arquetipos y mi mapa no tiene un polo claro.'
-      : empate
-        ? `Mis arquetipos van a la par: ${todosALaPar}${companeros.length > 3 ? ' y más' : ''}.`
-        : `Mi arquetipo dominante es ${dominante.name}. «${dominante.mantra}»`;
-    const texto = `${cabecera}
+    const texto = `${contenido.texto}
 
-Descubre el tuyo escuchando, en dos minutos:`;
+Descubre el tuyo escuchando:`;
     const completo = `${texto} ${url}`;
     vibrar(12);
 
@@ -94,12 +122,15 @@ Descubre el tuyo escuchando, en dos minutos:`;
           resolver(r);
         };
 
+        // Con la imagen si el dispositivo la acepta; si no, el texto y el enlace, como antes.
+        const imagen = imagenRef.current;
+        const conImagen = !!imagen && !!navigator.canShare?.({ files: [imagen] });
         navigator
-          .share({
-            title: plano ? 'Mi mapa de arquetipos' : empate ? 'Mis arquetipos, a la par' : `Mi arquetipo: ${dominante.name}`,
-            text: texto,
-            url,
-          })
+          .share(
+            conImagen
+              ? { files: [imagen!], title: 'Mi mapa de arquetipos', text: completo }
+              : { title: 'Mi mapa de arquetipos', text: texto, url }
+          )
           .then(
             () => cerrar('ok'),
             (e: any) => cerrar(e?.name === 'AbortError' ? 'cancelado' : 'fallo')
@@ -152,6 +183,11 @@ Descubre el tuyo escuchando, en dos minutos:`;
 
   return (
     <div className="relative min-h-[100dvh] flex flex-col items-center px-5 py-8 overflow-y-auto">
+      {/* La tarjeta que se comparte, fuera de la vista: solo sirve para generar la imagen. */}
+      <div aria-hidden="true" style={{ position: 'fixed', left: -10000, top: 0, pointerEvents: 'none' }}>
+        <TarjetaParaCompartir ref={tarjetaRef} contenido={contenido} formato="story" tema={TEMAS_TARJETA.esmeralda} />
+      </div>
+
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div
           className="absolute top-0 left-1/2 -translate-x-1/2 w-[620px] h-[620px] rounded-full blur-3xl opacity-30"

@@ -6,7 +6,6 @@ import {
   Copy,
   Check,
   X,
-  Sparkles,
   Smartphone,
   Square,
   Palette,
@@ -14,11 +13,11 @@ import {
   Loader2,
   CheckCircle2,
 } from 'lucide-react';
-import { ARCHETYPES, DIMENSIONS, getArchetype } from '../../data/archetypesData';
+import { getArchetype } from '../../data/archetypesData';
 import { getMapLead } from '../../services/scoringEngine';
-import { ARCHETYPE_VISUALS } from '../../data/archetypeImages';
-import { ArchetypeId, AssessmentResult, GenderMode, DEFAULT_GENDER } from '../../types';
-import { ArchetypeIllustratedArtwork } from '../archetypes/ArchetypeIllustratedArtwork';
+import { AssessmentResult, GenderMode, DEFAULT_GENDER } from '../../types';
+import { TarjetaParaCompartir, TEMAS_TARJETA } from './TarjetaParaCompartir';
+import { contenidoParaCompartir } from '../../services/tarjetaCompartir';
 
 interface ShareResultImageModalProps {
   result: AssessmentResult;
@@ -30,6 +29,11 @@ interface ShareResultImageModalProps {
 
 type CardFormat = 'story' | 'square';
 type CardTheme = 'emerald-gold' | 'obsidian-cosmic' | 'crimson-amber';
+const TEMA_DE: Record<CardTheme, keyof typeof TEMAS_TARJETA> = {
+  'emerald-gold': 'esmeralda',
+  'obsidian-cosmic': 'obsidiana',
+  'crimson-amber': 'carmesi',
+};
 
 export const ShareResultImageModal: React.FC<ShareResultImageModalProps> = ({
   result,
@@ -40,8 +44,9 @@ export const ShareResultImageModal: React.FC<ShareResultImageModalProps> = ({
   const [format, setFormat] = useState<CardFormat>('story');
   const [theme, setTheme] = useState<CardTheme>('emerald-gold');
   const [userName, setUserName] = useState('');
-  const [showDimensions, setShowDimensions] = useState(true);
-  const [showTop3, setShowTop3] = useState(true);
+  // Menos ruido: lo que cuenta la tarjeta es la pareja y su frase; lo demás, si se pide.
+  const [showDimensions, setShowDimensions] = useState(false);
+  const [showTop3, setShowTop3] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [copiedToast, setCopiedToast] = useState(false);
   const [shareSuccess, setShareSuccess] = useState(false);
@@ -51,10 +56,9 @@ export const ShareResultImageModal: React.FC<ShareResultImageModalProps> = ({
   if (!isOpen) return null;
 
   const dominant = getArchetype(result.dominantArchetype.archetypeId, gender);
-  const dominantVisual = ARCHETYPE_VISUALS[result.dominantArchetype.archetypeId];
-  const { compositeProfile } = result;
   // La imagen sale a redes: no puede proclamar un dominante que las respuestas no sostienen.
   const lead = getMapLead(result, gender);
+  const contenido = contenidoParaCompartir(result, gender);
 
   // Theme styling configurations
   const themeStyles = {
@@ -185,13 +189,8 @@ function comoNombreDeFichero(texto: string): string {
       ) {
         await navigator.share({
           files: [file],
-          title: `Mi Mapa Arquetípico: ${compositeProfile.title}`,
-          text:
-            lead.kind === 'single'
-              ? `Descubrí mi arquetipo dominante: ${dominant.name}. Descubre el tuyo: ${SITIO}`
-              : lead.kind === 'tie'
-                ? `Mis arquetipos van a la par: ${lead.label.replace(/, a la par$/, '')}. Descubre los tuyos: ${SITIO}`
-                : `Hice el test de arquetipos y mi mapa no tiene un polo claro. Haz el tuyo: ${SITIO}`,
+          title: 'Mi mapa de arquetipos',
+          text: `${contenido.texto} Descubre el tuyo: ${SITIO}`,
         });
         setShareSuccess(true);
         setTimeout(() => setShareSuccess(false), 3000);
@@ -427,193 +426,20 @@ function comoNombreDeFichero(texto: string): string {
               </span>
             </div>
 
-            {/* Live Render Card Wrapper (Captured by html-to-image) */}
-            <div
+            {/* La tarjeta que se captura (html-to-image): la misma que comparte la V2. */}
+            <TarjetaParaCompartir
               ref={cardRef}
-              style={{
-                width: format === 'story' ? '360px' : '380px',
-                maxWidth: '100%',
-                minHeight: format === 'story' ? '620px' : '380px',
-              }}
-              className={`p-4 sm:p-6 rounded-3xl border shadow-2xl relative overflow-hidden flex flex-col justify-between select-none ${themeStyles.bg} ${themeStyles.border} box-border`}
-            >
-              {/* Decorative background glow & sacred geometry */}
-              <div
-                className="absolute top-0 right-0 w-48 h-48 rounded-full blur-3xl pointer-events-none"
-                style={{ backgroundColor: themeStyles.glow }}
-              />
-              <div
-                className="absolute bottom-0 left-0 w-40 h-40 rounded-full blur-3xl pointer-events-none"
-                style={{ backgroundColor: themeStyles.glow }}
-              />
-
-              {/* Top Branding & Header */}
-              <div className="relative z-10 space-y-1 text-center">
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-[9px] uppercase tracking-widest font-bold shadow-sm"
-                     style={{ borderColor: `${themeStyles.accentColor}50`, color: themeStyles.accentColor }}>
-                  <Sparkles className="w-2.5 h-2.5" />
-                  <span>Los 18 Arquetipos · Mapa Simbólico</span>
-                </div>
-
-                {userName && (
-                  <p className="text-xs font-medium text-[#E5D7B7] pt-0.5">
-                    {userName}
-                  </p>
-                )}
-              </div>
-
-              {/* Main Archetype Illustrated Core */}
-              <div className="relative z-10 my-3 flex flex-col items-center text-center space-y-2">
-                {/* Illustrated Avatar/Portrait Card: sin polo claro no hay un rostro que enseñar */}
-                {lead.kind !== 'flat' && (
-                <div
-                  className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden shadow-2xl border-2 shrink-0 bg-[#0E1513] relative"
-                  style={{ borderColor: themeStyles.cardBorder }}
-                >
-                  <ArchetypeIllustratedArtwork
-                    archetypeId={dominant.id}
-                    className="w-full h-full object-cover"
-                  />
-                  {lead.kind === 'single' && (
-                    <div className="absolute top-1 right-1 px-1.5 py-0.5 rounded-md bg-black/70 border border-white/10 text-[9px] font-mono font-bold text-[#FFE898]">
-                      {result.dominantArchetype.normalizedScore}
-                    </div>
-                  )}
-                </div>
-                )}
-
-                {/* Dominant Titles */}
-                <div>
-                  <div className="inline-flex items-center gap-1 text-[10px] uppercase font-bold tracking-wider text-[#A6B2A8]">
-                    <span>{lead.kind === 'single' ? 'Arquetipo Dominante' : lead.kind === 'tie' ? 'En cabeza, a la par' : 'Mi mapa'}</span>
-                    {lead.kind === 'single' && (
-                      <>
-                        <span>·</span>
-                        {/* El nombre de la dimension, no su identificador: "corazon"
-                            con capitalize salia "Corazon", sin tilde. */}
-                        <span>{DIMENSIONS[dominant.dimension].name.split(' & ')[0]}</span>
-                      </>
-                    )}
-                  </div>
-                  <h3 className="font-serif text-2xl sm:text-3xl font-bold text-[#F2EFE6] tracking-tight">
-                    {lead.kind === 'single' ? dominant.name : lead.label}
-                  </h3>
-                  {lead.kind === 'single' && (
-                    <p className="text-[11px] font-medium" style={{ color: themeStyles.accentColor }}>
-                      {dominantVisual.characterTitle}
-                    </p>
-                  )}
-                </div>
-
-                {/* Composite Title & Synthesis (en un mapa plano repetiría el titular) */}
-                {lead.kind !== 'flat' && (
-                <div className={`w-full p-3 rounded-2xl border text-left space-y-1.5 ${themeStyles.subtleBox}`}>
-                  {/* La combinacion son tres nombres completos: al lado del titulo
-                      del bloque no cabe y se pisan. Va debajo, en su linea. */}
-                  <span className="block text-[9px] uppercase tracking-widest font-bold text-[#9DA79F]">
-                    Perfil Compuesto
-                  </span>
-                  <p className="font-serif font-bold text-sm text-[#F2EFE6] leading-tight">
-                    {compositeProfile.title}
-                  </p>
-                  <p className="text-[9px] font-semibold text-[#D6A84F] leading-tight">
-                    {compositeProfile.archetypeCombination}
-                  </p>
-                  {lead.kind === 'single' && (
-                    <p className="text-[10px] text-[#C5CFC7] leading-relaxed italic font-serif">
-                      "{dominant.mantra}"
-                    </p>
-                  )}
-                </div>
-                )}
-              </div>
-
-              {/* 4 Dimensions Bar (Optional Toggle) */}
-              {showDimensions && (
-                <div className={`relative z-10 p-2.5 rounded-xl border space-y-1.5 my-1 ${themeStyles.subtleBox}`}>
-                  <div className="flex items-center justify-between text-[9px] font-bold text-[#9DA79F] uppercase tracking-wider">
-                    <span>Balance de las 4 Dimensiones</span>
-                  </div>
-                  {/* En filas, no en cuatro columnas: en una tarjeta de 360 px de
-                      ancho, "Construcción & Soberanía" en un cuarto del ancho no
-                      cabe de ninguna manera. Alineadas, se leen de un vistazo y
-                      las barras se comparan entre si, que es de lo que trata. */}
-                  <div className="space-y-1">
-                    {(['mente', 'accion', 'corazon', 'construccion'] as const).map((dimId) => {
-                      const score = result.dimensionScores[dimId] || 0;
-                      const dimInfo = DIMENSIONS[dimId];
-                      return (
-                        <div key={dimId} className="flex items-center gap-1.5">
-                          <span
-                            className="w-1.5 h-1.5 rounded-full shrink-0"
-                            style={{ backgroundColor: dimInfo.color }}
-                          />
-                          <span className="w-[76px] shrink-0 text-[8px] text-[#A6B2A8] truncate">
-                            {dimInfo.name.split(' & ')[0]}
-                          </span>
-                          <span className="flex-1 h-1.5 bg-[#0E1513] rounded-full overflow-hidden">
-                            <span
-                              className="block h-full rounded-full"
-                              style={{ width: `${score}%`, backgroundColor: dimInfo.color }}
-                            />
-                          </span>
-                          <span className="w-[26px] shrink-0 text-right text-[8px] font-mono font-bold text-[#F2EFE6]">
-                            {score}%
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Top 3 Ranking Podiums (Optional Toggle). En un mapa plano ese orden lo decide la
-                  lista de datos, no las respuestas: no se publica. */}
-              {showTop3 && lead.kind !== 'flat' && (
-                <div className={`relative z-10 p-2 rounded-xl border my-1 ${themeStyles.subtleBox}`}>
-                  <div className="text-[9px] font-bold text-[#9DA79F] uppercase tracking-wider mb-1 text-center">
-                    Top 3 Fuerzas Arquetípicas
-                  </div>
-                  {/* Un podio se lee mejor en vertical: los nombres caben enteros
-                      -"Constructor / Constructora" no entra en un tercio de 360 px-
-                      y las tres barras quedan alineadas para compararse. */}
-                  <div className="space-y-1">
-                    {result.ranking.slice(0, 3).map((item, idx) => (
-                      <div
-                        key={item.archetypeId}
-                        className="flex items-center gap-1.5 px-1.5 py-1 rounded-lg bg-black/40 border border-white/5"
-                      >
-                        <span className="w-3.5 shrink-0 text-[8px] font-mono font-bold text-[#D6A84F]">
-                          {idx + 1}
-                        </span>
-                        <span className="text-[11px] shrink-0 leading-none">{item.emoji}</span>
-                        <span className="flex-1 min-w-0 text-[10px] font-serif font-bold text-[#F2EFE6] truncate leading-tight">
-                          {item.name}
-                        </span>
-                        <span className="w-9 shrink-0 h-1 bg-[#0E1513] rounded-full overflow-hidden">
-                          <span
-                            className="block h-full rounded-full"
-                            style={{
-                              width: `${item.normalizedScore}%`,
-                              backgroundColor: themeStyles.accentColor,
-                            }}
-                          />
-                        </span>
-                        <span className="w-[26px] shrink-0 text-right text-[8px] font-mono font-bold text-[#D6A84F]">
-                          {item.normalizedScore}%
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Watermark & Footer */}
-              <div className="relative z-10 pt-2 border-t border-white/10 flex items-center justify-between text-[8px] text-[#7A8880]">
-                <span>Descubre tu mapa interior</span>
-                <span className="font-semibold text-[#A6B2A8]">archetypes-mystical.web.app</span>
-              </div>
-            </div>
+              contenido={contenido}
+              formato={format}
+              tema={TEMAS_TARJETA[TEMA_DE[theme]]}
+              nombre={userName || undefined}
+              dimensiones={showDimensions ? result.dimensionScores : null}
+              top3={
+                showTop3 && lead.kind !== 'flat'
+                  ? result.ranking.slice(0, 3).map(s => ({ emoji: s.emoji, name: getArchetype(s.archetypeId, gender).name, score: s.normalizedScore }))
+                  : null
+              }
+            />
           </div>
         </div>
       </div>
