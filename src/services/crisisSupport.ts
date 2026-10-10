@@ -85,7 +85,7 @@ const SENALES: RegExp[] = [
   // "Tomarme las pastillas que me recetó el médico" o "no quiero tomarme las pastillas" no lo
   // son: hace falta la señal de cantidad o de riesgo.
   /\bsobredosis\b/,
-  /\b(tomarme|tragarme) (todas las|un bote de|una caja de|un monton de) (pastillas|pildoras)\b/,
+  /\b(tomarme|tragarme) (todas las|todos los|un bote de|una caja de|un monton de) (pastillas|pildoras|somniferos|calmantes)\b/,
   /\b(ya )?tengo las pastillas (en la mano|preparadas|listas|aqui)\b/,
   // Autolesión. La intención deliberada manda sobre cualquier filtro de lo accidental: "me
   // hice daño a propósito" es una señal en cualquier tiempo, diga dónde, y vaya la intención
@@ -93,12 +93,13 @@ const SENALES: RegExp[] = [
   /\bautolesi/,
   new RegExp(`${SIN_NEGAR}\\b${ACTO_DANO}.{0,40}${INTENCION_AFIRMADA}`),
   new RegExp(`${INTENCION_AFIRMADA}.{0,40}${SIN_NEGAR}\\b${ACTO_DANO}`),
-  // La intención de no despertar, aunque no diga cantidades: "tomarme las pastillas para no
-  // despertar".
-  // Solo con un medio de riesgo delante, o cerrando la frase: «me pongo auriculares para no
-  // despertar a mi pareja» o «busco otro trabajo para no seguir aquí» no son crisis.
-  /\b(tomarme|tragarme|tomar|pastillas|pildoras|dormir(me)?|beber(me)?|tirarme|cortarme|hacerme dano).{0,60}\bpara no (volver a )?despertar\b(?! (a|al|tarde|temprano|cansad[oa]s?|con|de|mal|antes|pronto)\b)/,
-  /\bpara no (volver a )?despertar( (nunca|jamas)( mas)?| mas)?(?= *([.,;:!?…]|$))/,
+  // La intención de no despertar, aunque no diga cantidades: «tomarme las pastillas para no
+  // despertar». Como «no despertar» es también lo que busca quien duerme mal («para no
+  // despertar durante la noche», «a mi pareja», «tarde»), cuenta solo cuando cierra la frase,
+  // con un deseo o un medio de riesgo delante, y sin hablar de dormir mejor. «Para no volver a
+  // despertar» es inequívoco por sí solo.
+  /\bpara no volver a despertar(me)?\b(?! a\b)/,
+  /^(?!.*\b(melatonina|somnifero|insomnio|valeriana|infusion|tila|dormir mejor|descansar)\b).*\b(quiero|quisiera|ojala|tomarme|tragarme|dormirme|cerrar los ojos)\b.{0,60}\bpara no despertar( (nunca|jamas)( mas)?| mas)?(?= *([.,;:!?…]|$))/,
   /\b(tomarme|tragarme|pastillas|pildoras|tirarme|lanzarme|saltar|cortarme|hacerme dano|matarme|me voy a (tirar|lanzar|cortar)).{0,60}\bpara no (seguir|estar) aqui\b/,
   /\bpara no (seguir|estar) viv[oa]\b/,
   // Hacerse sangre a propósito es una lesión, se corte lo que se corte: aquí no vale la

@@ -155,6 +155,8 @@ describe('detectCrisis', () => {
     'Voy a tomarme todo para no seguir aquí',
     'Me voy a tirar para no seguir aquí',
     'Me tomaré las pastillas para no volver a despertar nunca',
+    'Voy a tomarme todos los somníferos',
+    'Ojalá dormirme para no despertar',
   ];
 
   for (const frase of crisis) {
@@ -232,6 +234,11 @@ describe('detectCrisis', () => {
     'Busco otro trabajo para no seguir aquí',
     'Pongo la alarma para no despertar tarde',
     'Tomo melatonina para no despertar a las 4',
+    // Segunda revisión de cierre de Codex: los despertares nocturnos de quien duerme mal
+    'Voy a tomar melatonina para no despertar en mitad de la noche',
+    'Tomo pastillas para no despertar durante la noche',
+    'Tomo pastillas para no despertar cada dos horas',
+    'Quiero tomar melatonina para no despertar.',
   ];
 
   for (const frase of sinCrisis) {
