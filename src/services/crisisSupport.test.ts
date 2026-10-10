@@ -125,6 +125,11 @@ describe('detectCrisis', () => {
     // Novena revisión de Codex: una parte del cuerpo detrás de lo cosmético lo convierte en lesión
     'Me corté las puntas del pulgar y del índice a propósito',
     'Me corté el pelo y los brazos a propósito',
+    // Décima revisión de Codex: negar la finalidad no niega la lesión
+    'Me corté las muñecas, no queriendo morir sino sentir algo',
+    'Me corté las muñecas',
+    'Me corto para sentir algo',
+    'Me hago daño para castigarme',
   ];
 
   for (const frase of crisis) {
@@ -179,6 +184,9 @@ describe('detectCrisis', () => {
     'Me hice daño, pero no lo hice a propósito',
     'Me corté las puntas de mi pelo a propósito',
     'Me corté las uñas de las manos a propósito',
+    'Me corté el pelo para sentirme mejor',
+    'Me corté el flequillo para sentir algo distinto',
+    'No me corté las muñecas',
   ];
 
   for (const frase of sinCrisis) {

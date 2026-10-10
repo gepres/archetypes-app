@@ -20,7 +20,7 @@ import { getMapLead } from '../../services/scoringEngine';
 import { crisisInConversation } from '../../services/crisisSupport';
 import { GeminiService } from '../../services/geminiService';
 import { AIProviderService, PROVIDER_OPTIONS } from '../../services/aiProviderService';
-import { StorageService } from '../../services/storageService';
+import { StorageService, insertarRespuesta } from '../../services/storageService';
 import { ArchetypeId, AssessmentResult, ChatMessage, GenderMode, UserProfile } from '../../types';
 import { ArchetypeIllustratedArtwork } from '../archetypes/ArchetypeIllustratedArtwork';
 import { MarkdownRenderer } from '../common/MarkdownRenderer';
@@ -40,7 +40,7 @@ interface AiReflectionViewProps {
 
 // Las vistas del chat montadas ahora mismo. Una respuesta que llega cuando su vista ya se
 // desmontó (se fue a otra pestaña y volvió) avisa a la que esté montada para que la muestre.
-const vistasDelChat = new Set<(messages: ChatMessage[], guardada: boolean) => void>();
+const vistasDelChat = new Set<(preguntaId: string, respuesta: ChatMessage, guardada: boolean) => void>();
 
 /** El nombre legible del modelo activo, no su identificador. */
 function nombreDelModelo(): string {
@@ -185,21 +185,28 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
     }
   }, [initialPrompt, isLoading]);
 
+  // La conversación que se ve ahora, para saber al llegar una respuesta si su pregunta está aquí.
+  const mensajesRef = useRef(messages);
+  mensajesRef.current = messages;
+
   // Mientras este chat esté montado. Una respuesta que llega después de desmontarlo no toca
   // esta vista: se guarda en la conversación vigente y avisa a la vista que haya montada.
   const montadoRef = useRef(true);
   useEffect(() => {
     montadoRef.current = true;
-    // Recibe la conversación ya con la respuesta, no la relee: si no se pudo guardar, al menos
-    // se ve, y se guarda con la siguiente escritura.
-    const recargar = (lista: ChatMessage[], guardada: boolean) => {
-      setMessages(lista);
+    // Cada vista añade la respuesta a la conversación que muestra, detrás de su pregunta, sin
+    // releer el disco: si no se pudo guardar (almacenamiento lleno), al menos se ve, y se
+    // guarda con la siguiente escritura. Si su pregunta no está aquí (otra cuenta, conversación
+    // reiniciada), no hace nada.
+    const recibir = (preguntaId: string, respuesta: ChatMessage, guardada: boolean) => {
+      if (!insertarRespuesta(mensajesRef.current, preguntaId, respuesta)) return;
+      setMessages(prev => insertarRespuesta(prev, preguntaId, respuesta) ?? prev);
       setSinGuardar(!guardada);
     };
-    vistasDelChat.add(recargar);
+    vistasDelChat.add(recibir);
     return () => {
       montadoRef.current = false;
-      vistasDelChat.delete(recargar);
+      vistasDelChat.delete(recibir);
     };
   }, []);
 
@@ -252,12 +259,11 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
       };
 
       // Se añade a la conversación guardada, no a la copia de este envío: entretanto la vista
-      // pudo desmontarse y volver, o la persona pudo escribir otra cosa.
-      const conRespuesta = StorageService.addChatReply(dueno, preguntaId, aiMsg);
-      if (conRespuesta) {
-        vistasDelChat.forEach(recargar => recargar(conRespuesta.messages, conRespuesta.guardada));
-        if (montadoRef.current) refreshAiStatus();
-      }
+      // pudo desmontarse y volver, o la persona pudo escribir otra cosa. Y a la de cada vista
+      // montada, para que se vea aunque no se haya podido guardar.
+      const guardada = StorageService.addChatReply(dueno, preguntaId, aiMsg)?.guardada ?? false;
+      vistasDelChat.forEach(recibir => recibir(preguntaId, aiMsg, guardada));
+      if (montadoRef.current) refreshAiStatus();
     } catch (err) {
       console.error('Chat error:', err);
     } finally {

@@ -104,6 +104,13 @@ const SENALES: RegExp[] = [
   /\bme hago dano\b(?! (en|al|entrenando|jugando|corriendo|haciendo))/,
   /\bme (hago|hice|he hecho) dano en (los brazos|las munecas)\b/,
   /\bcortarme (las venas|los brazos|las munecas|la piel)\b/,
+  // Cortarse las muñecas o las venas es una señal por sí sola, diga o no la intención: «me corté
+  // las muñecas, no queriendo morir sino sentir algo» niega la finalidad, no la lesión.
+  new RegExp(`${SIN_NEGAR}\\b${CORTE} (las|mis) (munecas|venas)\\b`),
+  // Hacerse daño para sentir, para castigarse o para aliviar lo que duele por dentro: la
+  // finalidad delata que no fue un accidente. Lo cosmético sigue fuera («me corté el pelo para
+  // sentirme mejor»).
+  new RegExp(`${SIN_NEGAR}\\b${ACTO_DANO}.{0,60}\\b(para|sino|solo para) (sentir algo|sentir dolor|no sentir nada|castigarme|desahogarme|aliviar(me)?|calmar(me)? (el dolor|la ansiedad))\\b`),
   // Violencia y peligro, también mientras ocurre
   /\bme (pega|golpea|maltrata|amenaza|viola|pegan|golpean|maltratan|amenazan)\b/,
   /\bme (esta|estan) (pegando|golpeando|maltratando|amenazando|violando|haciendo dano)\b/,

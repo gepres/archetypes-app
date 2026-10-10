@@ -20,12 +20,6 @@ import { CRISIS_CLOSED_NOTE } from './crisisSupport';
 // `applyAccountData`).
 let syncPaused = false;
 
-// La conversación que no se pudo guardar (almacenamiento lleno) y de qué cuenta es. Mientras
-// exista, es la conversación vigente de esa cuenta: se lee de aquí y no del disco, para que ni
-// una respuesta tardía ni la vista al volver pierdan lo que no llegó a guardarse. La siguiente
-// escritura que funcione la guarda y la suelta; cambiar los datos de cuenta también la suelta.
-let chatSinGuardar: { dueno: string; messages: ChatMessage[] } | null = null;
-
 function welcomeMessage(): ChatMessage {
   return {
     id: 'msg-welcome-1',
@@ -135,6 +129,20 @@ export function mergeAccountData(a: AccountData, b: AccountData): AccountData {
   });
   const chatMessages = ordenarConversacion(unirPorId(a.chatMessages ?? [], b.chatMessages ?? [], (_x, y) => y));
   return { currentResult, history, journalEntries, challenges, chatMessages };
+}
+
+/**
+ * La conversación con la respuesta justo detrás de su pregunta, recordando a cuál contesta
+ * (`replyTo`). Null si la pregunta no está, o si la respuesta ya estaba.
+ */
+export function insertarRespuesta(
+  mensajes: ChatMessage[],
+  preguntaId: string,
+  respuesta: ChatMessage
+): ChatMessage[] | null {
+  const i = mensajes.findIndex(m => m.id === preguntaId && m.role === 'user');
+  if (i === -1 || mensajes.some(m => m.id === respuesta.id)) return null;
+  return [...mensajes.slice(0, i + 1), { ...respuesta, replyTo: preguntaId }, ...mensajes.slice(i + 1)];
 }
 
 /**
@@ -359,7 +367,6 @@ export const StorageService = {
 
   // Chat messages for Gemini
   getChatMessages(): ChatMessage[] {
-    if (chatSinGuardar && chatSinGuardar.dueno === this.getUserProfile().id) return chatSinGuardar.messages;
     try {
       const data = localStorage.getItem(STORAGE_KEYS.CHAT_MESSAGES);
       if (data) return JSON.parse(data);
@@ -374,19 +381,14 @@ export const StorageService = {
     }
   },
 
-  /**
-   * Devuelve si quedó guardada. Con el almacenamiento lleno la escritura falla, y la
-   * conversación se queda en memoria como la vigente de esta cuenta (ver `chatSinGuardar`).
-   */
+  /** Devuelve si quedó guardada: con el almacenamiento lleno, la escritura falla. */
   saveChatMessages(messages: ChatMessage[]): boolean {
     try {
       localStorage.setItem(STORAGE_KEYS.CHAT_MESSAGES, JSON.stringify(messages));
     } catch (e) {
       console.error("Error saving chat messages:", e);
-      chatSinGuardar = { dueno: this.getUserProfile().id, messages };
       return false;
     }
-    chatSinGuardar = null;
     this.syncActiveAccountData();
     return true;
   },
@@ -416,9 +418,9 @@ export const StorageService = {
    * sin pisar lo que se haya escrito mientras llegaba (la vista que la pidió puede llevar rato
    * desmontada, y su copia de la conversación ser antigua). La respuesta recuerda su pregunta
    * (`replyTo`), para seguir detrás de ella al combinar copias. Se descarta, devolviendo null,
-   * si la cuenta abierta ya no es la que preguntó o si la pregunta ya no está porque se reinició
-   * la conversación. Si no se pudo guardar, la conversación se devuelve igual con `guardada`
-   * en false: la respuesta no se pierde de la vista y se guarda con la siguiente escritura.
+   * si la cuenta abierta ya no es la que preguntó o si la pregunta no está guardada (se reinició
+   * la conversación, o no se pudo guardar). Lo que no llega al disco no se pierde de la vista:
+   * cada vista montada añade la respuesta a su propia conversación (`insertarRespuesta`).
    */
   addChatReply(
     dueno: string,
@@ -426,10 +428,8 @@ export const StorageService = {
     respuesta: ChatMessage
   ): { messages: ChatMessage[]; guardada: boolean } | null {
     if (this.getUserProfile().id !== dueno) return null;
-    const actual = this.getChatMessages();
-    const i = actual.findIndex(m => m.id === preguntaId && m.role === 'user');
-    if (i === -1) return null;
-    const messages = [...actual.slice(0, i + 1), { ...respuesta, replyTo: preguntaId }, ...actual.slice(i + 1)];
+    const messages = insertarRespuesta(this.getChatMessages(), preguntaId, respuesta);
+    if (!messages) return null;
     return { messages, guardada: this.saveChatMessages(messages) };
   },
 
@@ -564,7 +564,6 @@ export const StorageService = {
 
   /** Pone en el navegador los datos de una persona, sin subir nada. */
   writeActiveData(d: AccountData): void {
-    chatSinGuardar = null;
     if (d.currentResult) localStorage.setItem(STORAGE_KEYS.CURRENT_RESULT, JSON.stringify(d.currentResult));
     else localStorage.removeItem(STORAGE_KEYS.CURRENT_RESULT);
     localStorage.setItem(STORAGE_KEYS.ASSESSMENT_HISTORY, JSON.stringify(d.history ?? []));

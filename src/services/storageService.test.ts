@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { StorageService, backupBelongsTo, emptyAccountData, hasOwnData, mergeAccountData, mergeChallengeProgress, ordenarConversacion } from './storageService';
+import { StorageService, backupBelongsTo, emptyAccountData, hasOwnData, insertarRespuesta, mergeAccountData, mergeChallengeProgress, ordenarConversacion } from './storageService';
 import { FirebaseService } from './firebaseService';
 import { calculateAssessmentResult } from './scoringEngine';
 import { QUESTIONS_DATA } from '../data/questionsData';
@@ -160,34 +160,61 @@ describe('chat: una respuesta tardía no pisa ni se pierde', () => {
     return estado;
   };
 
-  it('si no se pudo guardar la pregunta, su respuesta tampoco se pierde (novena revisión de Codex)', () => {
+  it('si no se pudo guardar la pregunta, la vista conserva la respuesta y el disco no se toca (novena revisión de Codex)', () => {
     const restaurar = montar();
     try {
       StorageService.saveChatMessages([msg('w', 'model')]);
       const disco = conDiscoLleno();
-      assert.equal(StorageService.saveChatMessages([msg('w', 'model'), msg('q1', 'user')]), false);
-      // La vista que vuelve a montarse ve la pregunta aunque no esté en disco.
-      assert.deepEqual(ids(StorageService.getChatMessages()), ['w', 'q1']);
-      const tras = StorageService.addChatReply('uidX', 'q1', msg('r1', 'model'));
-      assert.deepEqual(ids(tras?.messages), ['w', 'q1', 'r1']);
-      assert.equal(tras?.guardada, false);
-      // En cuanto hay sitio, la siguiente escritura lo guarda todo.
+      // La vista muestra la pregunta aunque no se haya guardado.
+      const enLaVista = [msg('w', 'model'), msg('q1', 'user')];
+      assert.equal(StorageService.saveChatMessages(enLaVista), false);
+      // Al llegar la respuesta no hay nada que guardar en disco…
+      assert.equal(StorageService.addChatReply('uidX', 'q1', msg('r1', 'model')), null);
+      // …pero la vista la añade a lo suyo, y su siguiente escritura lo guarda todo.
+      const conRespuesta = insertarRespuesta(enLaVista, 'q1', msg('r1', 'model'));
+      assert.deepEqual(ids(conRespuesta), ['w', 'q1', 'r1']);
       disco.lleno = false;
-      assert.equal(StorageService.saveChatMessages(StorageService.getChatMessages()), true);
-      assert.deepEqual(ids(JSON.parse((globalThis as any).localStorage.getItem('archetypes_chat_messages'))), ['w', 'q1', 'r1']);
+      assert.equal(StorageService.saveChatMessages(conRespuesta!), true);
+      assert.deepEqual(ids(StorageService.getChatMessages()), ['w', 'q1', 'r1']);
     } finally {
       restaurar();
     }
   });
 
-  it('con dos respuestas pendientes y el disco lleno, la segunda no borra la primera (novena revisión de Codex)', () => {
+  it('con dos respuestas pendientes y el disco lleno, la vista no pierde la primera (novena revisión de Codex)', () => {
+    const enLaVista = [msg('w', 'model'), msg('q1', 'user'), msg('q2', 'user')];
+    const conR1 = insertarRespuesta(enLaVista, 'q1', msg('r1', 'model'))!;
+    assert.deepEqual(ids(insertarRespuesta(conR1, 'q2', msg('r2', 'model'))), ['w', 'q1', 'r1', 'q2', 'r2']);
+  });
+
+  it('una respuesta que ya estaba no se duplica', () => {
+    const conR1 = insertarRespuesta([msg('q1', 'user')], 'q1', msg('r1', 'model'))!;
+    assert.equal(insertarRespuesta(conR1, 'q1', msg('r1', 'model')), null);
+  });
+
+  it('lo que otra pestaña guardó no se pisa con lo que esta no pudo guardar (décima revisión de Codex)', () => {
     const restaurar = montar();
     try {
-      StorageService.saveChatMessages([msg('w', 'model'), msg('q1', 'user'), msg('q2', 'user')]);
+      // Esta pestaña no pudo guardar q1; otra pestaña de la misma cuenta guardó q2.
+      const disco = conDiscoLleno();
+      StorageService.saveChatMessages([msg('w', 'model'), msg('q1', 'user')]);
+      disco.lleno = false;
+      StorageService.saveChatMessages([msg('w', 'model'), msg('q2', 'user')]);
+      // Llega r1: no está su pregunta en disco, así que el disco se queda como lo dejó la otra.
+      assert.equal(StorageService.addChatReply('uidX', 'q1', msg('r1', 'model')), null);
+      assert.deepEqual(ids(StorageService.getChatMessages()), ['w', 'q2']);
+    } finally {
+      restaurar();
+    }
+  });
+
+  it('reiniciar los datos locales no deja vivo lo que no se pudo guardar (décima revisión de Codex)', () => {
+    const restaurar = montar();
+    try {
       conDiscoLleno();
-      StorageService.addChatReply('uidX', 'q1', msg('r1', 'model'));
-      const tras = StorageService.addChatReply('uidX', 'q2', msg('r2', 'model'));
-      assert.deepEqual(ids(tras?.messages), ['w', 'q1', 'r1', 'q2', 'r2']);
+      StorageService.saveChatMessages([msg('w', 'model'), msg('privado', 'user')]);
+      (globalThis as any).localStorage.clear();
+      assert.ok(!StorageService.getChatMessages().some(m => m.id === 'privado'));
     } finally {
       restaurar();
     }
