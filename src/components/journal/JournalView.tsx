@@ -13,11 +13,13 @@ import {
   Cloud,
   Lock,
 } from 'lucide-react';
-import { ARCHETYPES, ARCHETYPES_LIST } from '../../data/archetypesData';
+import { getArchetype } from '../../data/archetypesData';
 import { FirebaseService } from '../../services/firebaseService';
 import { JOURNAL_PROMPTS, StorageService } from '../../services/storageService';
 import { ArchetypeId, JournalEntry, GenderMode, DEFAULT_GENDER } from '../../types';
 import { ArchetypeBadge } from '../common/ArchetypeBadge';
+import { ArchetypePickerModal } from '../archetypes/ArchetypePickerModal';
+import { BotonElegirArquetipo } from '../archetypes/BotonElegirArquetipo';
 
 interface JournalViewProps {
   entries: JournalEntry[];
@@ -42,7 +44,11 @@ export const JournalView: React.FC<JournalViewProps> = ({
     []
   );
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedArchetypeFilter, setSelectedArchetypeFilter] = useState<string>('todos');
+  const [selectedArchetypeFilter, setSelectedArchetypeFilter] = useState<ArchetypeId | 'todos'>('todos');
+  // Los arquetipos se eligen en un selector (modal), no en un desplegable: el del filtro y el
+  // de los arquetipos de una entrada nueva.
+  const [eligiendoFiltro, setEligiendoFiltro] = useState(false);
+  const [eligiendoInvolucrados, setEligiendoInvolucrados] = useState(false);
 
   // New entry form state
   const [title, setTitle] = useState('');
@@ -226,24 +232,34 @@ export const JournalView: React.FC<JournalViewProps> = ({
               <span>Arquetipos involucrados en esta experiencia</span>
             </label>
             <div className="flex flex-wrap gap-1.5">
-              {ARCHETYPES_LIST.map(a => {
-                const isSelected = selectedArchetypes.includes(a.id);
+              {/* Los elegidos, con el nombre de la perspectiva de la persona; tocarlos los quita. */}
+              {selectedArchetypes.map(id => {
+                const a = getArchetype(id, gender);
                 return (
                   <button
-                    key={a.id}
+                    key={id}
                     type="button"
-                    onClick={() => handleToggleArchetypeTag(a.id)}
-                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs transition-all ${
-                      isSelected
-                        ? 'bg-[#315C45] text-[#F2EFE6] border border-[#D6A84F] font-semibold'
-                        : 'bg-[#16201D] text-[#9DA79F] border border-[#1E2A25] hover:text-[#F2EFE6]'
-                    }`}
+                    onClick={() => handleToggleArchetypeTag(id)}
+                    aria-label={`Quitar ${a.name}`}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs bg-[#315C45] text-[#F2EFE6] border border-[#D6A84F] font-semibold"
                   >
                     <span>{a.emoji}</span>
                     <span>{a.name}</span>
+                    <span className="text-[#D6A84F]" aria-hidden="true">
+                      ×
+                    </span>
                   </button>
                 );
               })}
+              <button
+                type="button"
+                onClick={() => setEligiendoInvolucrados(true)}
+                aria-haspopup="dialog"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs bg-[#16201D] text-[#C5CFC7] border border-dashed border-[#315C45] hover:text-[#F2EFE6] transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5 text-[#D6A84F]" />
+                <span>{selectedArchetypes.length ? 'Cambiar arquetipos' : 'Elegir arquetipos'}</span>
+              </button>
             </div>
           </div>
 
@@ -292,20 +308,13 @@ export const JournalView: React.FC<JournalViewProps> = ({
 
       {/* Filter and Search Bar */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-y border-[#1E2A25] py-3">
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <span className="text-xs text-[#9DA79F]">Filtrar por:</span>
-          <select
-            value={selectedArchetypeFilter}
-            onChange={e => setSelectedArchetypeFilter(e.target.value)}
-            className="p-1.5 rounded-lg bg-[#121A17] border border-[#1E2A25] text-xs text-[#F2EFE6] focus:outline-none"
-          >
-            <option value="todos">Todos los arquetipos</option>
-            {ARCHETYPES_LIST.map(a => (
-              <option key={a.id} value={a.id}>
-                {a.emoji} {a.name}
-              </option>
-            ))}
-          </select>
+        <div className="w-full sm:w-auto">
+          <BotonElegirArquetipo
+            etiqueta="Filtrar por"
+            valor={selectedArchetypeFilter}
+            gender={gender}
+            onAbrir={() => setEligiendoFiltro(true)}
+          />
         </div>
 
         <div className="relative w-full sm:w-60">
@@ -400,6 +409,29 @@ export const JournalView: React.FC<JournalViewProps> = ({
           ))
         )}
       </div>
+
+      <ArchetypePickerModal
+        isOpen={eligiendoFiltro}
+        onClose={() => setEligiendoFiltro(false)}
+        onSelect={id => setSelectedArchetypeFilter(id === 'none' ? 'todos' : id)}
+        currentSelectedId={selectedArchetypeFilter === 'todos' ? 'none' : selectedArchetypeFilter}
+        title="Filtrar el diario"
+        subtitle="Muestra solo las entradas de un arquetipo."
+        allowNone
+        noneLabel="Todos los arquetipos"
+        noneVariant="todos"
+        gender={gender}
+      />
+      <ArchetypePickerModal
+        isOpen={eligiendoInvolucrados}
+        onClose={() => setEligiendoInvolucrados(false)}
+        multiple
+        selectedIds={selectedArchetypes}
+        onConfirmMany={setSelectedArchetypes}
+        title="Arquetipos de esta experiencia"
+        subtitle="Marca los que reconoces en lo que viviste. Puedes elegir varios."
+        gender={gender}
+      />
     </div>
   );
 };

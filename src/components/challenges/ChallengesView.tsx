@@ -9,9 +9,11 @@ import {
   ArrowRight,
   Shield,
 } from 'lucide-react';
-import { getArchetype, getArchetypeList, getDimensionShortName } from '../../data/archetypesData';
+import { getArchetype, getDimensionShortName } from '../../data/archetypesData';
 import { ArchetypeId, Challenge, GenderMode, DEFAULT_GENDER } from '../../types';
 import { ArchetypeBadge } from '../common/ArchetypeBadge';
+import { ArchetypePickerModal } from '../archetypes/ArchetypePickerModal';
+import { BotonElegirArquetipo } from '../archetypes/BotonElegirArquetipo';
 
 interface ChallengesViewProps {
   challenges: Challenge[];
@@ -29,10 +31,11 @@ export const ChallengesView: React.FC<ChallengesViewProps> = ({
   onGenderChange,
 }) => {
   const currentGender = gender || DEFAULT_GENDER;
-  const archetypeList = getArchetypeList(currentGender);
 
   const [filterStatus, setFilterStatus] = useState<'todos' | 'pendientes' | 'completados'>('todos');
-  const [selectedArchetypeFilter, setSelectedArchetypeFilter] = useState<string>('todos');
+  const [selectedArchetypeFilter, setSelectedArchetypeFilter] = useState<ArchetypeId | 'todos'>('todos');
+  // El arquetipo se elige en un selector (modal), no en un desplegable: se ve mejor en el celular.
+  const [eligiendoArquetipo, setEligiendoArquetipo] = useState(false);
 
   const completedCount = challenges.filter(c => c.completed).length;
   const progressPercent = Math.round((completedCount / challenges.length) * 100);
@@ -139,20 +142,13 @@ export const ChallengesView: React.FC<ChallengesViewProps> = ({
         </div>
 
         {/* Archetype Filter */}
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <span className="text-xs text-[#9DA79F]">Arquetipo:</span>
-          <select
-            value={selectedArchetypeFilter}
-            onChange={e => setSelectedArchetypeFilter(e.target.value)}
-            className="p-1.5 rounded-lg bg-[#121A17] border border-[#1E2A25] text-xs text-[#F2EFE6] focus:outline-none"
-          >
-            <option value="todos">Todos los arquetipos</option>
-            {archetypeList.map(a => (
-              <option key={a.id} value={a.id}>
-                {a.emoji} {a.name}
-              </option>
-            ))}
-          </select>
+        <div className="w-full sm:w-auto">
+          <BotonElegirArquetipo
+            etiqueta="Arquetipo"
+            valor={selectedArchetypeFilter}
+            gender={currentGender}
+            onAbrir={() => setEligiendoArquetipo(true)}
+          />
         </div>
       </div>
 
@@ -166,7 +162,7 @@ export const ChallengesView: React.FC<ChallengesViewProps> = ({
           <p className="text-sm text-[#C5CFC7] font-medium">
             {selectedArchetypeFilter === 'todos'
               ? 'No hay retos con ese estado todavía.'
-              : `Todavía no hay prácticas para ${getArchetype(selectedArchetypeFilter as ArchetypeId, currentGender).name}.`}
+              : `Todavía no hay prácticas para ${getArchetype(selectedArchetypeFilter, currentGender).name}.`}
           </p>
           <button
             type="button"
@@ -284,6 +280,19 @@ export const ChallengesView: React.FC<ChallengesViewProps> = ({
           );
         })}
       </div>
+
+      <ArchetypePickerModal
+        isOpen={eligiendoArquetipo}
+        onClose={() => setEligiendoArquetipo(false)}
+        onSelect={id => setSelectedArchetypeFilter(id === 'none' ? 'todos' : id)}
+        currentSelectedId={selectedArchetypeFilter === 'todos' ? 'none' : selectedArchetypeFilter}
+        title="Retos de un arquetipo"
+        subtitle="Muestra solo las prácticas de un arquetipo."
+        allowNone
+        noneLabel="Todos los arquetipos"
+        noneVariant="todos"
+        gender={currentGender}
+      />
     </div>
   );
 };
