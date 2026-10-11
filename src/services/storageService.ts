@@ -444,10 +444,10 @@ export const StorageService = {
    * sobre la conversación que tiene delante (la de la vista), no sobre la del disco: si algo no
    * se pudo guardar, cerrar no lo borra. Devuelve también si se pudo guardar.
    */
-  closeCrisis(actual?: ChatMessage[]): { messages: ChatMessage[]; guardada: boolean } {
+  closeCrisis(actual?: ChatMessage[], momento: Date = new Date()): { messages: ChatMessage[]; guardada: boolean } {
     const messages = [
       ...(actual ?? this.getChatMessages()),
-      { id: `msg-safe-${Date.now()}`, role: 'model' as const, content: CRISIS_CLOSED_NOTE, timestamp: new Date().toISOString(), crisisClosed: true },
+      { id: `msg-safe-${momento.getTime()}`, role: 'model' as const, content: CRISIS_CLOSED_NOTE, timestamp: momento.toISOString(), crisisClosed: true },
     ];
     return { messages, guardada: this.saveChatMessages(messages) };
   },

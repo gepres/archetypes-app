@@ -3,7 +3,7 @@
  * y el almacenamiento del navegador. La lógica vive en lecturaCore.ts.
  */
 import { AIProviderService } from './aiProviderService';
-import { CRISIS_FOLLOWUP, crisisInConversation, senalesDeCrisis } from './crisisSupport';
+import { CRISIS_FOLLOWUP, crisisInConversation } from './crisisSupport';
 import { cerrarCrisisRegistradas, crisisAbiertaEnRegistro, suscribirCrisis } from './crisisVigente';
 import { StorageService } from './storageService';
 import { crearLecturas } from './lecturaCore';
@@ -60,21 +60,21 @@ export const lecturas = crearLecturas({
 });
 
 /**
- * «Ya estoy a salvo» desde la lectura: lo mismo que el botón del chat (cierra la crisis en el
- * chat y en el registro común). Así nadie se queda bloqueado por una crisis que ya no se ve en
- * ningún chat (una pestaña que la tenía y se cerró sin poder guardarla).
+ * «Ya estoy a salvo» desde la lectura: lo mismo que el botón del chat (cierra hasta ahora la
+ * crisis en el chat y en el registro común, con el mismo momento). Así nadie se queda bloqueado
+ * por una crisis que ya no se ve en ningún chat (una pestaña que la tenía y se cerró sin poder
+ * guardarla).
  */
 export async function declararASalvo(): Promise<void> {
   const dueno = StorageService.getUserProfile().id;
-  let senales: string[] = [];
+  const momento = new Date();
   try {
     const chat = StorageService.getChatMessages();
-    senales = senalesDeCrisis(chat);
-    if (crisisInConversation(chat)) StorageService.closeCrisis(chat);
+    if (crisisInConversation(chat)) StorageService.closeCrisis(chat, momento);
   } catch {
     // El registro se cierra igual.
   }
-  await cerrarCrisisRegistradas(dueno, senales);
+  await cerrarCrisisRegistradas(dueno, momento.getTime());
 }
 
 /** Si se puede pedir ahora, y la línea que lo acompaña (qué se envía y lo que cuesta). */

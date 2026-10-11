@@ -3,187 +3,254 @@
  * entregar una interpretación mientras tanto (la lectura personal con IA).
  *
  * La conversación guardada no basta: si el almacenamiento está lleno, el mensaje de crisis no
- * llega a guardarse; y una crisis cerrada con el botón puede no llegar a guardar su cierre. Por
- * eso cada señal de crisis se apunta, por su mensaje, en un registro común a todas las pestañas
- * (IndexedDB, con mucho más espacio que el almacenamiento del chat):
- * - El chat apunta cada señal al enviarla. Un chat que no tiene ese mensaje no la cierra: no hace
- *   nada. Una señal nueva cuenta aunque otra pestaña hubiera cerrado las anteriores.
- * - El botón «Ya estoy a salvo» cierra todas las de la cuenta (la persona dice que está a salvo).
- * - Una crisis cerrada no se vuelve a abrir aunque reaparezca una copia antigua del chat.
- * - Si el registro no se puede usar, se mira lo que se sepa (lo de esta pestaña y el chat
- *   guardado), y si tampoco se puede leer, cuenta como abierta.
- * Abrir y cerrar se hacen cada uno en una sola transacción (leer y escribir de una vez): así una
- * apertura que llega a la vez que un cierre no lo pisa.
- * Los avisos entre pestañas solo sirven para que una lectura a la vista se vuelva a comprobar:
- * no deciden nada.
+ * llega a guardarse, y un cierre con el botón tampoco. Por eso hay un registro común a todas las
+ * pestañas (IndexedDB, con mucho más espacio que el almacenamiento del chat), que cuenta en el
+ * tiempo:
+ * - Cada señal de crisis se apunta con su mensaje y el momento en que se escribió.
+ * - «Ya estoy a salvo» apunta un cierre hasta ese momento: cierra toda señal anterior, se apunte
+ *   antes o después, y ninguna posterior. Así un cierre que llega tarde no cierra una señal
+ *   nueva, y una señal que se apunta tarde no reabre lo ya cerrado. El cierre solo avanza.
+ * - El chat guardado también cuenta: sus señales desde su último cierre, y ese cierre.
+ * - Lo que una pestaña no pudo apuntar lo recuerda, lo reintenta en cada comprobación y se lo
+ *   cuenta a las demás pestañas abiertas, que hacen lo mismo; una pestaña nueva lo pregunta al
+ *   abrirse y espera un momento la respuesta antes de su primera comprobación.
+ * - Reiniciar los datos vacía el registro y deja apuntado el reinicio, que cierra todo lo anterior
+ *   (de cualquier cuenta): lo que otra pestaña aún no sabía apuntar no revive al apuntarse tarde.
+ * - Si no se puede leer el registro o el chat guardado, cuenta como abierta.
+ * Hay una crisis abierta si alguna señal es posterior al último cierre que se conozca. (Se cuenta
+ * con que el reloj del dispositivo no retrocede.)
  */
-import { senalesDeCrisis } from './crisisSupport';
+import { SenalCrisis, senalesDeCrisis, ultimoCierreDeCrisis } from './crisisSupport';
 
+export type { SenalCrisis } from './crisisSupport';
+
+/**
+ * En el registro: una señal (su mensaje y cuándo se escribió), el cierre de la cuenta, o el
+ * reinicio de todos los datos (que vale como cierre para todas las cuentas).
+ */
 export interface RegistroCrisis {
   clave: string;
   dueno: string;
-  /** El mensaje con la señal de crisis. */
-  mensajeId: string;
-  abierta: boolean;
-  fecha: string;
+  tipo: 'senal' | 'cierre' | 'reinicio';
+  /** La señal: su mensaje. */
+  mensajeId?: string;
+  /** La señal: cuándo se escribió. El cierre y el reinicio: hasta cuándo cierran. En milisegundos. */
+  momento: number;
 }
 
 export interface AlmacenCrisis {
+  /** Los de la cuenta, y el reinicio si lo hay. */
   deDueno(dueno: string): Promise<RegistroCrisis[]>;
   /**
    * Lee los de la cuenta y guarda los que devuelva `cambios`, todo en una sola transacción: nadie
    * escribe entre medias.
    */
   cambiar(dueno: string, cambios: (rs: RegistroCrisis[]) => RegistroCrisis[]): Promise<void>;
-  /** Lo vacía (al reiniciar los datos). */
-  vaciar(): Promise<void>;
+  /** Lo vacía y deja apuntado `reinicio`, de una vez (al reiniciar los datos). */
+  vaciar(reinicio: RegistroCrisis): Promise<void>;
 }
 
 /** El chat guardado no se pudo leer. */
 export const ILEGIBLE = '__ilegible__';
 
-/** Las señales de crisis abiertas en el chat guardado (sus mensajes), o ILEGIBLE. */
-export function senalesDelChatGuardado(guardado: string | null): string[] | typeof ILEGIBLE {
-  if (guardado === null) return [];
+/** Lo que dice el chat guardado: sus señales desde su último cierre y ese cierre; o ILEGIBLE. */
+export function crisisDelChatGuardado(
+  guardado: string | null
+): { senales: SenalCrisis[]; cierre: number | null } | typeof ILEGIBLE {
+  if (guardado === null) return { senales: [], cierre: null };
   try {
     const mensajes = JSON.parse(guardado);
     if (!Array.isArray(mensajes)) return ILEGIBLE;
-    return senalesDeCrisis(mensajes);
+    return { senales: senalesDeCrisis(mensajes), cierre: ultimoCierreDeCrisis(mensajes) };
   } catch {
     return ILEGIBLE;
   }
 }
 
-const registro = (dueno: string, mensajeId: string, abierta: boolean): RegistroCrisis => ({
-  clave: `${dueno}:${mensajeId}`,
+const deSenal = (dueno: string, s: SenalCrisis): RegistroCrisis => ({
+  clave: `${dueno}:${s.id}`,
   dueno,
-  mensajeId,
-  abierta,
-  fecha: new Date().toISOString(),
+  tipo: 'senal',
+  mensajeId: s.id,
+  momento: s.momento,
 });
+const deCierre = (dueno: string, hasta: number): RegistroCrisis => ({ clave: `${dueno}:__cierre`, dueno, tipo: 'cierre', momento: hasta });
+const deReinicio = (momento: number): RegistroCrisis => ({ clave: '__reinicio', dueno: '*', tipo: 'reinicio', momento });
 
-/** Abiertas las de esos mensajes que aún no consten; las que constan (sobre todo, cerradas) no se tocan. */
-const abrirNuevas = (dueno: string, ids: string[]) => (rs: RegistroCrisis[]) =>
-  ids.filter(id => !rs.some(r => r.mensajeId === id)).map(id => registro(dueno, id, true));
+/** Lo que falta en el registro: las señales que no consten, y el cierre si va más allá del que hay. */
+const loQueFalta = (dueno: string, senales: SenalCrisis[], cierre: number | null) => (rs: RegistroCrisis[]) => {
+  const nuevas = senales.filter(s => !rs.some(r => r.tipo === 'senal' && r.mensajeId === s.id)).map(s => deSenal(dueno, s));
+  const actual = rs.find(r => r.tipo === 'cierre');
+  const avanza = cierre !== null && (!actual || actual.momento < cierre);
+  return avanza ? [...nuevas, deCierre(dueno, cierre)] : nuevas;
+};
 
-export function crearRegistroCrisis(almacen: AlmacenCrisis | null, abrirCanal: () => BroadcastChannel | null = () => null) {
-  /** Lo que esta pestaña no pudo apuntar en el registro (si falló), para no perderlo. */
-  const sinApuntar = new Map<string, Set<string>>();
-  /**
-   * Cuántas veces se ha cerrado (o reiniciado) cada cuenta en esta pestaña. Una apertura pedida
-   * antes de un cierre no se apunta después de él: el cierre manda.
-   */
-  const cierres = new Map<string, number>();
-  let reinicios = 0;
-  const vez = (dueno: string) => `${reinicios}:${cierres.get(dueno) ?? 0}`;
+/** Lo que una pestaña sabe de una cuenta y aún no consta en el registro. */
+interface SinApuntar {
+  senales: Map<string, number>;
+  cierre: number | null;
+}
+
+/** Lo que se cuentan las pestañas. */
+type MensajeEntrePestanas =
+  | { tipo: 'cambio' }
+  | { tipo: 'pregunta' }
+  | { tipo: 'reinicio' }
+  | { tipo: 'saber'; cuentas: { dueno: string; senales: SenalCrisis[]; cierre: number | null }[] };
+
+/** Cuánto espera una pestaña recién abierta, antes de su primera comprobación, a que le cuenten. */
+export const ESPERA_AL_ABRIR = 300;
+
+export function crearRegistroCrisis(
+  almacen: AlmacenCrisis | null,
+  abrirCanal: () => BroadcastChannel | null = () => null,
+  esperaAlAbrir = ESPERA_AL_ABRIR
+) {
+  const sinApuntar = new Map<string, SinApuntar>();
   const oyentes = new Set<() => void>();
   let canal: BroadcastChannel | null = null;
   let iniciado = false;
+  /** La primera comprobación espera a que las demás pestañas cuenten lo que sepan. */
+  let alAbrir: Promise<void> = Promise.resolve();
 
+  const deCuenta = (dueno: string) => {
+    let s = sinApuntar.get(dueno);
+    if (!s) {
+      s = { senales: new Map(), cierre: null };
+      sinApuntar.set(dueno, s);
+    }
+    return s;
+  };
+  const recordar = (dueno: string, senales: SenalCrisis[], cierre: number | null) => {
+    const s = deCuenta(dueno);
+    for (const x of senales) if (!s.senales.has(x.id)) s.senales.set(x.id, x.momento);
+    if (cierre !== null) s.cierre = Math.max(s.cierre ?? cierre, cierre);
+  };
+  const lista = (s: SinApuntar): SenalCrisis[] => [...s.senales].map(([id, momento]) => ({ id, momento }));
+
+  const enviar = (m: MensajeEntrePestanas) => {
+    try {
+      canal?.postMessage(m);
+    } catch {
+      // Sin canal, cada pestaña sabe lo suyo y lo que haya en el registro y en el chat guardado.
+    }
+  };
+  /** Contar a las demás lo que esta pestaña sabe sin apuntar (de una cuenta, o de todas). */
+  const contar = (dueno?: string) => {
+    const cuentas = [...sinApuntar]
+      .filter(([d, s]) => (dueno === undefined || d === dueno) && (s.senales.size > 0 || s.cierre !== null))
+      .map(([d, s]) => ({ dueno: d, senales: lista(s), cierre: s.cierre }));
+    if (cuentas.length) enviar({ tipo: 'saber', cuentas });
+  };
   const avisarAqui = () => {
     for (const f of oyentes) f();
   };
+  const avisar = () => {
+    avisarAqui();
+    enviar({ tipo: 'cambio' });
+  };
+
   const iniciar = () => {
     if (iniciado) return;
     iniciado = true;
     try {
       canal = abrirCanal();
-      if (canal) canal.onmessage = () => avisarAqui();
     } catch {
       canal = null;
     }
+    if (!canal) return;
+    canal.onmessage = (e: MessageEvent<MensajeEntrePestanas>) => {
+      const m = e.data;
+      if (m?.tipo === 'pregunta') {
+        contar();
+        return;
+      }
+      if (m?.tipo === 'saber') for (const c of m.cuentas) recordar(c.dueno, c.senales, c.cierre);
+      if (m?.tipo === 'reinicio') sinApuntar.clear();
+      avisarAqui();
+    };
+    enviar({ tipo: 'pregunta' });
+    alAbrir = new Promise(r => setTimeout(r, esperaAlAbrir));
   };
-  const avisar = () => {
-    avisarAqui();
+
+  /** Apunta en el registro lo que esta pestaña sabe sin apuntar, si ahora se puede. */
+  const apuntarLoSabido = async (dueno: string) => {
+    const s = sinApuntar.get(dueno);
+    if (!almacen || !s || (s.senales.size === 0 && s.cierre === null)) return;
+    const senales = lista(s);
+    const cierre = s.cierre;
     try {
-      canal?.postMessage('cambio');
+      await almacen.cambiar(dueno, loQueFalta(dueno, senales, cierre));
     } catch {
-      // Sin canal, las demás pestañas lo comprueban igual antes de pedir o entregar.
+      return;
     }
+    // Ya consta: se olvida lo apuntado (no lo que haya llegado entretanto).
+    for (const x of senales) if (s.senales.get(x.id) === x.momento) s.senales.delete(x.id);
+    if (s.cierre === cierre) s.cierre = null;
+    // Las demás tienen que saberlo: alguna pudo enseñar una lectura mientras tanto.
+    avisar();
+  };
+
+  /** Apunta una señal o un cierre; si no se puede, se recuerda y se cuenta a las demás. */
+  const apuntar = async (dueno: string, senales: SenalCrisis[], cierre: number | null) => {
+    iniciar();
+    try {
+      if (!almacen) throw new Error('sin registro');
+      await almacen.cambiar(dueno, loQueFalta(dueno, senales, cierre));
+    } catch {
+      recordar(dueno, senales, cierre);
+      contar(dueno);
+    }
+    avisar();
   };
 
   return {
-    /** El chat tiene abierta la crisis que abrió ese mensaje. Si ya se cerró, no se reabre. */
-    async abrir(dueno: string, mensajeId: string): Promise<void> {
-      iniciar();
-      const pedida = vez(dueno);
-      try {
-        if (!almacen) throw new Error('sin registro');
-        // Se decide dentro de la transacción: si consta (abierta o cerrada) no se toca, y si esta
-        // pestaña la cerró entretanto, tampoco.
-        await almacen.cambiar(dueno, rs => (vez(dueno) === pedida ? abrirNuevas(dueno, [mensajeId])(rs) : []));
-      } catch {
-        if (vez(dueno) === pedida) {
-          const s = sinApuntar.get(dueno) ?? new Set<string>();
-          s.add(mensajeId);
-          sinApuntar.set(dueno, s);
-        }
-      }
-      avisar();
+    /** Una señal de crisis en el chat (su mensaje y cuándo se escribió). */
+    abrir(dueno: string, senal: SenalCrisis): Promise<void> {
+      return apuntar(dueno, [senal], null);
     },
 
-    /** «Ya estoy a salvo»: se cierran todas las de la cuenta (y las conocidas, aunque no constaran). */
-    async cerrarTodas(dueno: string, conocidas: string[] = []): Promise<void> {
-      iniciar();
-      cierres.set(dueno, (cierres.get(dueno) ?? 0) + 1);
-      sinApuntar.delete(dueno);
-      try {
-        if (almacen) {
-          const fecha = new Date().toISOString();
-          await almacen.cambiar(dueno, rs => [
-            ...rs.filter(r => r.abierta).map(r => ({ ...r, abierta: false, fecha })),
-            ...conocidas.filter(id => !rs.some(r => r.mensajeId === id)).map(id => registro(dueno, id, false)),
-          ]);
-        }
-      } catch {
-        // Lo que no se pudo apuntar se comprueba igual con el chat guardado.
-      }
-      avisar();
+    /** «Ya estoy a salvo»: cierra toda señal de la cuenta anterior a `hasta`, y ninguna posterior. */
+    cerrarTodas(dueno: string, hasta: number = Date.now()): Promise<void> {
+      return apuntar(dueno, [], hasta);
     },
 
     /** Si hay una crisis abierta en esa cuenta. `guardado`: el chat guardado, tal cual. */
     async abierta(dueno: string, guardado: string | null): Promise<boolean> {
       iniciar();
-      const enChat = senalesDelChatGuardado(guardado);
-      if (enChat === ILEGIBLE) return true;
-      const pendientes = [...(sinApuntar.get(dueno) ?? [])];
-      if (!almacen) return pendientes.length > 0 || enChat.length > 0;
-      if (pendientes.length) {
-        // Lo que esta pestaña no pudo apuntar se apunta ahora, sin pisar un cierre que ya conste
-        // (de otra pestaña, por ejemplo): desde ahí manda el registro. Si sigue sin poder, cuenta
-        // como abierta.
-        const pedida = vez(dueno);
+      await alAbrir;
+      const chat = crisisDelChatGuardado(guardado);
+      if (chat === ILEGIBLE) return true;
+      await apuntarLoSabido(dueno);
+      let rs: RegistroCrisis[] = [];
+      if (almacen) {
         try {
-          await almacen.cambiar(dueno, rs => (vez(dueno) === pedida ? abrirNuevas(dueno, pendientes)(rs) : []));
+          rs = await almacen.deDueno(dueno);
         } catch {
           return true;
         }
-        const s = sinApuntar.get(dueno);
-        for (const id of pendientes) s?.delete(id);
-        // Las demás pestañas tienen que saberlo: alguna pudo enseñar una lectura mientras tanto.
-        avisar();
       }
-      let rs: RegistroCrisis[];
-      try {
-        rs = await almacen.deDueno(dueno);
-      } catch {
-        return true;
-      }
-      if (rs.some(r => r.abierta)) return true;
-      // Las del chat guardado, salvo las que consten cerradas (su cierre pudo no llegar a guardarse).
-      return enChat.some(id => !rs.some(r => r.mensajeId === id && !r.abierta));
+      const sabido = sinApuntar.get(dueno);
+      const cierres = [chat.cierre, sabido?.cierre ?? null, ...rs.filter(r => r.tipo !== 'senal').map(r => r.momento)];
+      const hasta = Math.max(-Infinity, ...cierres.filter((x): x is number => x !== null));
+      const momentos = [
+        ...chat.senales.map(s => s.momento),
+        ...(sabido ? [...sabido.senales.values()] : []),
+        ...rs.filter(r => r.tipo === 'senal').map(r => r.momento),
+      ];
+      return momentos.some(m => m > hasta);
     },
 
-    /** Reiniciar todos los datos: se olvida todo, también lo que esta pestaña recordaba. */
+    /** Reiniciar todos los datos: se olvida todo, también lo que sabían las pestañas. */
     async olvidarTodo(): Promise<void> {
       iniciar();
-      reinicios++;
       sinApuntar.clear();
       try {
-        await almacen?.vaciar();
+        await almacen?.vaciar(deReinicio(Date.now()));
       } catch {
-        // Si no se pudo borrar, lo que quede se sigue respetando (y «Ya estoy a salvo» lo cierra).
+        // Si no se pudo vaciar, lo que quede se sigue respetando (y «Ya estoy a salvo» lo cierra).
       }
+      enviar({ tipo: 'reinicio' });
       avisar();
     },
 
@@ -202,21 +269,18 @@ export function crearRegistroCrisis(almacen: AlmacenCrisis | null, abrirCanal: (
   };
 }
 
-type Conversacion = { id?: string; role: string; content: string; crisisClosed?: boolean }[];
-
 /**
- * «Ya estoy a salvo» sobre una conversación: se cierran en el registro las señales de la misma
- * copia que se guarda cerrada (`guardarCierre`). Con copias distintas, una señal que se guarda
- * cerrada en el chat podría quedar sin cerrar en el registro y apuntarse después como abierta.
+ * «Ya estoy a salvo» en una conversación: el cierre del registro y la marca que se guarda en el
+ * chat llevan el mismo momento (`guardarCierre` lo recibe para ponérselo a la marca).
  */
-export function cerrarCrisisDeConversacion<C extends Conversacion, T>(
+export function cerrarCrisisDeConversacion<T>(
   registro: Pick<ReturnType<typeof crearRegistroCrisis>, 'cerrarTodas'>,
   dueno: string,
-  conversacion: C,
-  guardarCierre: (c: C) => T
+  guardarCierre: (momento: Date) => T
 ): { resultado: T; registrado: Promise<void> } {
-  const registrado = registro.cerrarTodas(dueno, senalesDeCrisis(conversacion));
-  return { resultado: guardarCierre(conversacion), registrado };
+  const momento = new Date();
+  const registrado = registro.cerrarTodas(dueno, momento.getTime());
+  return { resultado: guardarCierre(momento), registrado };
 }
 
 /** El registro en IndexedDB del navegador (null si no lo hay). */
@@ -266,7 +330,8 @@ function almacenEnNavegador(): AlmacenCrisis | null {
     });
   };
   return {
-    deDueno: async dueno => ((await enTransaccion('readonly', s => s.getAll())) as RegistroCrisis[]).filter(r => r.dueno === dueno),
+    deDueno: async dueno =>
+      ((await enTransaccion('readonly', s => s.getAll())) as RegistroCrisis[]).filter(r => r.dueno === dueno || r.tipo === 'reinicio'),
     cambiar: async (dueno, cambios) => {
       await enTransaccion('readwrite', s => {
         const todos = s.getAll();
@@ -278,8 +343,11 @@ function almacenEnNavegador(): AlmacenCrisis | null {
       });
     },
     // Se vacía en vez de borrar la base: borrarla esperaría a que la cerraran las demás pestañas.
-    vaciar: async () => {
-      await enTransaccion('readwrite', s => s.clear());
+    vaciar: async reinicio => {
+      await enTransaccion('readwrite', s => {
+        s.clear();
+        return s.put(reinicio);
+      });
     },
   };
 }
@@ -291,8 +359,8 @@ export const apuntarCrisis = deLaApp.abrir;
 export const cerrarCrisisRegistradas = deLaApp.cerrarTodas;
 export const crisisAbiertaEnRegistro = deLaApp.abierta;
 export const suscribirCrisis = deLaApp.suscribir;
-/** «Ya estoy a salvo» en el chat: cierra en el registro y en el chat la misma conversación. */
-export const cerrarCrisisDelChat = <C extends Conversacion, T>(dueno: string, conversacion: C, guardarCierre: (c: C) => T): T =>
-  cerrarCrisisDeConversacion(deLaApp, dueno, conversacion, guardarCierre).resultado;
+/** «Ya estoy a salvo» en el chat: el cierre del registro y la marca del chat, con el mismo momento. */
+export const cerrarCrisisDelChat = <T>(dueno: string, guardarCierre: (momento: Date) => T): T =>
+  cerrarCrisisDeConversacion(deLaApp, dueno, guardarCierre).resultado;
 /** Borra el registro entero y lo que esta pestaña recordaba (al reiniciar todos los datos). */
 export const borrarRegistroCrisis = deLaApp.olvidarTodo;

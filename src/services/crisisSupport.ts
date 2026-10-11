@@ -166,19 +166,46 @@ export const CRISIS_CLOSED_NOTE =
  * salvo (la marca CRISIS_CLOSED_NOTE), sin tener que borrar el historial. Una señal posterior
  * la vuelve a abrir.
  */
+type MensajeConCrisis = { id?: string; role: string; content: string; timestamp?: string; crisisClosed?: boolean };
+
+/** Una señal de crisis: su mensaje y cuándo se escribió (en milisegundos). */
+export interface SenalCrisis {
+  id: string;
+  momento: number;
+}
+
 /**
- * Los mensajes con señal de crisis desde el último cierre con el botón (vacío si no hay ninguna
- * abierta). Cada señal se identifica por su mensaje, para saberlo entre pestañas: una que el
- * registro común ya conoce no cuenta dos veces, y una nueva cuenta aunque otra pestaña cerrara
- * las anteriores.
+ * Cuándo se escribió un mensaje. Sin una fecha legible, 0: la señal cuenta como abierta hasta
+ * el primer «Ya estoy a salvo».
  */
-export function senalesDeCrisis(mensajes: { id?: string; role: string; content: string; crisisClosed?: boolean }[]): string[] {
-  let senales: string[] = [];
+const momentoDe = (m: MensajeConCrisis): number => {
+  const t = m.timestamp ? Date.parse(m.timestamp) : NaN;
+  return Number.isFinite(t) ? t : 0;
+};
+
+/**
+ * Las señales de crisis desde el último cierre con el botón (vacío si no hay ninguna abierta),
+ * cada una con su mensaje y su momento: para saberlo entre pestañas (ver crisisVigente.ts).
+ */
+export function senalesDeCrisis(mensajes: MensajeConCrisis[]): SenalCrisis[] {
+  let senales: SenalCrisis[] = [];
   mensajes.forEach((m, i) => {
-    if (m.role === 'user' && detectCrisis(m.content)) senales.push(m.id || `mensaje-${i}`);
+    if (m.role === 'user' && detectCrisis(m.content)) senales.push({ id: m.id || `mensaje-${i}`, momento: momentoDe(m) });
     else if (m.role !== 'user' && esCierreDelBoton(m)) senales = [];
   });
   return senales;
+}
+
+/** Cuándo se pulsó por última vez «Ya estoy a salvo» en esta conversación (null si nunca). */
+export function ultimoCierreDeCrisis(mensajes: MensajeConCrisis[]): number | null {
+  let cierre: number | null = null;
+  for (const m of mensajes) {
+    if (m.role !== 'user' && esCierreDelBoton(m)) {
+      const t = m.timestamp ? Date.parse(m.timestamp) : NaN;
+      if (Number.isFinite(t)) cierre = Math.max(cierre ?? t, t);
+    }
+  }
+  return cierre;
 }
 
 export function crisisInConversation(
