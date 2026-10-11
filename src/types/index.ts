@@ -219,6 +219,11 @@ export interface AssessmentResult {
   evidence?: Partial<Record<ArchetypeId, AnswerEvidence[]>>;
   /** Con qué test se hizo. Sin él, es el de frases de 1 a 5 (todos los resultados antiguos). */
   instrumento?: 'dilemas';
+  /**
+   * Cuántas posiciones de arriba (1 o 2) decidió el test por comparaciones directas: no son
+   * empates aunque sus números se parezcan.
+   */
+  cabezaResuelta?: number;
 }
 
 export interface JournalEntry {

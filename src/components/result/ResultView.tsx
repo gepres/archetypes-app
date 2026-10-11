@@ -287,7 +287,10 @@ export const ResultView: React.FC<ResultViewProps> = ({
             {result.top3.map((item, index) => {
               const arch = getArchetype(item.archetypeId, gender);
               const next = result.top3[index + 1];
-              const aLaParConElSiguiente = !!next && item.normalizedScore - next.normalizedScore <= TIE_MAX_GAP;
+              // Si el test decidió este puesto comparando directamente, no está a la par aunque
+              // el número se parezca al del siguiente.
+              const decidido = index < (result.cabezaResuelta ?? 0);
+              const aLaParConElSiguiente = !decidido && !!next && item.normalizedScore - next.normalizedScore <= TIE_MAX_GAP;
               const primera = (evidence[item.archetypeId] ?? [])[0];
               return (
                 <button
@@ -329,7 +332,7 @@ export const ResultView: React.FC<ResultViewProps> = ({
           <h3 className="font-serif text-xl font-bold text-[#F2EFE6]">Cómo se reparte tu mapa</h3>
           <p className="text-xs text-[#9DA79F] leading-relaxed max-w-2xl">
             {result.instrumento === 'dilemas'
-              ? 'Cada número dice cuántas veces elegiste esa figura cuando aparecía entre las opciones, en una escala de 10 a 98.'
+              ? 'Cada número compara esa figura con las que compartió pantalla: en qué parte de esas comparaciones la preferiste, en una escala de 10 a 98.'
               : 'Cada número es tu afinidad con las afirmaciones de esa figura, en una escala de 10 a 98.'}{' '}
             No te compara con otras personas ni mide lo que eres, y una diferencia de uno o dos puntos no significa nada.
             {isQuick &&
@@ -462,7 +465,7 @@ export const ResultView: React.FC<ResultViewProps> = ({
           className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl border border-[#23332D] bg-[#121A17] hover:bg-[#1A2521] text-xs font-semibold text-[#9DA79F] hover:text-[#F2EFE6] transition-colors"
         >
           <RotateCcw className="w-4 h-4" />
-          <span>{isQuick ? 'Afinar con el test completo (60)' : 'Repetir el test'}</span>
+          <span>{isQuick ? `Afinar con el test completo (${DILEMAS.length})` : 'Repetir el test'}</span>
         </button>
       </div>
 

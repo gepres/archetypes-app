@@ -12,6 +12,7 @@ import {
   Calendar,
 } from 'lucide-react';
 import { getArchetype, getArchetypeName } from '../../data/archetypesData';
+import { DILEMAS, DILEMAS_RAPIDO_IDS } from '../../data/dilemasData';
 import { getMapLead } from '../../services/scoringEngine';
 import { recommendChallenges } from '../../services/personalization';
 import { ArchetypeId, AssessmentResult, Challenge, GenderMode, JournalEntry, DEFAULT_GENDER } from '../../types';
@@ -77,13 +78,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             onClick={() => onStartTest('full')}
             className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#315C45] hover:bg-[#3D7055] text-[#F2EFE6] font-semibold text-sm transition-all shadow-md active:scale-95"
           >
-            Iniciar Evaluación Completa (60)
+            Iniciar Evaluación Completa ({DILEMAS.length})
           </button>
           <button
             onClick={() => onStartTest('quick')}
             className="w-full sm:w-auto px-5 py-3 rounded-xl border border-[#23332D] bg-[#121A17] hover:bg-[#1A2521] text-[#C5CFC7] font-medium text-sm transition-all"
           >
-            Test Rápido (24)
+            Test Rápido ({DILEMAS_RAPIDO_IDS.length})
           </button>
         </div>
       </div>
@@ -99,8 +100,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const dominantName = getArchetypeName(currentResult.dominantArchetype.archetypeId, currentGender);
   const lead = getMapLead(currentResult, currentGender);
 
-  // Past comparison result if multiple evaluations exist
-  const previousResult = history.length > 1 ? history[1] : undefined;
+  // El resultado anterior con el que comparar: solo uno hecho con el mismo test. Uno de frases
+  // (sin instrumento) y uno de dilemas se calculan distinto, y superponerlos parecería una
+  // evolución que no es.
+  const instrumentoDe = (r: AssessmentResult) => r.instrumento ?? 'frases';
+  const previousResult = history.find(
+    r => r.id !== currentResult.id && instrumentoDe(r) === instrumentoDe(currentResult)
+  );
 
   return (
     <div id="dashboard-view" className="max-w-5xl mx-auto space-y-8 pb-24 pt-2">

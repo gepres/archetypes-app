@@ -116,7 +116,7 @@ const MITAD_RAPIDA: Dilema[] = [
       { arquetipo: 'integrador', texto: 'Escucho a cada quien y armo un acuerdo con algo de todos.' },
       { arquetipo: 'constructor', texto: 'Un sistema claro de turnos, que funcione sin discutirlo cada día.' },
       { arquetipo: 'mago', texto: 'Busco qué está provocando de verdad la tensión y le doy la vuelta.' },
-      { arquetipo: 'cuidador', texto: 'Me encargo yo de lo que falta para que nadie lo pase mal.' },
+      { arquetipo: 'cuidador', texto: 'Me fijo en quién va más cargado y le echo una mano.' },
     ],
   },
   {
@@ -138,7 +138,7 @@ const MITAD_RAPIDA: Dilema[] = [
     pregunta: '¿Qué respondes?',
     opciones: [
       { arquetipo: 'soberano', texto: 'Que no, sin culpa: mi tiempo también es mío.' },
-      { arquetipo: 'cuidador', texto: 'Que sí: sé que esa persona me necesita.' },
+      { arquetipo: 'cuidador', texto: 'Le ayudo con lo que de verdad necesita, y le digo hasta dónde llego.' },
       { arquetipo: 'bufon', texto: 'Le contesto con una broma y negocio algo más ligero.' },
       { arquetipo: 'mistico', texto: 'Me tomo un momento a solas para escuchar qué necesito de verdad.' },
     ],

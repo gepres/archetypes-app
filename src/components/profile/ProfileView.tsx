@@ -527,7 +527,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                         {item.title || `Mapa ${withDe(item.dominantArchetype?.name ?? '')}`}
                       </span>
                       <span className="text-[10px] bg-[#1A2521] text-[#D6A84F] px-2 py-0.5 rounded-full font-bold">
-                        {item.type === 'quick' ? 'Rápido' : 'Completo (60)'}
+                        {item.type === 'quick' ? 'Rápido' : 'Completo'}
+                        {item.instrumento === 'dilemas' ? ' · situaciones' : ' · frases'}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-xs text-[#9DA79F] mt-0.5">

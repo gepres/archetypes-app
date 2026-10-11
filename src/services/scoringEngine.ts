@@ -104,7 +104,13 @@ export function resultadoDesdePuntuaciones(
   testType: 'full' | 'quick',
   gender: GenderMode,
   evidenciaDe: (id: ArchetypeId) => AnswerEvidence[],
-  instrumento?: 'dilemas'
+  instrumento?: 'dilemas',
+  /**
+   * Un orden ya decidido por el test (el de dilemas decide la cabeza con comparaciones, no con
+   * la puntuación): `resueltos` dice cuántas posiciones de arriba están decididas, para que el
+   * perfil no las tome por empates aunque sus números se parezcan.
+   */
+  orden?: { ids: ArchetypeId[]; resueltos: 0 | 1 | 2 }
 ): AssessmentResult {
   // Calculate normalized percentage (0 - 100)
   const normalizedScores: Record<ArchetypeId, number> = {
@@ -146,7 +152,11 @@ export function resultadoDesdePuntuaciones(
         dimension: arch.dimension,
       };
     })
-    .sort((a, b) => exactScores[b.archetypeId] - exactScores[a.archetypeId]);
+    .sort((a, b) =>
+      orden
+        ? orden.ids.indexOf(a.archetypeId) - orden.ids.indexOf(b.archetypeId)
+        : exactScores[b.archetypeId] - exactScores[a.archetypeId]
+    );
 
   ranking.forEach((item, index) => {
     item.rank = index + 1;
@@ -191,7 +201,8 @@ export function resultadoDesdePuntuaciones(
   };
 
   // Generate composite profile
-  const compositeProfile = generateCompositeProfile(ranking, dimensionScores, gender);
+  const resueltos = orden?.resueltos ?? 0;
+  const compositeProfile = generateCompositeProfile(ranking, dimensionScores, gender, resueltos);
 
   const evidence: Partial<Record<ArchetypeId, AnswerEvidence[]>> = {};
   top3.forEach(item => {
@@ -217,6 +228,7 @@ export function resultadoDesdePuntuaciones(
     compositeProfile,
     evidence,
     ...(instrumento ? { instrumento } : {}),
+    ...(resueltos ? { cabezaResuelta: resueltos } : {}),
   };
 }
 
@@ -301,7 +313,7 @@ export function adaptAssessmentResultToGender(
     };
   });
 
-  const compositeProfile = generateCompositeProfile(ranking, result.dimensionScores, gender);
+  const compositeProfile = generateCompositeProfile(ranking, result.dimensionScores, gender, result.cabezaResuelta ?? 0);
   // Se recalcula con la regla de ahora: los resultados guardados traían las tres últimas
   // posiciones, elegidas aunque estuvieran empatadas con otras.
   const developmentArchetypes = developmentFromProfile(compositeProfile, ranking);
@@ -379,7 +391,9 @@ export function getMapLead(
 function generateCompositeProfile(
   ranking: ArchetypeScore[],
   _dimensionScores: Record<DimensionId, number>,
-  gender: GenderMode = 'male'
+  gender: GenderMode = 'male',
+  /** Cuántas posiciones de arriba ya decidió el test (0: se deducen de las puntuaciones). */
+  resueltos = 0
 ): CompositeProfile {
   const [first, second, third] = ranking;
   const last = ranking[ranking.length - 1];
@@ -423,7 +437,7 @@ function generateCompositeProfile(
 
   // Si todo el mapa cabe en unos pocos puntos y nadie se despega, no se inventa una identidad.
   const range = first.normalizedScore - last.normalizedScore;
-  if (range <= FLAT_MAX_RANGE && first.normalizedScore - second.normalizedScore <= FLAT_MAX_LEAD) {
+  if (!resueltos && range <= FLAT_MAX_RANGE && first.normalizedScore - second.normalizedScore <= FLAT_MAX_LEAD) {
     return {
       archetypeKey,
       title: 'Un mapa sin un polo claro',
@@ -442,7 +456,7 @@ function generateCompositeProfile(
 
   // Quiénes comparten el primer puesto. Si son tres o más, las respuestas no distinguen entre
   // ellos: elegir dos por el orden en que están en los datos sería inventar.
-  const leaders = ranking.filter(s => first.normalizedScore - s.normalizedScore <= TIE_MAX_GAP);
+  const leaders = resueltos >= 1 ? [first] : ranking.filter(s => first.normalizedScore - s.normalizedScore <= TIE_MAX_GAP);
   const leaderIds = leaders.map(s => s.archetypeId);
 
   if (leaders.length >= 3) {
@@ -465,7 +479,8 @@ function generateCompositeProfile(
   // Un líder con un mapa casi sin contraste, o con tres o más empatadas detrás: no se inventa
   // una pareja eligiendo a una de ellas por posición. Se nombra al líder y se dice que detrás
   // van a la par. (Con exactamente dos empatadas detrás, la pareja se mantiene y se dice.)
-  const segundos = ranking.slice(1).filter(s => second.normalizedScore - s.normalizedScore <= TIE_MAX_GAP);
+  const segundos =
+    resueltos >= 2 ? [second] : ranking.slice(1).filter(s => second.normalizedScore - s.normalizedScore <= TIE_MAX_GAP);
   if (leaders.length === 1 && segundos.length >= 2 && (range <= FLAT_MAX_RANGE || segundos.length >= 3)) {
     return {
       archetypeKey,

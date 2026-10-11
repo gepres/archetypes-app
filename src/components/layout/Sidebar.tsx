@@ -183,7 +183,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               onClick={() => onStartTest('full')}
               className="w-full py-2 px-3 bg-[#315C45] hover:bg-[#3D7055] text-[#F2EFE6] text-xs font-semibold rounded-xl transition-all shadow-md active:scale-95"
             >
-              Realizar Test (60)
+              Realizar Test
             </button>
           </div>
         )}

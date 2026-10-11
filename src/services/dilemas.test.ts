@@ -90,7 +90,7 @@ describe('los dilemas: un reparto equilibrado', () => {
   });
 });
 
-describe('puntuación: la proporción de veces que se eligió cuando aparecía', () => {
+describe('puntuación: la parte de sus comparaciones que ganó cada figura', () => {
   it('quien elige siempre a una figura le da 100, y a las que nunca elige 0', () => {
     const orden = ['sanador', ...IDS.filter(id => id !== 'sanador')] as ArchetypeId[];
     const p = puntuacionesDilemas(responder('full', orden), 'full');
@@ -119,26 +119,48 @@ describe('desempate', () => {
     assert.equal(candidatosDesempate(todas.slice(0, -1), 'quick'), null);
   });
 
-  it('con un empate arriba, se ofrece entre las empatadas y lo resuelve con una diferencia real', () => {
-    // Buscamos un orden que deje un empate en cabeza.
-    for (let s = 0; s < 400; s++) {
-      const orden = barajar(IDS, `orden-${s}`);
+  it('regresión (Codex): creador > rebelde > constructor da la pareja Creador + Rebelde', () => {
+    // El Constructor nunca coincide con las dos primeras en el rápido y salía «elegido siempre»;
+    // el Rebelde perdió una vez contra el Creador. Contar elecciones daba la pareja equivocada.
+    const orden = ['creador', 'rebelde', 'constructor', ...IDS.filter(id => !['creador', 'rebelde', 'constructor'].includes(id))] as ArchetypeId[];
+    const r = calcularResultadoDilemas(desempatar(responder('quick', orden), 'quick', orden), 'quick', 'male');
+    assert.deepEqual(r.compositeProfile.pair, ['creador', 'rebelde']);
+  });
+
+  it('regresión (Codex): un desempate no deja que otra figura adelante a las del grupo', () => {
+    // creador > heroe > constructor > rebelde: perder dos desempates no puede dejar al
+    // Constructor por detrás del Rebelde, que no jugó ninguno.
+    const orden = ['creador', 'heroe', 'constructor', 'rebelde', ...IDS.filter(id => !['creador', 'heroe', 'constructor', 'rebelde'].includes(id))] as ArchetypeId[];
+    const r = calcularResultadoDilemas(desempatar(responder('quick', orden), 'quick', orden), 'quick', 'male');
+    const pos = (id: ArchetypeId) => r.ranking.findIndex(s => s.archetypeId === id);
+    assert.deepEqual([pos('creador'), pos('heroe')], [0, 1]);
+    assert.ok(pos('constructor') < pos('rebelde'), `constructor ${pos('constructor')} · rebelde ${pos('rebelde')}`);
+  });
+
+  it('los desempates ordenan, pero no cambian la puntuación de nadie', () => {
+    for (let s = 0; s < 80; s++) {
+      const orden = barajar(IDS, `puntua-${s}`);
       const respuestas = responder('quick', orden);
-      const p = puntuacionesDilemas(respuestas, 'quick');
-      const max = Math.max(...IDS.map(id => p[id]));
-      const lideres = IDS.filter(id => p[id] === max);
-      if (lideres.length < 2 || lideres.length > 6) continue;
-      assert.deepEqual(candidatosDesempate(respuestas, 'quick')?.slice().sort(), lideres.slice().sort());
-      const final = desempatar(respuestas, 'quick', orden);
-      const pf = puntuacionesDilemas(final, 'quick');
-      const ganadora = [...lideres].sort((a, b) => orden.indexOf(a) - orden.indexOf(b))[0];
-      assert.ok(lideres.every(id => id === ganadora || pf[ganadora] - pf[id] >= 5), 'la diferencia es real');
-      // Nadie de fuera del empate adelanta a las empatadas.
-      const fuera = IDS.filter(id => !lideres.includes(id));
-      assert.ok(lideres.every(l => fuera.every(f => pf[l] > pf[f])));
-      return;
+      const antes = puntuacionesDilemas(respuestas, 'quick');
+      const despues = puntuacionesDilemas(desempatar(respuestas, 'quick', orden), 'quick');
+      assert.deepEqual(despues, antes);
     }
-    assert.fail('no se encontró un empate de prueba');
+  });
+
+  it('con cualquier persona coherente, la pareja son sus dos preferidas de verdad', () => {
+    let casos = 0;
+    let acierta = 0;
+    for (let s = 0; s < 300; s++) {
+      const orden = barajar(IDS, `verdad-${s}`);
+      for (const tipo of ['quick', 'full'] as TipoTest[]) {
+        const r = calcularResultadoDilemas(desempatar(responder(tipo, orden), tipo, orden), tipo, 'universal');
+        casos++;
+        if (r.ranking[0].archetypeId === orden[0] && r.ranking[1].archetypeId === orden[1]) acierta++;
+        // Los números que se enseñan nunca suben a lo largo del orden.
+        for (let i = 1; i < r.ranking.length; i++) assert.ok(r.ranking[i].normalizedScore <= r.ranking[i - 1].normalizedScore);
+      }
+    }
+    assert.equal(acierta, casos, `acierta ${acierta} de ${casos}`);
   });
 
   it('como mucho tres desempates', () => {
@@ -170,11 +192,11 @@ describe('el resultado', () => {
         assert.equal(r.ranking[0].archetypeId, orden[0], 'quien siempre se elige, encabeza');
         const lead = getMapLead(r, 'universal');
         assert.notEqual(lead.kind, 'flat');
-        if (lead.kind === 'single' && r.compositeProfile.pair) sinEmpate++;
+        if (lead.kind === 'single' && r.compositeProfile.pair?.join() === orden.slice(0, 2).join()) sinEmpate++;
       }
     }
-    // Con los desempates, casi siempre hay una pareja clara al frente.
-    assert.ok(sinEmpate >= 100, `solo ${sinEmpate} de 120 con pareja clara`);
+    // Con los desempates, la pareja al frente es la de verdad, sin empates.
+    assert.equal(sinEmpate, 120, `solo ${sinEmpate} de 120 con su pareja`);
   });
 
   it('«por qué te salió» cita las situaciones en que se eligió a cada figura del podio', () => {

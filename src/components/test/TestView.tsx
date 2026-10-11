@@ -270,14 +270,16 @@ export const TestView: React.FC<TestViewProps> = ({ testType: initialTestType, o
 
           {fase === 'dilemas' &&
             (ultimo || todasRespondidas ? (
+              // Con alguna sin responder, el botón no se bloquea: lleva a la primera que falta.
               <button
                 id="finish-assessment-btn"
                 onClick={terminar}
-                disabled={!todasRespondidas}
-                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#D6A84F] hover:bg-[#E5BE72] text-[#0B1110] text-xs font-bold transition-all shadow-lg active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#D6A84F] hover:bg-[#E5BE72] text-[#0B1110] text-xs font-bold transition-all shadow-lg active:scale-95"
               >
                 <CheckCircle2 className="w-4 h-4" />
-                Ver mi mapa
+                {todasRespondidas
+                  ? 'Ver mi mapa'
+                  : `Te falta${dilemas.length - respondidas === 1 ? '' : 'n'} ${dilemas.length - respondidas}: ir`}
               </button>
             ) : (
               <button
