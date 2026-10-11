@@ -200,6 +200,30 @@ describe('desempate', () => {
     }
   });
 
+  it('regresión (Codex): con respuestas que se contradicen, el perfil respeta lo que se decidió en los desempates', () => {
+    // Elegir «la primera» de cada pantalla barajada deja ciclos (A gana a B, B a C, C a A).
+    const respuestas = dilemasDelTest('quick').map(d => ({ dilemaId: d.id, arquetipo: barajar(d.opciones, `2-${d.id}`)[0].arquetipo }));
+    const preferencia = ['mago', 'sacerdote', ...IDS.filter(id => id !== 'mago' && id !== 'sacerdote')] as ArchetypeId[];
+    const r = calcularResultadoDilemas(desempatar(respuestas, 'quick', preferencia), 'quick', 'male');
+    const lead = getMapLead(r, 'male');
+    assert.equal(lead.kind, 'single', `sale ${lead.label}`);
+    assert.equal(lead.ids[0], r.ranking[0].archetypeId);
+  });
+
+  it('con respuestas al azar, lo que deciden los desempates es lo que dice el perfil', () => {
+    for (let s = 0; s < 300; s++) {
+      const respuestas = dilemasDelTest('quick').map(d => ({ dilemaId: d.id, arquetipo: barajar(d.opciones, `azar-${s}-${d.id}`)[0].arquetipo }));
+      const preferencia = barajar(IDS, `pref-${s}`);
+      const r = calcularResultadoDilemas(desempatar(respuestas, 'quick', preferencia), 'quick', 'male');
+      const resueltos = r.cabezaResuelta ?? 0;
+      if (resueltos >= 1) {
+        assert.equal(r.compositeProfile.isTie, false, `caso ${s}`);
+        assert.equal(getMapLead(r, 'male').ids[0], r.ranking[0].archetypeId, `caso ${s}`);
+      }
+      if (resueltos >= 2 && r.compositeProfile.pair) assert.deepEqual(r.compositeProfile.pair, [r.ranking[0].archetypeId, r.ranking[1].archetypeId], `caso ${s}`);
+    }
+  });
+
   it('como mucho tres desempates', () => {
     for (let s = 0; s < 200; s++) {
       const orden = barajar(IDS, `tope-${s}`);

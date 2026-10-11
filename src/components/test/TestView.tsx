@@ -32,6 +32,14 @@ export const TestView: React.FC<TestViewProps> = ({ testType: initialTestType, o
   const [fase, setFase] = useState<'dilemas' | 'desempate' | 'calculando'>('dilemas');
   const [desempates, setDesempates] = useState<RespuestaDilema[]>([]);
   const desempatesRespondidos = useRef(new Set<string>());
+  // Tras elegir, medio segundo sin aceptar otra elección: el segundo toque de un doble toque
+  // caería ya en la pantalla siguiente (otra situación u otro desempate) y la respondería.
+  const bloqueoHasta = useRef(0);
+  const bloquear = () => {
+    if (Date.now() < bloqueoHasta.current) return false;
+    bloqueoHasta.current = Date.now() + 500;
+    return true;
+  };
   const reiniciarDesempates = () => {
     desempatesRespondidos.current = new Set();
     setDesempates([]);
@@ -99,6 +107,7 @@ export const TestView: React.FC<TestViewProps> = ({ testType: initialTestType, o
   };
 
   const elegir = (o: OpcionDilema) => {
+    if (!bloquear()) return;
     setRespuestas(prev => ({ ...prev, [dilema.id]: o.arquetipo }));
     reiniciarDesempates();
     // Avanza solo si sigue en esta misma pantalla: un doble toque no se salta la siguiente.
@@ -110,7 +119,7 @@ export const TestView: React.FC<TestViewProps> = ({ testType: initialTestType, o
     if (!desempate || !candidatos) return;
     // Un doble toque no responde dos veces al mismo desempate (el estado aún no se ha
     // actualizado entre los dos toques: por eso una ref).
-    if (desempatesRespondidos.current.has(desempate.id)) return;
+    if (desempatesRespondidos.current.has(desempate.id) || !bloquear()) return;
     desempatesRespondidos.current.add(desempate.id);
     const nuevos = [...desempates, { dilemaId: desempate.id, arquetipo: o.arquetipo, entre: candidatos }];
     setDesempates(nuevos);

@@ -94,23 +94,25 @@ export function puntuacionesDilemas(respuestas: RespuestaDilema[], tipo: TipoTes
 
 const igual = (a: number, b: number) => Math.abs(a - b) < 1e-9;
 
-/** El grupo de las que mejor tasa tienen entre `ids`. */
-function mejores(ids: ArchetypeId[], p: Record<ArchetypeId, number>): ArchetypeId[] {
+/**
+ * El grupo de las que mejor tasa tienen entre `ids`. Con `margen`, también las que se quedan a
+ * menos de esos puntos: una diferencia así no distingue a nadie.
+ */
+function mejores(ids: ArchetypeId[], p: Record<ArchetypeId, number>, margen = 0): ArchetypeId[] {
   const max = Math.max(...ids.map(id => p[id]));
-  return ids.filter(id => igual(p[id], max));
+  return ids.filter(id => igual(p[id], max) || p[id] >= max - margen);
 }
 
 interface Capa {
   ids: ArchetypeId[];
-  /** Si la decidieron las comparaciones (y no la tasa, cuando las respuestas se contradicen). */
-  porComparacion: boolean;
 }
 
 /**
  * El orden por capas (desempates incluidos): cada capa son las figuras cuyas derrotas fueron
  * todas contra figuras ya colocadas. Dentro de una capa, por la puntuación de las situaciones.
  * Si las respuestas se contradicen (A gana a B, B a C y C a A), ninguna queda libre: entonces se
- * coloca la de mejor tasa, contando los desempates.
+ * colocan las de mejor tasa contando los desempates, y las que quedan a menos de un punto van
+ * juntas (así se ofrece desempatarlas, y lo que se elija ahí decide).
  */
 function capas(c: Comparaciones, puntuacion: Record<ArchetypeId, number>): Capa[] {
   const conTodo = tasa(c);
@@ -119,14 +121,13 @@ function capas(c: Comparaciones, puntuacion: Record<ArchetypeId, number>): Capa[
   const lista: Capa[] = [];
   while (restantes.length) {
     const libres = restantes.filter(id => [...c.leGanaron[id]].every(g => colocadas.has(g)));
-    const porComparacion = libres.length > 0;
-    const capa = (porComparacion ? libres : mejores(restantes, conTodo)).sort((a, b) => puntuacion[b] - puntuacion[a]);
-    lista.push({ ids: capa, porComparacion });
+    const capa = (libres.length ? libres : mejores(restantes, conTodo, 1)).sort((a, b) => puntuacion[b] - puntuacion[a]);
+    lista.push({ ids: capa });
     for (const id of capa) colocadas.add(id);
     restantes = restantes.filter(id => !colocadas.has(id));
   }
   const sinDatos = IDS.filter(id => !colocadas.has(id));
-  if (sinDatos.length) lista.push({ ids: sinDatos, porComparacion: false });
+  if (sinDatos.length) lista.push({ ids: sinDatos });
   return lista;
 }
 
@@ -144,7 +145,9 @@ export function candidatosDesempate(respuestas: RespuestaDilema[], tipo: TipoTes
 
 /**
  * El orden final, con las puntuaciones de las situaciones tal cual. `resueltos`: cuántos puestos
- * de arriba (hasta dos, los de la pareja) quedaron decididos uno a uno por comparaciones.
+ * de arriba (hasta dos, los de la pareja) quedaron decididos uno a uno, por comparaciones o, si
+ * las respuestas se contradicen, por la tasa con los desempates. El perfil lo respeta en vez de
+ * volver a deducir empates de las puntuaciones, que no cuentan los desempates.
  */
 export function ordenDilemas(
   respuestas: RespuestaDilema[],
@@ -154,7 +157,7 @@ export function ordenDilemas(
   const lista = capas(comparar(respuestas, tipo, true), puntuaciones);
   let resueltos = 0;
   for (const capa of lista) {
-    if (resueltos >= 2 || capa.ids.length !== 1 || !capa.porComparacion) break;
+    if (resueltos >= 2 || capa.ids.length !== 1) break;
     resueltos++;
   }
   return { ids: lista.flatMap(capa => capa.ids), resueltos: resueltos as 0 | 1 | 2, puntuaciones };
