@@ -142,7 +142,7 @@ function candidatosEnCabeza(respuestas: RespuestaDilema[], tipo: TipoTest, candi
   const delTest = new Map(dilemasDelTest(tipo).map(d => [d.id, d]));
   const { cabeza } = ordenDilemas(respuestas, tipo);
   // Si se desempata el segundo puesto, el primero ya está colocado.
-  const colocadas = new Set(cabeza[0].length > 1 ? [] : cabeza[0]);
+  const colocadas = new Set(cabeza.primero.length > 1 ? [] : cabeza.primero);
   const gano = new Map<ArchetypeId, Set<ArchetypeId>>(IDS.map(id => [id, new Set()]));
   for (const r of respuestas) {
     const otras = r.entre ?? delTest.get(r.dilemaId)!.opciones.map(o => o.arquetipo);
@@ -323,13 +323,13 @@ describe('desempate', () => {
     // dos de ellas, no puede aparecer «a la par en el primer puesto» por tener muchos puntos.
     const respuestas = dilemasDelTest('quick').map(d => ({ dilemaId: d.id, arquetipo: barajar(d.opciones, `probe-156-${d.id}`)[0].arquetipo }));
     const r = calcularResultadoDilemas(respuestas, 'quick', 'male');
-    assert.deepEqual([...getMapLead(r, 'male').ids].sort(), [...r.cabeza![0]].sort());
+    assert.deepEqual([...getMapLead(r, 'male').ids].sort(), [...r.cabeza!.primero].sort());
     for (let s = 0; s < 300; s++) {
       const azar = dilemasDelTest('quick').map(d => ({ dilemaId: d.id, arquetipo: barajar(d.opciones, `perfil-${s}-${d.id}`)[0].arquetipo }));
       const res = calcularResultadoDilemas(desempatar(azar, 'quick', barajar(IDS, `pp-${s}`)), 'quick', 'male');
       const lead = getMapLead(res, 'male');
-      if (lead.kind === 'tie') assert.deepEqual([...lead.ids].sort(), [...res.cabeza![0]].sort(), `caso ${s}`);
-      if (lead.kind === 'single') assert.deepEqual(res.cabeza![0], [lead.ids[0]], `caso ${s}`);
+      if (lead.kind === 'tie') assert.deepEqual([...lead.ids].sort(), [...res.cabeza!.primero].sort(), `caso ${s}`);
+      if (lead.kind === 'single') assert.deepEqual(res.cabeza!.primero, [lead.ids[0]], `caso ${s}`);
     }
   });
 
@@ -405,6 +405,41 @@ describe('el resultado', () => {
         }
       }
     }
+  });
+
+  it('regresión (Codex): ningún resultado lleva listas anidadas (Firestore rechazaría la cuenta entera)', () => {
+    const anidadas = (v: unknown, ruta = 'resultado'): string | null => {
+      if (Array.isArray(v)) {
+        for (const [i, x] of v.entries()) {
+          if (Array.isArray(x)) return `${ruta}[${i}]`;
+          const r = anidadas(x, `${ruta}[${i}]`);
+          if (r) return r;
+        }
+      } else if (v && typeof v === 'object') {
+        for (const [k, x] of Object.entries(v)) {
+          const r = anidadas(x, `${ruta}.${k}`);
+          if (r) return r;
+        }
+      }
+      return null;
+    };
+    for (let s = 0; s < 100; s++) {
+      for (const tipo of ['quick', 'full'] as TipoTest[]) {
+        const respuestas = dilemasDelTest(tipo).map(d => ({ dilemaId: d.id, arquetipo: barajar(d.opciones, `nube-${s}-${d.id}`)[0].arquetipo }));
+        const r = calcularResultadoDilemas(desempatar(respuestas, tipo, barajar(IDS, `np-${s}`)), tipo, 'male');
+        for (const res of [r, adaptAssessmentResultToGender(r, 'female')]) {
+          const hallada = anidadas(JSON.parse(JSON.stringify(res)));
+          assert.equal(hallada, null, `lista anidada en ${hallada}`);
+        }
+      }
+    }
+  });
+
+  it('un resultado guardado con la cabeza en la forma de desarrollo (lista de listas) se sigue leyendo', () => {
+    const orden = barajar(IDS, 'vieja');
+    const r = calcularResultadoDilemas(desempatar(responder('quick', orden), 'quick', orden), 'quick', 'male');
+    const viejo = { ...r, cabeza: [r.cabeza!.primero, r.cabeza!.segundo] } as unknown as typeof r;
+    assert.deepEqual(adaptAssessmentResultToGender(viejo, 'male').compositeProfile, adaptAssessmentResultToGender(r, 'male').compositeProfile);
   });
 
   it('las puntuaciones visibles van de 10 a 98 y las dimensiones salen de ellas', () => {

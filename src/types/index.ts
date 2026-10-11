@@ -183,6 +183,12 @@ export interface AnswerEvidence {
   dilemaId?: string;
 }
 
+/** Los grupos del primer y del segundo puesto de un mapa de dilemas. */
+export interface CabezaMapa {
+  primero: ArchetypeId[];
+  segundo: ArchetypeId[];
+}
+
 /** El test por dilemas a medias, para retomarlo donde se dejó. */
 export interface ProgresoTest {
   instrumento: 'dilemas';
@@ -224,8 +230,12 @@ export interface AssessmentResult {
    * empates aunque sus números se parezcan.
    */
   cabezaResuelta?: number;
-  /** Test por dilemas: quiénes comparten el primer puesto y quiénes el segundo. */
-  cabeza?: ArchetypeId[][];
+  /**
+   * Test por dilemas: quiénes comparten el primer puesto y quiénes el segundo. Un objeto y no una
+   * lista de listas: Firestore no admite listas anidadas y rechazaría la cuenta entera al
+   * sincronizar.
+   */
+  cabeza?: CabezaMapa;
 }
 
 export interface JournalEntry {

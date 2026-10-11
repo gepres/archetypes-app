@@ -7,6 +7,7 @@ import {
   ArchetypeScore,
   AssessmentAnswer,
   AssessmentResult,
+  CabezaMapa,
   CompositeProfile,
   DimensionId,
   GenderMode,
@@ -110,7 +111,7 @@ export function resultadoDesdePuntuaciones(
    * puntuación). `cabeza`: quiénes comparten el primer puesto y quiénes el segundo; el perfil
    * usa esos grupos, no la cercanía de los números.
    */
-  orden?: { ids: ArchetypeId[]; cabeza: ArchetypeId[][] }
+  orden?: { ids: ArchetypeId[]; cabeza: CabezaMapa }
 ): AssessmentResult {
   // Calculate normalized percentage (0 - 100)
   const normalizedScores: Record<ArchetypeId, number> = {
@@ -314,13 +315,16 @@ export function adaptAssessmentResultToGender(
     };
   });
 
-  const compositeProfile = generateCompositeProfile(ranking, result.dimensionScores, gender, result.cabeza);
+  const compositeProfile = generateCompositeProfile(ranking, result.dimensionScores, gender, leerCabeza(result.cabeza));
   // Se recalcula con la regla de ahora: los resultados guardados traían las tres últimas
   // posiciones, elegidas aunque estuvieran empatadas con otras.
   const developmentArchetypes = developmentFromProfile(compositeProfile, ranking);
 
+  const cabeza = leerCabeza(result.cabeza);
   return {
     ...result,
+    // Si venía en la forma de desarrollo (lista de listas), se guarda ya en la buena.
+    ...(cabeza ? { cabeza } : {}),
     title: resultTitle(compositeProfile, dominantArchetype.name),
     dominantArchetype,
     ranking,
@@ -344,9 +348,22 @@ function resultTitle(profile: CompositeProfile, dominantName: string): string {
 }
 
 /** Cuántos puestos de arriba (0, 1 o 2) decidió el test uno a uno: capas de una sola figura. */
-function cuantosResueltos(cabeza?: ArchetypeId[][]): 0 | 1 | 2 {
-  if (!cabeza || cabeza[0]?.length !== 1) return 0;
-  return cabeza[1]?.length === 1 ? 2 : 1;
+function cuantosResueltos(cabeza?: CabezaMapa): 0 | 1 | 2 {
+  if (!cabeza || cabeza.primero.length !== 1) return 0;
+  return cabeza.segundo.length === 1 ? 2 : 1;
+}
+
+/**
+ * La cabeza guardada en un resultado. Acepta también la forma de una versión de desarrollo que
+ * nunca se publicó (una lista de listas, que Firestore no admite).
+ */
+function leerCabeza(cabeza: unknown): CabezaMapa | undefined {
+  if (Array.isArray(cabeza)) return { primero: cabeza[0] ?? [], segundo: cabeza[1] ?? [] };
+  if (cabeza && typeof cabeza === 'object' && Array.isArray((cabeza as CabezaMapa).primero)) {
+    const c = cabeza as CabezaMapa;
+    return { primero: c.primero, segundo: Array.isArray(c.segundo) ? c.segundo : [] };
+  }
+  return undefined;
 }
 
 /** Dos figuras están a la par si las separa esta distancia o menos (en puntos de 10 a 98). */
@@ -400,7 +417,7 @@ function generateCompositeProfile(
   _dimensionScores: Record<DimensionId, number>,
   gender: GenderMode = 'male',
   /** Los grupos del primer y segundo puesto, si los decidió el test (si no, se deducen de las puntuaciones). */
-  cabeza?: ArchetypeId[][]
+  cabeza?: CabezaMapa
 ): CompositeProfile {
   const deIds = (ids: ArchetypeId[] = []) =>
     ids.map(id => ranking.find(s => s.archetypeId === id)).filter((s): s is ArchetypeScore => !!s);
@@ -468,7 +485,7 @@ function generateCompositeProfile(
 
   // Quiénes comparten el primer puesto. Si son tres o más, las respuestas no distinguen entre
   // ellos: elegir dos por el orden en que están en los datos sería inventar.
-  const leaders = cabeza ? deIds(cabeza[0]) : ranking.filter(s => first.normalizedScore - s.normalizedScore <= TIE_MAX_GAP);
+  const leaders = cabeza ? deIds(cabeza.primero) : ranking.filter(s => first.normalizedScore - s.normalizedScore <= TIE_MAX_GAP);
   const leaderIds = leaders.map(s => s.archetypeId);
 
   if (leaders.length >= 3) {
@@ -492,7 +509,7 @@ function generateCompositeProfile(
   // una pareja eligiendo a una de ellas por posición. Se nombra al líder y se dice que detrás
   // van a la par. (Con exactamente dos empatadas detrás, la pareja se mantiene y se dice.)
   const segundos =
-    cabeza ? deIds(cabeza[1]) : ranking.slice(1).filter(s => second.normalizedScore - s.normalizedScore <= TIE_MAX_GAP);
+    cabeza ? deIds(cabeza.segundo) : ranking.slice(1).filter(s => second.normalizedScore - s.normalizedScore <= TIE_MAX_GAP);
   if (leaders.length === 1 && segundos.length >= 2 && (range <= FLAT_MAX_RANGE || segundos.length >= 3)) {
     return {
       archetypeKey,

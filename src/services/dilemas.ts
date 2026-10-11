@@ -21,7 +21,7 @@
 import { ARCHETYPE_DRIVES_YO } from '../data/archetypePairs';
 import { ARCHETYPES_LIST } from '../data/archetypesData';
 import { DILEMAS, DILEMAS_RAPIDO_IDS, Dilema, OpcionDilema, PREGUNTA_DESEMPATE } from '../data/dilemasData';
-import { AnswerEvidence, ArchetypeId, AssessmentResult, GenderMode, RespuestaDilema } from '../types';
+import { AnswerEvidence, ArchetypeId, AssessmentResult, CabezaMapa, GenderMode, RespuestaDilema } from '../types';
 import { resultadoDesdePuntuaciones } from './scoringEngine';
 
 export type TipoTest = 'full' | 'quick';
@@ -184,10 +184,14 @@ export function candidatosDesempate(respuestas: RespuestaDilema[], tipo: TipoTes
 export function ordenDilemas(
   respuestas: RespuestaDilema[],
   tipo: TipoTest
-): { ids: ArchetypeId[]; cabeza: ArchetypeId[][]; puntuaciones: Record<ArchetypeId, number> } {
+): { ids: ArchetypeId[]; cabeza: CabezaMapa; puntuaciones: Record<ArchetypeId, number> } {
   const puntuaciones = puntuacionesDilemas(respuestas, tipo);
   const lista = capas(comparar(respuestas, tipo, true), puntuaciones);
-  return { ids: lista.flatMap(capa => capa.ids), cabeza: lista.slice(0, 2).map(capa => capa.ids), puntuaciones };
+  return {
+    ids: lista.flatMap(capa => capa.ids),
+    cabeza: { primero: lista[0]?.ids ?? [], segundo: lista[1]?.ids ?? [] },
+    puntuaciones,
+  };
 }
 
 /** La pantalla de un desempate: lo que mueve a cada figura, sin su nombre. */
