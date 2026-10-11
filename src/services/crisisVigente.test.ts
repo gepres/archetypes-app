@@ -1,6 +1,13 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { AlmacenCrisis, ILEGIBLE, RegistroCrisis, crearRegistroCrisis, senalesDelChatGuardado } from './crisisVigente';
+import {
+  AlmacenCrisis,
+  ILEGIBLE,
+  RegistroCrisis,
+  cerrarCrisisDeConversacion,
+  crearRegistroCrisis,
+  senalesDelChatGuardado,
+} from './crisisVigente';
 import { CRISIS_CLOSED_NOTE, senalesDeCrisis } from './crisisSupport';
 
 /**
@@ -196,6 +203,28 @@ describe('registro de crisis', () => {
     dejar();
     a.cerrar();
     b.cerrar();
+  });
+
+  it('regresión (Codex): «Ya estoy a salvo» cierra en el registro lo mismo que guarda cerrado en el chat', async () => {
+    const { almacen, fallo } = almacenEnMemoria();
+    const a = crearRegistroCrisis(almacen);
+    const b = crearRegistroCrisis(almacen);
+    const m1 = { id: 'm1', role: 'user', content: CRISIS };
+    const m2 = { id: 'm2', role: 'user', content: CRISIS };
+    await a.abrir('cuenta', 'm1');
+    fallo.escribir = true;
+    await b.abrir('cuenta', 'm2'); // B guarda m2 en el chat, pero no la puede apuntar
+    fallo.escribir = false;
+    // A solo ve m1, pero la conversación que guarda cerrada (la del disco unida a la suya) tiene m2.
+    const enDisco = [m1, m2];
+    let guardado = '';
+    const { registrado } = cerrarCrisisDeConversacion(a, 'cuenta', enDisco, c => {
+      guardado = JSON.stringify([...c, { id: 'msg-safe-1', role: 'model', content: CRISIS_CLOSED_NOTE, crisisClosed: true }]);
+    });
+    await registrado;
+    // B reintenta apuntar m2: consta cerrada, no se reabre.
+    assert.equal(await b.abierta('cuenta', guardado), false);
+    assert.equal(await a.abierta('cuenta', guardado), false);
   });
 
   it('regresión (Codex): reiniciar los datos olvida el registro y lo que esta pestaña recordaba', async () => {

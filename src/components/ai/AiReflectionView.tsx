@@ -18,7 +18,7 @@ import { ARCHETYPE_VISUALS } from '../../data/archetypeImages';
 import { getArchetypeList, getArchetypeName, getArchetypeNarrative, withDe } from '../../data/archetypesData';
 import { getMapLead } from '../../services/scoringEngine';
 import { crisisInConversation, senalesDeCrisis } from '../../services/crisisSupport';
-import { apuntarCrisis, cerrarCrisisRegistradas } from '../../services/crisisVigente';
+import { apuntarCrisis, cerrarCrisisDelChat } from '../../services/crisisVigente';
 import { GeminiService } from '../../services/geminiService';
 import { AIProviderService, describirEstadoIA } from '../../services/aiProviderService';
 import { StorageService, insertarRespuesta, unirConversaciones } from '../../services/storageService';
@@ -597,9 +597,11 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
           <button
             type="button"
             onClick={() => {
-              // En el registro común también, aunque el cierre no llegue a guardarse en el chat.
-              void cerrarCrisisRegistradas(userProfile.id, senales);
-              const { messages: cerrada, guardada } = StorageService.closeCrisis(conversacionVigente());
+              // En el registro común también, aunque el cierre no llegue a guardarse en el chat: las
+              // señales de la misma conversación que se guarda cerrada.
+              const { messages: cerrada, guardada } = cerrarCrisisDelChat(userProfile.id, conversacionVigente(), c =>
+                StorageService.closeCrisis(c)
+              );
               if (guardada) reinicioSinGuardarRef.current = false;
               ponerMensajes(cerrada);
               setSinGuardar(!guardada);

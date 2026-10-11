@@ -202,6 +202,23 @@ export function crearRegistroCrisis(almacen: AlmacenCrisis | null, abrirCanal: (
   };
 }
 
+type Conversacion = { id?: string; role: string; content: string; crisisClosed?: boolean }[];
+
+/**
+ * «Ya estoy a salvo» sobre una conversación: se cierran en el registro las señales de la misma
+ * copia que se guarda cerrada (`guardarCierre`). Con copias distintas, una señal que se guarda
+ * cerrada en el chat podría quedar sin cerrar en el registro y apuntarse después como abierta.
+ */
+export function cerrarCrisisDeConversacion<C extends Conversacion, T>(
+  registro: Pick<ReturnType<typeof crearRegistroCrisis>, 'cerrarTodas'>,
+  dueno: string,
+  conversacion: C,
+  guardarCierre: (c: C) => T
+): { resultado: T; registrado: Promise<void> } {
+  const registrado = registro.cerrarTodas(dueno, senalesDeCrisis(conversacion));
+  return { resultado: guardarCierre(conversacion), registrado };
+}
+
 /** El registro en IndexedDB del navegador (null si no lo hay). */
 function almacenEnNavegador(): AlmacenCrisis | null {
   if (typeof indexedDB === 'undefined') return null;
@@ -274,5 +291,8 @@ export const apuntarCrisis = deLaApp.abrir;
 export const cerrarCrisisRegistradas = deLaApp.cerrarTodas;
 export const crisisAbiertaEnRegistro = deLaApp.abierta;
 export const suscribirCrisis = deLaApp.suscribir;
+/** «Ya estoy a salvo» en el chat: cierra en el registro y en el chat la misma conversación. */
+export const cerrarCrisisDelChat = <C extends Conversacion, T>(dueno: string, conversacion: C, guardarCierre: (c: C) => T): T =>
+  cerrarCrisisDeConversacion(deLaApp, dueno, conversacion, guardarCierre).resultado;
 /** Borra el registro entero y lo que esta pestaña recordaba (al reiniciar todos los datos). */
 export const borrarRegistroCrisis = deLaApp.olvidarTodo;
