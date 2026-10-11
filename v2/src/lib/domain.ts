@@ -17,6 +17,12 @@ export {
   getArchetypeName,
 } from '@v1/data/archetypesData';
 
+// La lectura personal con IA: la misma que en la V1 (interpreta el mapa, no lo calcula).
+export { estadoLectura, lecturas } from '@v1/services/lecturaIA';
+export type { RespuestaLectura } from '@v1/services/lecturaIA';
+export { admiteLectura, parrafosLectura, textoParaVoz } from '@v1/services/lecturaPersonal';
+export type { ParrafoLectura } from '@v1/services/lecturaPersonal';
+
 // El test por dilemas: las mismas situaciones, barajadas y puntuadas igual que en la V1.
 export { DILEMAS, DILEMAS_RAPIDO_IDS } from '@v1/data/dilemasData';
 export type { Dilema, OpcionDilema } from '@v1/data/dilemasData';

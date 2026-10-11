@@ -132,3 +132,41 @@ export function pulirLectura(texto: string): string {
   const conMayuscula = pregunta.charAt(0) + pregunta.charAt(1).toLocaleUpperCase('es') + pregunta.slice(2);
   return [...previos, ...(resto ? [resto] : []), `*${conMayuscula}*`].join('\n\n');
 }
+
+export interface ParrafoLectura {
+  /** Todo el párrafo en cursiva (la pregunta final). */
+  cursiva: boolean;
+  partes: { texto: string; enlace?: string }[];
+}
+
+/**
+ * El texto en párrafos para pintarlo sin un intérprete de Markdown (la V2): cursiva si el párrafo
+ * entero va entre asteriscos, enlaces [texto](url) y, del resto del formato, solo el texto.
+ */
+export function parrafosLectura(texto: string): ParrafoLectura[] {
+  return texto
+    .trim()
+    .split(/\n\s*\n/)
+    .map(p => p.trim())
+    .filter(Boolean)
+    .map(p => {
+      const cursiva = /^\*[^*].*\*$/.test(p) && !p.startsWith('**');
+      const cuerpo = (cursiva ? p.slice(1, -1) : p).replace(/\*\*|__|\*|_/g, '');
+      const partes: ParrafoLectura['partes'] = [];
+      let resto = cuerpo;
+      for (let m = resto.match(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/); m; m = resto.match(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/)) {
+        if (m.index! > 0) partes.push({ texto: resto.slice(0, m.index) });
+        partes.push({ texto: m[1], enlace: m[2] });
+        resto = resto.slice(m.index! + m[0].length);
+      }
+      if (resto) partes.push({ texto: resto });
+      return { cursiva, partes };
+    });
+}
+
+/** El texto para leerlo en voz alta: sin asteriscos, enlaces ni saltos raros. */
+export function textoParaVoz(texto: string): string {
+  return parrafosLectura(texto)
+    .map(p => p.partes.map(x => x.texto).join(''))
+    .join('\n\n');
+}

@@ -14,6 +14,8 @@ import {
 } from '../lib/domain';
 import type { AssessmentResult } from '../lib/domain';
 import { callar, decir, vibrar } from '../lib/voice';
+import { LecturaVoz } from './LecturaVoz';
+import { admiteLectura } from '../lib/domain';
 
 interface RevealScreenProps {
   resultado: AssessmentResult;
@@ -298,6 +300,17 @@ Descubre el tuyo escuchando:`;
           </p>
         </motion.div>
         </>)}
+
+        {/* La lectura personal con IA: interpreta el mapa, no lo calcula. */}
+        {admiteLectura(resultado) && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={revelado ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6, delay: prefersReducedMotion ? 0 : 0.4 }}
+          >
+            <LecturaVoz resultado={resultado} silencio={silencio} />
+          </motion.div>
+        )}
 
         {/* Un solo camino hacia adelante */}
         <motion.div

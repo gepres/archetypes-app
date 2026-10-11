@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { admiteLectura, motivoSinLectura, promptLectura, pulirLectura } from './lecturaPersonal';
+import { admiteLectura, motivoSinLectura, parrafosLectura, promptLectura, pulirLectura, textoParaVoz } from './lecturaPersonal';
 import { motivoAmable } from './estadoAsistente';
 import { barajar, calcularResultadoDilemas, dilemasDelTest } from './dilemas';
 import { calculateAssessmentResult, getMapLead } from './scoringEngine';
@@ -141,5 +141,23 @@ describe('lectura personal: cuando no la puede escribir una IA', () => {
       'Se acabó el saldo de tu cuenta de IA.'
     );
     assert.match(motivoSinLectura({ modelUsed: 'Fallback Local', text: 'sin motivo' }, 10), /Inténtalo en un rato/);
+  });
+});
+
+describe('lectura personal: para la V2 (sin Markdown) y para la voz', () => {
+  it('párrafos con la pregunta en cursiva y los enlaces como enlaces', () => {
+    const p = parrafosLectura(['Uno con **negrita**.', '*¿Qué eliges?*', 'Mira [esta web](https://findahelpline.com) hoy.'].join('\n\n'));
+    assert.deepEqual(p, [
+      { cursiva: false, partes: [{ texto: 'Uno con negrita.' }] },
+      { cursiva: true, partes: [{ texto: '¿Qué eliges?' }] },
+      { cursiva: false, partes: [{ texto: 'Mira ' }, { texto: 'esta web', enlace: 'https://findahelpline.com' }, { texto: ' hoy.' }] },
+    ]);
+  });
+
+  it('la voz no lee asteriscos ni direcciones', () => {
+    assert.equal(
+      textoParaVoz(['Uno **fuerte**.', '*¿Y tú?*', '[Ayuda](https://x.org)'].join('\n\n')),
+      ['Uno fuerte.', '¿Y tú?', 'Ayuda'].join('\n\n')
+    );
   });
 });
