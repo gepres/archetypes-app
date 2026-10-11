@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, Sparkles, RotateCcw, CheckCircle2, Scale } from 'lucide-react';
 import { OpcionDilema } from '../../data/dilemasData';
 import {
@@ -31,6 +31,11 @@ export const TestView: React.FC<TestViewProps> = ({ testType: initialTestType, o
   const [semilla, setSemilla] = useState<string>(nuevaSemilla);
   const [fase, setFase] = useState<'dilemas' | 'desempate' | 'calculando'>('dilemas');
   const [desempates, setDesempates] = useState<RespuestaDilema[]>([]);
+  const desempatesRespondidos = useRef(new Set<string>());
+  const reiniciarDesempates = () => {
+    desempatesRespondidos.current = new Set();
+    setDesempates([]);
+  };
 
   const dilemas = useMemo(() => dilemasDelTest(testType), [testType]);
 
@@ -88,19 +93,25 @@ export const TestView: React.FC<TestViewProps> = ({ testType: initialTestType, o
       return;
     }
     if (candidatosDesempate(lista, testType)) {
-      setDesempates([]);
+      reiniciarDesempates();
       setFase('desempate');
     } else calcular(lista);
   };
 
   const elegir = (o: OpcionDilema) => {
     setRespuestas(prev => ({ ...prev, [dilema.id]: o.arquetipo }));
-    setDesempates([]);
-    if (!ultimo) window.setTimeout(() => setCurrentIndex(i => Math.min(i + 1, dilemas.length - 1)), 260);
+    reiniciarDesempates();
+    // Avanza solo si sigue en esta misma pantalla: un doble toque no se salta la siguiente.
+    const desde = currentIndex;
+    if (!ultimo) window.setTimeout(() => setCurrentIndex(i => (i === desde ? Math.min(desde + 1, dilemas.length - 1) : i)), 260);
   };
 
   const elegirDesempate = (o: OpcionDilema) => {
     if (!desempate || !candidatos) return;
+    // Un doble toque no responde dos veces al mismo desempate (el estado aún no se ha
+    // actualizado entre los dos toques: por eso una ref).
+    if (desempatesRespondidos.current.has(desempate.id)) return;
+    desempatesRespondidos.current.add(desempate.id);
     const nuevos = [...desempates, { dilemaId: desempate.id, arquetipo: o.arquetipo, entre: candidatos }];
     setDesempates(nuevos);
     if (!candidatosDesempate([...lista, ...nuevos], testType)) calcular([...lista, ...nuevos]);
@@ -108,7 +119,7 @@ export const TestView: React.FC<TestViewProps> = ({ testType: initialTestType, o
 
   const anterior = () => {
     if (fase === 'desempate') {
-      setDesempates([]);
+      reiniciarDesempates();
       setFase('dilemas');
       return;
     }
@@ -123,7 +134,7 @@ export const TestView: React.FC<TestViewProps> = ({ testType: initialTestType, o
     if (tipo === testType) return;
     setTestType(tipo);
     setFase('dilemas');
-    setDesempates([]);
+    reiniciarDesempates();
     // A la primera pendiente del nuevo test.
     const nuevos = dilemasDelTest(tipo);
     setCurrentIndex(Math.max(0, nuevos.findIndex(d => !respuestas[d.id])));
@@ -132,7 +143,7 @@ export const TestView: React.FC<TestViewProps> = ({ testType: initialTestType, o
   const reiniciar = () => {
     if (window.confirm('¿Quieres borrar tus respuestas y empezar de nuevo?')) {
       setRespuestas({});
-      setDesempates([]);
+      reiniciarDesempates();
       setFase('dilemas');
       setCurrentIndex(0);
       setSemilla(nuevaSemilla());

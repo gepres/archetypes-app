@@ -47,6 +47,9 @@ export const TestScreen: React.FC<TestScreenProps> = ({ tipo, silencio, onToggle
 
   const respuestasRef = useRef<RespuestaDilema[]>([]);
   const bloqueadoRef = useRef(false);
+  // La pantalla que está de verdad delante. Durante la animación de salida, la anterior sigue
+  // visible unos milisegundos con sus botones: un toque en ella no debe contar.
+  const vigenteRef = useRef<string | null>(null);
 
   const pantalla: Pantalla | null = useMemo(() => {
     if (desempate) return desempate;
@@ -84,6 +87,7 @@ export const TestScreen: React.FC<TestScreenProps> = ({ tipo, silencio, onToggle
 
   useEffect(() => {
     if (!pantalla) return;
+    vigenteRef.current = pantalla.id;
     setLeyendo(null);
     leer(pantalla);
     return () => {
@@ -95,6 +99,13 @@ export const TestScreen: React.FC<TestScreenProps> = ({ tipo, silencio, onToggle
 
   const siguientePantalla = useCallback(() => {
     const todas = respuestasRef.current;
+    // No se termina con situaciones sin responder: se vuelve a la primera que falte.
+    const pendiente = dilemas.findIndex(d => !todas.some(r => r.dilemaId === d.id));
+    if (pendiente >= 0) {
+      setDesempate(null);
+      setIndice(pendiente);
+      return;
+    }
     const candidatos = candidatosDesempate(todas, tipo);
     if (candidatos) {
       const numero = todas.filter(r => r.dilemaId.startsWith('desempate')).length + 1;
@@ -110,11 +121,13 @@ export const TestScreen: React.FC<TestScreenProps> = ({ tipo, silencio, onToggle
       return;
     }
     onTerminar(todas);
-  }, [tipo, semilla, onTerminar]);
+  }, [dilemas, tipo, semilla, onTerminar]);
 
   const responder = useCallback(
     (o: OpcionDilema) => {
       if (bloqueadoRef.current || !pantalla) return;
+      // Solo cuenta un toque en la pantalla vigente, y una sola respuesta por situación.
+      if (vigenteRef.current !== pantalla.id || respuestasRef.current.some(r => r.dilemaId === pantalla.id)) return;
       bloqueadoRef.current = true;
       // Elegir corta la voz al instante: no hay que esperar a que termine.
       callar();

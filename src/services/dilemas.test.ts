@@ -156,11 +156,48 @@ describe('desempate', () => {
         const r = calcularResultadoDilemas(desempatar(responder(tipo, orden), tipo, orden), tipo, 'universal');
         casos++;
         if (r.ranking[0].archetypeId === orden[0] && r.ranking[1].archetypeId === orden[1]) acierta++;
-        // Los números que se enseñan nunca suben a lo largo del orden.
-        for (let i = 1; i < r.ranking.length; i++) assert.ok(r.ranking[i].normalizedScore <= r.ranking[i - 1].normalizedScore);
       }
     }
     assert.equal(acierta, casos, `acierta ${acierta} de ${casos}`);
+  });
+
+  it('regresión (Codex): tras desempatar, nadie de fuera del grupo se cuela por delante de quien le ganó', () => {
+    // integrador > padre > sabio > rey: el Sabio le ganó al Rey y solo perdió con las dos
+    // primeras; el Rey no puede acabar tercero por delante de él.
+    const orden = ['integrador', 'padre', 'sabio', 'rey', ...IDS.filter(id => !['integrador', 'padre', 'sabio', 'rey'].includes(id))] as ArchetypeId[];
+    const r = calcularResultadoDilemas(desempatar(responder('quick', orden), 'quick', orden), 'quick', 'male');
+    assert.deepEqual(r.top3.map(s => s.archetypeId), ['integrador', 'padre', 'sabio']);
+  });
+
+  it('regresión (Codex): lo que se elige en un desempate no cambia ningún número ni el balance de dimensiones', () => {
+    let probados = 0;
+    for (let s = 0; s < 200 && probados < 25; s++) {
+      const orden = barajar(IDS, `numeros-${s}`);
+      const respuestas = responder('quick', orden);
+      if (!candidatosDesempate(respuestas, 'quick')) continue;
+      probados++;
+      // Mismas situaciones; en los desempates, una vez se elige según el orden y otra al revés.
+      const a = calcularResultadoDilemas(desempatar(respuestas, 'quick', orden), 'quick', 'male');
+      const b = calcularResultadoDilemas(desempatar(respuestas, 'quick', [...orden].reverse()), 'quick', 'male');
+      assert.deepEqual(b.scores, a.scores);
+      assert.deepEqual(b.dimensionScores, a.dimensionScores);
+    }
+    assert.ok(probados >= 10, `solo ${probados} casos con desempate`);
+  });
+
+  it('el orden nunca pone a una figura delante de otra que le ganó directamente', () => {
+    for (let s = 0; s < 200; s++) {
+      const orden = barajar(IDS, `capas-${s}`);
+      for (const tipo of ['quick', 'full'] as TipoTest[]) {
+        const respuestas = desempatar(responder(tipo, orden), tipo, orden);
+        const pos = new Map(calcularResultadoDilemas(respuestas, tipo, 'male').ranking.map((x, i) => [x.archetypeId, i]));
+        const delTest = new Map(dilemasDelTest(tipo).map(d => [d.id, d]));
+        for (const r of respuestas) {
+          const otras = r.entre ?? delTest.get(r.dilemaId)!.opciones.map(o => o.arquetipo);
+          for (const o of otras) if (o !== r.arquetipo) assert.ok(pos.get(r.arquetipo)! < pos.get(o)!, `${r.arquetipo} le ganó a ${o}`);
+        }
+      }
+    }
   });
 
   it('como mucho tres desempates', () => {

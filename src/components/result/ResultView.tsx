@@ -335,6 +335,8 @@ export const ResultView: React.FC<ResultViewProps> = ({
               ? 'Cada número compara esa figura con las que compartió pantalla: en qué parte de esas comparaciones la preferiste, en una escala de 10 a 98.'
               : 'Cada número es tu afinidad con las afirmaciones de esa figura, en una escala de 10 a 98.'}{' '}
             No te compara con otras personas ni mide lo que eres, y una diferencia de uno o dos puntos no significa nada.
+            {result.instrumento === 'dilemas' &&
+              ' El orden sale de tus elecciones directas (y del desempate, si lo hubo): por eso una figura puede ir delante de otra con un número algo menor.'}
             {isQuick &&
               (result.instrumento === 'dilemas'
                 ? ' Con el test rápido, cada figura aparece solo cuatro veces: el completo afina más.'
