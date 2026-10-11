@@ -18,7 +18,7 @@ export {
 } from '@v1/data/archetypesData';
 
 // La lectura personal con IA: la misma que en la V1 (interpreta el mapa, no lo calcula).
-export { declararASalvo, estadoLectura, lecturas, suscribirCrisis } from '@v1/services/lecturaIA';
+export { declararASalvo, estadoLectura, lecturas, suscribirCambios } from '@v1/services/lecturaIA';
 export type { RespuestaLectura } from '@v1/services/lecturaIA';
 export { admiteLectura, parrafosLectura, textoParaVoz } from '@v1/services/lecturaPersonal';
 export type { ParrafoLectura } from '@v1/services/lecturaPersonal';

@@ -28,6 +28,8 @@ export interface RegistroCrisis {
 export interface AlmacenCrisis {
   deDueno(dueno: string): Promise<RegistroCrisis[]>;
   poner(r: RegistroCrisis): Promise<void>;
+  /** Borra todo (al reiniciar los datos), cerrando antes lo que lo impediría. */
+  borrarTodo(): Promise<void>;
 }
 
 /** El chat guardado no se pudo leer. */
@@ -132,6 +134,18 @@ export function crearRegistroCrisis(almacen: AlmacenCrisis | null, abrirCanal: (
       return enChat !== null && !rs.some(r => r.mensajeId === enChat && !r.abierta);
     },
 
+    /** Reiniciar todos los datos: se olvida todo, también lo que esta pestaña recordaba. */
+    async olvidarTodo(): Promise<void> {
+      iniciar();
+      sinApuntar.clear();
+      try {
+        await almacen?.borrarTodo();
+      } catch {
+        // Si no se pudo borrar, lo que quede se sigue respetando (y «Ya estoy a salvo» lo cierra).
+      }
+      avisar();
+    },
+
     /** Avisa cuando algo cambia (aquí o en otra pestaña), para volver a comprobar. */
     suscribir(f: () => void): () => void {
       iniciar();
@@ -179,16 +193,25 @@ function almacenEnNavegador(): AlmacenCrisis | null {
     poner: async r => {
       await enTransaccion('readwrite', s => s.put(r));
     },
+    borrarTodo: async () => {
+      // La conexión abierta impediría borrar la base: se cierra antes.
+      if (db) {
+        try {
+          (await db).close();
+        } catch {
+          // Si no llegó a abrirse, no hay nada que cerrar.
+        }
+        db = null;
+      }
+      await new Promise<void>((resolve, reject) => {
+        const r = indexedDB.deleteDatabase('archetypes-crisis');
+        r.onsuccess = () => resolve();
+        r.onerror = () => reject(r.error);
+        // Otra pestaña con la base abierta: se borra cuando la cierre; no se espera.
+        r.onblocked = () => resolve();
+      });
+    },
   };
-}
-
-/** Borra el registro entero (al reiniciar todos los datos). */
-export function borrarRegistroCrisis(): void {
-  try {
-    indexedDB?.deleteDatabase('archetypes-crisis');
-  } catch {
-    // Sin IndexedDB no hay nada que borrar.
-  }
 }
 
 const deLaApp = crearRegistroCrisis(almacenEnNavegador(), () =>
@@ -198,3 +221,5 @@ export const apuntarCrisis = deLaApp.abrir;
 export const cerrarCrisisRegistradas = deLaApp.cerrarTodas;
 export const crisisAbiertaEnRegistro = deLaApp.abierta;
 export const suscribirCrisis = deLaApp.suscribir;
+/** Borra el registro entero y lo que esta pestaña recordaba (al reiniciar todos los datos). */
+export const borrarRegistroCrisis = deLaApp.olvidarTodo;

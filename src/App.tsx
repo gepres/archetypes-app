@@ -199,7 +199,7 @@ export default function App() {
       )
     ) {
       localStorage.clear();
-      borrarRegistroCrisis();
+      void borrarRegistroCrisis();
       // Lo que el chat tenía en pantalla tampoco sobrevive al reinicio, ni una consulta pendiente.
       setChatAbierto(false);
       setChatEpoch(e => e + 1);

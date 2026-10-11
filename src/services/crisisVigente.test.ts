@@ -16,6 +16,9 @@ function almacenEnMemoria() {
       if (fallo.escribir) throw new Error('no se puede escribir');
       datos.set(r.clave, { ...r });
     },
+    borrarTodo: async () => {
+      datos.clear();
+    },
   };
   return { almacen, datos, fallo };
 }
@@ -91,6 +94,21 @@ describe('registro de crisis', () => {
     assert.equal(await r.abierta('cuenta', null), true);
     await r.cerrarTodas('cuenta');
     assert.equal(await r.abierta('cuenta', null), false);
+  });
+
+  it('regresión (Codex): reiniciar los datos olvida el registro y lo que esta pestaña recordaba', async () => {
+    const { almacen, fallo } = almacenEnMemoria();
+    const r = crearRegistroCrisis(almacen);
+    await r.abrir('cuenta', 'm1');
+    fallo.escribir = true;
+    await r.abrir('cuenta', 'm2'); // no se pudo apuntar: lo recuerda la pestaña
+    fallo.escribir = false;
+    await r.olvidarTodo();
+    assert.equal(await r.abierta('cuenta', null), false);
+    const sinRegistro = crearRegistroCrisis(null);
+    await sinRegistro.abrir('cuenta', 'm3');
+    await sinRegistro.olvidarTodo();
+    assert.equal(await sinRegistro.abierta('cuenta', null), false);
   });
 
   it('sin registro (sin IndexedDB) se mira lo de esta pestaña y el chat guardado', async () => {

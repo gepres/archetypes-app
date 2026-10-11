@@ -4,15 +4,32 @@
  */
 import { AIProviderService } from './aiProviderService';
 import { CRISIS_FOLLOWUP, crisisAbiertaDesde, crisisInConversation } from './crisisSupport';
-import { cerrarCrisisRegistradas, crisisAbiertaEnRegistro } from './crisisVigente';
+import { cerrarCrisisRegistradas, crisisAbiertaEnRegistro, suscribirCrisis } from './crisisVigente';
 import { StorageService } from './storageService';
 import { crearLecturas } from './lecturaCore';
 
 export type { RespuestaLectura } from './lecturaCore';
-// Para que una lectura a la vista se vuelva a comprobar si se abre o cierra una crisis.
-export { suscribirCrisis } from './crisisVigente';
 
 const CHAT = 'archetypes_chat_messages';
+/** Lo que, si cambia en otra pestaña, obliga a volver a comprobar una lectura a la vista. */
+const CLAVES_VIGILADAS = new Set([CHAT, 'archetypes_user_profile', 'archetypes_current_result', 'archetypes_history']);
+
+/**
+ * Avisa cuando hay que volver a comprobar una lectura a la vista: se abre o cierra una crisis
+ * (aquí o en otra pestaña), o en otra pestaña cambian la cuenta, el resultado o el chat, o se
+ * borran los datos.
+ */
+export function suscribirCambios(f: () => void): () => void {
+  const dejarCrisis = suscribirCrisis(f);
+  const alCambiar = (e: StorageEvent) => {
+    if (e.key === null || CLAVES_VIGILADAS.has(e.key)) f();
+  };
+  window.addEventListener('storage', alCambiar);
+  return () => {
+    dejarCrisis();
+    window.removeEventListener('storage', alCambiar);
+  };
+}
 
 export const lecturas = crearLecturas({
   // Sin el perfil de la persona: su nombre no hace falta para leer un mapa.

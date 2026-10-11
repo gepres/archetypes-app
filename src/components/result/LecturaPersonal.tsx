@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Loader2, RotateCcw, Sparkles } from 'lucide-react';
-import { RespuestaLectura, declararASalvo, estadoLectura, lecturas, suscribirCrisis } from '../../services/lecturaIA';
+import { RespuestaLectura, declararASalvo, estadoLectura, lecturas, suscribirCambios } from '../../services/lecturaIA';
 import { AssessmentResult, GenderMode } from '../../types';
 import { MarkdownRenderer } from '../common/MarkdownRenderer';
 
@@ -27,7 +27,7 @@ export const LecturaPersonal: React.FC<LecturaPersonalProps> = ({ result, gender
   const peticion = useRef(0);
   // Cambia cuando se abre o se cierra una crisis (aquí o en otra pestaña): se vuelve a comprobar.
   const [revision, setRevision] = useState(0);
-  useEffect(() => suscribirCrisis(() => setRevision(n => n + 1)), []);
+  useEffect(() => suscribirCambios(() => setRevision(n => n + 1)), []);
 
   const aplicar = (r: RespuestaLectura, anterior: string | null) => {
     if (!r.ok && r.cuidado) {
@@ -61,6 +61,13 @@ export const LecturaPersonal: React.FC<LecturaPersonalProps> = ({ result, gender
       if (peticion.current !== mia) return;
       if (crisis) {
         aplicar(lecturas.cuidado, null);
+        return;
+      }
+      // Si el resultado ya no es de la cuenta abierta (otra pestaña cambió de cuenta o borró los
+      // datos), su lectura no se muestra.
+      if (!lecturas.resultadoVigente(result.id)) {
+        setMotivo('Este resultado ya no está en la cuenta abierta.');
+        setEstado('sin-ia');
         return;
       }
       const guardada = lecturas.leer(clave);

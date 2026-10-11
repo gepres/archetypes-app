@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Loader2, RotateCcw, Sparkles, Volume2 } from 'lucide-react';
-import { declararASalvo, estadoLectura, lecturas, parrafosLectura, suscribirCrisis, textoParaVoz } from '../lib/domain';
+import { declararASalvo, estadoLectura, lecturas, parrafosLectura, suscribirCambios, textoParaVoz } from '../lib/domain';
 import type { AssessmentResult, ParrafoLectura, RespuestaLectura } from '../lib/domain';
 import { callar, decir } from '../lib/voice';
 
@@ -57,7 +57,7 @@ export const LecturaVoz: React.FC<LecturaVozProps> = ({ resultado, silencio }) =
   const [revision, setRevision] = useState(0);
   useEffect(
     () =>
-      suscribirCrisis(() => {
+      suscribirCambios(() => {
         callar();
         setRevision(n => n + 1);
       }),
@@ -104,6 +104,14 @@ export const LecturaVoz: React.FC<LecturaVozProps> = ({ resultado, silencio }) =
       if (peticion.current !== mia) return;
       if (crisis) {
         aplicar(lecturas.cuidado, null, false);
+        return;
+      }
+      // Si el resultado ya no es de la cuenta abierta (otra pestaña cambió de cuenta o borró los
+      // datos), su lectura no se muestra.
+      if (!lecturas.resultadoVigente(resultado.id)) {
+        callar();
+        setMotivo('Este resultado ya no está en la cuenta abierta.');
+        setEstado('sin-ia');
         return;
       }
       const guardada = lecturas.leer(clave);

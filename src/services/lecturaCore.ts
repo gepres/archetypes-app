@@ -79,6 +79,8 @@ export function crearLecturas(deps: DependenciasLectura) {
   const lecturas = {
     /** Si hay una crisis abierta ahora: entonces no se muestra ni se lee ninguna lectura. */
     crisisAbierta: () => deps.crisisAbierta(),
+    /** Si ese resultado sigue en la cuenta abierta (si no, su lectura tampoco se muestra). */
+    resultadoVigente: (resultId: string) => deps.resultadoExiste(resultId),
     /** Lo que se muestra en su lugar. */
     cuidado,
 
