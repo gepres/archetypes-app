@@ -1,6 +1,6 @@
 import React, { useCallback, useRef, useState } from 'react';
-import { calculateAssessmentResult } from './lib/domain';
-import type { AssessmentAnswer, AssessmentResult } from './lib/domain';
+import { calcularResultadoDilemas } from './lib/domain';
+import type { AssessmentResult, RespuestaDilema } from './lib/domain';
 import { callar } from './lib/voice';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import { TestScreen } from './components/TestScreen';
@@ -40,10 +40,10 @@ export const App: React.FC = () => {
   // De quien es la sesion cuando empieza el test (ver terminarTest).
   const duenoRef = useRef(leerDueno());
 
-  const terminarTest = useCallback((respuestas: AssessmentAnswer[]) => {
-    // En perspectiva universal: la V2 no pregunta nada mas que las afirmaciones,
+  const terminarTest = useCallback((respuestas: RespuestaDilema[]) => {
+    // En perspectiva universal: la V2 no pregunta nada mas que las situaciones,
     // asi que nadie ha podido elegir una perspectiva concreta.
-    const res = calculateAssessmentResult(respuestas, tipoRef.current, 'universal');
+    const res = calcularResultadoDilemas(respuestas, tipoRef.current, 'universal');
     setResultado(res);
     setPaso('revelacion');
     // Se guarda para que la version completa lo encuentre ya hecho, pero solo si sigue

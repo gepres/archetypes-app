@@ -17,7 +17,16 @@ export {
   getArchetypeName,
 } from '@v1/data/archetypesData';
 
-export { LIKERT_OPTIONS, QUESTIONS_DATA, QUICK_QUESTION_IDS } from '@v1/data/questionsData';
+// El test por dilemas: las mismas situaciones, barajadas y puntuadas igual que en la V1.
+export { DILEMAS, DILEMAS_RAPIDO_IDS } from '@v1/data/dilemasData';
+export type { Dilema, OpcionDilema } from '@v1/data/dilemasData';
+export {
+  barajar,
+  calcularResultadoDilemas,
+  candidatosDesempate,
+  dilemaDeDesempate,
+  dilemasDelTest,
+} from '@v1/services/dilemas';
 
 export { calculateAssessmentResult, getMapLead, listNames } from '@v1/services/scoringEngine';
 
@@ -33,8 +42,8 @@ export type {
   Archetype,
   ArchetypeId,
   ArchetypeScore,
-  AssessmentAnswer,
   AssessmentResult,
+  RespuestaDilema,
   DimensionId,
   GenderMode,
   Question,

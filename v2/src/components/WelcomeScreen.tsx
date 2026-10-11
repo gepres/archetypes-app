@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
-import { BookOpen, ChevronDown, ChevronUp, Wand2 } from 'lucide-react';
+import { BookOpen, Wand2 } from 'lucide-react';
 import { VozPicker } from './VozPicker';
-import { QUESTIONS_DATA, QUICK_QUESTION_IDS } from '../lib/domain';
+import { DILEMAS, DILEMAS_RAPIDO_IDS } from '../lib/domain';
 import type { TipoTest } from './TestScreen';
 import { decir, prepararVoz, vibrar } from '../lib/voice';
 
 /** Los mismos cinco colores que las franjas del test, de si a no. */
-const ESCALA = ['#86EFAC', '#4E8B69', '#8A968D', '#8B5A5A', '#E06B6B'];
 
 interface WelcomeScreenProps {
   onEmpezar: (tipo: TipoTest) => void;
@@ -16,8 +15,8 @@ interface WelcomeScreenProps {
 }
 
 const CUANTAS = {
-  quick: QUICK_QUESTION_IDS.length,
-  full: QUESTIONS_DATA.length,
+  quick: DILEMAS_RAPIDO_IDS.length,
+  full: DILEMAS.length,
 };
 
 /**
@@ -38,7 +37,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onEmpezar, onConoc
     vibrar(18);
     await prepararVoz();
     // Se dice dentro del gesto: es lo que desbloquea la voz en iOS.
-    decir('Arriba es sí, abajo es no. Cuanto más lejos del centro, más fuerte. Empezamos.', {
+    decir('Te cuento una situación y cuatro maneras de responder. Elige la que más se parezca a ti. Empezamos.', {
       rate: 1.02,
     });
     window.setTimeout(() => onEmpezar(tipo), prefersReducedMotion ? 60 : 420);
@@ -65,13 +64,13 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onEmpezar, onConoc
             Escúchalo.
           </h1>
           <p className="text-sm text-[#8A968D] leading-relaxed">
-            Te digo una frase. Arriba si te pasa, abajo si no.
+            Te cuento una situación y cuatro maneras de responder.
             <br />
-            Cuanto más lejos del centro, más fuerte.
+            Toca la que más se parece a ti.
           </p>
         </div>
 
-        {/* Cuanto quieres darle. El corto responde a la promesa de dos minutos;
+        {/* Cuanto quieres darle. El corto es el que menos pide;
             el completo mide mejor, y quien lo pide ya sabe lo que cuesta. */}
         <div
           role="group"
@@ -79,8 +78,8 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onEmpezar, onConoc
           className="grid grid-cols-2 gap-1 p-1 rounded-2xl bg-[#101917] border border-[#1E2A25] max-w-xs mx-auto"
         >
           {([
-            { id: 'quick' as TipoTest, titulo: 'Rápido', detalle: `${CUANTAS.quick} frases · 2 min` },
-            { id: 'full' as TipoTest, titulo: 'Completo', detalle: `${CUANTAS.full} frases · 5 min` },
+            { id: 'quick' as TipoTest, titulo: 'Rápido', detalle: `${CUANTAS.quick} situaciones · 5 min` },
+            { id: 'full' as TipoTest, titulo: 'Completo', detalle: `${CUANTAS.full} situaciones · 10 min` },
           ]).map(op => {
             const activo = tipo === op.id;
             return (
@@ -130,21 +129,18 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onEmpezar, onConoc
           </button>
         </div>
 
-        {/* La escala, dibujada en vez de explicada: cinco pasos, un solo gesto */}
-        <div className="flex flex-col items-center gap-1 animate-riseIn">
-          <ChevronUp className="w-4 h-4 text-[#86EFAC]" strokeWidth={2.5} />
-          <div className="flex items-center gap-1.5">
-            {ESCALA.map(c => (
+        {/* La dinámica, dibujada en vez de explicada: cuatro respuestas, una es la tuya */}
+        <div className="flex flex-col items-center gap-2 animate-riseIn" aria-hidden="true">
+          <div className="flex flex-col gap-1.5 w-40">
+            {[0, 1, 2, 3].map(i => (
               <span
-                key={c}
-                className="w-7 h-1.5 rounded-full"
-                style={{ backgroundColor: c }}
+                key={i}
+                className={`h-2 rounded-full ${i === 2 ? 'bg-[#D6A84F] w-full' : 'bg-[#23332D] w-[85%]'}`}
               />
             ))}
           </div>
-          <ChevronDown className="w-4 h-4 text-[#E06B6B]" strokeWidth={2.5} />
           <p className="text-[10px] uppercase tracking-[0.18em] text-[#4E5C55] pt-1">
-            Cinco grados · un solo toque
+            Cuatro respuestas · una es la tuya
           </p>
         </div>
       </div>

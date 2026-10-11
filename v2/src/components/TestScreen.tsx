@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { ChevronDown, ChevronUp, RotateCcw, Volume2, VolumeX } from 'lucide-react';
-import { LIKERT_OPTIONS, QUESTIONS_DATA, QUICK_QUESTION_IDS } from '../lib/domain';
-import type { AssessmentAnswer, Question } from '../lib/domain';
+import { RotateCcw, Volume2, VolumeX } from 'lucide-react';
+import { barajar, candidatosDesempate, dilemaDeDesempate, dilemasDelTest } from '../lib/domain';
+import type { OpcionDilema, RespuestaDilema } from '../lib/domain';
 import { callar, decir, vibrar } from '../lib/voice';
 
 export type TipoTest = 'quick' | 'full';
@@ -11,192 +11,160 @@ interface TestScreenProps {
   tipo: TipoTest;
   silencio: boolean;
   onToggleSilencio: () => void;
-  onTerminar: (respuestas: AssessmentAnswer[]) => void;
+  onTerminar: (respuestas: RespuestaDilema[]) => void;
 }
 
+/** Lo que se ve y se oye en una pantalla: una situación o un desempate. */
+interface Pantalla {
+  id: string;
+  /** Arriba, pequeño: el ámbito o «Un último paso». */
+  cabecera: string;
+  situacion?: string;
+  pregunta: string;
+  opciones: OpcionDilema[];
+  /** Solo en los desempates: entre quiénes se elige. */
+  entre?: RespuestaDilema['entre'];
+}
+
+const NUMEROS = ['Uno', 'Dos', 'Tres', 'Cuatro', 'Cinco', 'Seis'];
+
 /**
- * Los cinco grados de la escala, de arriba abajo en la pantalla.
- *
- * Las etiquetas NO se escriben aqui: salen de la misma lista que usa la V1. Dos
- * versiones del mismo test que preguntan con palabras distintas no miden lo
- * mismo, y comparar sus resultados dejaria de tener sentido. Lo unico propio de
- * esta pantalla es la geometria: cuanto se aleja del centro y con que color.
+ * El test por dilemas, contado en voz alta: la voz lee la situación y luego cada respuesta,
+ * iluminando la que está leyendo. Se elige tocando (o con las teclas 1 a 4) en cualquier
+ * momento: la voz se calla al instante. Las mismas situaciones que la V1, barajadas igual.
  */
-const FORMA: Record<number, { color: string; flechas: number; dir: 'arriba' | 'centro' | 'abajo' }> = {
-  5: { color: '#86EFAC', flechas: 2, dir: 'arriba' },
-  4: { color: '#4E8B69', flechas: 1, dir: 'arriba' },
-  3: { color: '#8A968D', flechas: 0, dir: 'centro' },
-  2: { color: '#8B5A5A', flechas: 1, dir: 'abajo' },
-  1: { color: '#E06B6B', flechas: 2, dir: 'abajo' },
-};
-
-// De mayor acuerdo a menor, que es el orden en que se apilan en la pantalla.
-const NIVELES = [...LIKERT_OPTIONS]
-  .sort((a, b) => b.value - a.value)
-  .map(o => ({ valor: o.value, etiqueta: o.label, ...FORMA[o.value] }));
-
-const ARRIBA = NIVELES.filter(n => n.dir === 'arriba');
-const ABAJO = NIVELES.filter(n => n.dir === 'abajo');
-const NEUTRO = NIVELES.find(n => n.dir === 'centro')!;
-
-/** Umbrales de arrastre: un tiron corto es el grado suave, uno largo el extremo. */
-const ARRASTRE_SUAVE = 55;
-const ARRASTRE_FUERTE = 135;
-
-export const TestScreen: React.FC<TestScreenProps> = ({
-  tipo,
-  silencio,
-  onToggleSilencio,
-  onTerminar,
-}) => {
+export const TestScreen: React.FC<TestScreenProps> = ({ tipo, silencio, onToggleSilencio, onTerminar }) => {
   const prefersReducedMotion = useReducedMotion();
-
-  const preguntas: Question[] = useMemo(
-    () => (tipo === 'quick' ? QUESTIONS_DATA.filter(q => QUICK_QUESTION_IDS.includes(q.id)) : QUESTIONS_DATA),
-    [tipo]
-  );
+  const dilemas = useMemo(() => dilemasDelTest(tipo), [tipo]);
+  // Una semilla por recorrido: el orden de las respuestas no lo decide la posición.
+  const [semilla] = useState(() => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`);
 
   const [indice, setIndice] = useState(0);
+  const [desempate, setDesempate] = useState<Pantalla | null>(null);
+  const [leyendo, setLeyendo] = useState<number | null>(null);
   const [hablando, setHablando] = useState(false);
-  const [saliendo, setSaliendo] = useState<number | null>(null);
+  const [elegida, setElegida] = useState<string | null>(null);
 
-  const respuestasRef = useRef<AssessmentAnswer[]>([]);
+  const respuestasRef = useRef<RespuestaDilema[]>([]);
   const bloqueadoRef = useRef(false);
-  const arrastroRef = useRef(false);
 
-  const pregunta = preguntas[indice];
-  const total = preguntas.length;
-  const progreso = total ? (indice / total) * 100 : 0;
+  const pantalla: Pantalla | null = useMemo(() => {
+    if (desempate) return desempate;
+    const d = dilemas[indice];
+    if (!d) return null;
+    return {
+      id: d.id,
+      cabecera: d.ambito,
+      situacion: d.situacion,
+      pregunta: d.pregunta,
+      opciones: barajar(d.opciones, `${semilla}:${d.id}`),
+    };
+  }, [desempate, dilemas, indice, semilla]);
 
-  const leerActual = useCallback(
-    (texto: string) => {
+  // Se lee la situación y después cada respuesta, una a una. Si se corta (porque se eligió,
+  // se repite o se silencia), la lectura se detiene ahí.
+  const leer = useCallback(
+    async (p: Pantalla) => {
       if (silencio) return;
       setHablando(true);
-      decir(texto).then(() => setHablando(false));
+      const intro = p.situacion ? `${p.situacion} ${p.pregunta}` : p.pregunta;
+      let fin = await decir(intro);
+      for (let i = 0; i < p.opciones.length && fin === 'fin'; i++) {
+        setLeyendo(i);
+        fin = await decir(`${NUMEROS[i]}. ${p.opciones[i].texto}`);
+      }
+      // Si la cortaron, quien la cortó ya puso su estado (otra lectura, o una elección).
+      if (fin !== 'cortada') {
+        setLeyendo(null);
+        setHablando(false);
+      }
     },
     [silencio]
   );
 
-  // Cada afirmacion se lee sola al entrar. Nadie tiene que pulsar "reproducir".
   useEffect(() => {
-    if (!pregunta) return;
-    leerActual(pregunta.text);
-    return () => callar();
-  }, [pregunta, leerActual]);
-
-  const responder = useCallback(
-    (valor: number) => {
-      if (bloqueadoRef.current || !pregunta) return;
-      bloqueadoRef.current = true;
-
-      // Responder corta la voz al instante: no hay que esperar a que termine.
+    if (!pantalla) return;
+    setLeyendo(null);
+    leer(pantalla);
+    return () => {
       callar();
       setHablando(false);
-      // La intensidad del aviso acompana a la de la respuesta.
-      if (valor === 5) vibrar([14, 30, 14]);
-      else if (valor === 1) vibrar([10, 40, 10, 40, 10]);
-      else if (valor === 3) vibrar(8);
-      else vibrar(14);
+      setLeyendo(null);
+    };
+  }, [pantalla, leer]);
 
+  const siguientePantalla = useCallback(() => {
+    const todas = respuestasRef.current;
+    const candidatos = candidatosDesempate(todas, tipo);
+    if (candidatos) {
+      const numero = todas.filter(r => r.dilemaId.startsWith('desempate')).length + 1;
+      const d = dilemaDeDesempate(candidatos, numero);
+      setDesempate({
+        id: d.id,
+        cabecera: 'Un último paso',
+        situacion: 'Tus respuestas dejan a varias figuras igualadas.',
+        pregunta: d.pregunta,
+        opciones: barajar(d.opciones, `${semilla}:${d.id}`),
+        entre: candidatos,
+      });
+      return;
+    }
+    onTerminar(todas);
+  }, [tipo, semilla, onTerminar]);
+
+  const responder = useCallback(
+    (o: OpcionDilema) => {
+      if (bloqueadoRef.current || !pantalla) return;
+      bloqueadoRef.current = true;
+      // Elegir corta la voz al instante: no hay que esperar a que termine.
+      callar();
+      setHablando(false);
+      setLeyendo(null);
+      vibrar(14);
+      setElegida(o.arquetipo);
       respuestasRef.current = [
         ...respuestasRef.current,
-        { questionId: pregunta.id, value: valor },
+        { dilemaId: pantalla.id, arquetipo: o.arquetipo, ...(pantalla.entre ? { entre: pantalla.entre } : {}) },
       ];
 
-      setSaliendo(valor);
-
-      const esperar = prefersReducedMotion ? 60 : 260;
-      window.setTimeout(() => {
-        setSaliendo(null);
-        bloqueadoRef.current = false;
-        if (indice + 1 >= total) {
-          onTerminar(respuestasRef.current);
-        } else {
-          setIndice(i => i + 1);
-        }
-      }, esperar);
+      window.setTimeout(
+        () => {
+          setElegida(null);
+          bloqueadoRef.current = false;
+          if (pantalla.entre || indice + 1 >= dilemas.length) siguientePantalla();
+          else setIndice(i => i + 1);
+        },
+        prefersReducedMotion ? 80 : 320
+      );
     },
-    [pregunta, indice, total, onTerminar, prefersReducedMotion]
+    [pantalla, indice, dilemas.length, siguientePantalla, prefersReducedMotion]
   );
 
-  // Teclado, para quien esta en un ordenador: flechas para los grados suaves,
-  // con mayusculas para los extremos, y los numeros del 1 al 5 directos.
+  // Teclado: 1 a 4 (o hasta 6 en un desempate) para elegir; espacio o Intro para repetir.
   useEffect(() => {
     const alPulsar = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowUp') {
+      if (!pantalla) return;
+      const n = Number(e.key);
+      if (n >= 1 && n <= pantalla.opciones.length) {
         e.preventDefault();
-        responder(e.shiftKey ? 5 : 4);
-      } else if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        responder(e.shiftKey ? 1 : 2);
-      } else if (['1', '2', '3', '4', '5'].includes(e.key)) {
-        e.preventDefault();
-        responder(Number(e.key));
+        responder(pantalla.opciones[n - 1]);
       } else if (e.key === ' ' || e.key === 'Enter') {
         e.preventDefault();
-        if (pregunta) leerActual(pregunta.text);
+        callar();
+        leer(pantalla);
       }
     };
     window.addEventListener('keydown', alPulsar);
     return () => window.removeEventListener('keydown', alPulsar);
-  }, [responder, pregunta, leerActual]);
+  }, [pantalla, responder, leer]);
 
-  if (!pregunta) return null;
+  if (!pantalla) return null;
 
-  const desplazamientoSalida =
-    saliendo === 5 ? -520 : saliendo === 4 ? -300 : saliendo === 2 ? 300 : saliendo === 1 ? 520 : 0;
-
-  const salida = saliendo
-    ? {
-        y: desplazamientoSalida,
-        opacity: 0,
-        scale: saliendo === 3 ? 0.86 : 0.9,
-        rotate: desplazamientoSalida === 0 ? 0 : desplazamientoSalida < 0 ? -4 : 4,
-      }
-    : { opacity: 0 };
-
-  const renderFranja = (n: (typeof NIVELES)[number]) => {
-    const Flecha = n.dir === 'arriba' ? ChevronUp : ChevronDown;
-    const iconos = (
-      <span className="flex flex-col items-center -space-y-2.5" aria-hidden="true">
-        {Array.from({ length: n.flechas }).map((_, i) => (
-          <Flecha key={i} className="w-6 h-6" strokeWidth={2.5} />
-        ))}
-      </span>
-    );
-
-    return (
-      <button
-        key={n.valor}
-        type="button"
-        onClick={() => responder(n.valor)}
-        aria-label={n.etiqueta}
-        className="group relative flex-1 min-h-0 flex items-center justify-center outline-none transition-colors"
-        style={{ color: n.color }}
-      >
-        <span
-          className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity"
-          style={{
-            background: `linear-gradient(${n.dir === 'arriba' ? '180deg' : '0deg'}, ${n.color}1F, transparent)`,
-          }}
-        />
-        <span className="relative flex flex-col items-center gap-0.5 opacity-70 group-hover:opacity-100 group-active:opacity-100 transition-opacity">
-          {n.dir === 'arriba' && iconos}
-          <span className="text-[11px] sm:text-xs font-bold uppercase tracking-[0.18em] whitespace-nowrap">
-            {n.etiqueta}
-          </span>
-          {n.dir === 'abajo' && iconos}
-        </span>
-      </button>
-    );
-  };
+  const total = dilemas.length;
+  const progreso = desempate ? 100 : (indice / total) * 100;
 
   return (
-    <div
-      className="relative flex flex-col select-none overflow-hidden"
-      style={{ height: '100dvh', touchAction: 'none' }}
-    >
-      {/* Progreso: una linea, sin numeros que leer */}
+    <div className="relative flex flex-col select-none overflow-hidden" style={{ height: '100dvh' }}>
       <div className="absolute top-0 inset-x-0 h-1 bg-[#14201C] z-40">
         <motion.div
           className="h-full bg-gradient-to-r from-[#315C45] to-[#D6A84F]"
@@ -205,17 +173,18 @@ export const TestScreen: React.FC<TestScreenProps> = ({
         />
       </div>
 
-      {/* Decorativo: no debe tragarse toques que iban a la franja de arriba. */}
       <span className="pointer-events-none absolute top-4 left-4 z-40 text-[11px] font-semibold tracking-widest text-[#4E5C55]">
-        {indice + 1}/{total}
+        {desempate ? '✦' : `${indice + 1}/${total}`}
       </span>
 
-      {/* Los dos unicos controles del recorrido */}
       <div className="absolute top-3 right-3 z-40 flex items-center gap-2">
         <button
           type="button"
-          onClick={() => leerActual(pregunta.text)}
-          aria-label="Repetir la frase"
+          onClick={() => {
+            callar();
+            leer(pantalla);
+          }}
+          aria-label="Repetir"
           disabled={silencio}
           className="w-10 h-10 rounded-full bg-[#101917]/85 backdrop-blur border border-[#23332D] flex items-center justify-center text-[#8A968D] hover:text-[#F2EFE6] transition-colors disabled:opacity-40"
         >
@@ -226,6 +195,7 @@ export const TestScreen: React.FC<TestScreenProps> = ({
           onClick={() => {
             callar();
             setHablando(false);
+            setLeyendo(null);
             onToggleSilencio();
           }}
           aria-label={silencio ? 'Activar la voz' : 'Silenciar la voz'}
@@ -235,79 +205,68 @@ export const TestScreen: React.FC<TestScreenProps> = ({
         </button>
       </div>
 
-      {/* Las dos franjas del sí */}
-      {ARRIBA.map(renderFranja)}
-
-      {/* El centro: la frase. Tocarla es "a veces"; arrastrarla, cualquier grado. */}
-      <div className="relative shrink-0 px-5 py-1 z-20">
+      <div className="flex-1 overflow-y-auto overscroll-contain flex flex-col px-5 pt-16 pb-6">
         <AnimatePresence mode="wait">
           <motion.div
-            key={pregunta.id}
-            drag={prefersReducedMotion ? false : 'y'}
-            dragConstraints={{ top: 0, bottom: 0 }}
-            dragElastic={0.6}
-            onDragStart={() => {
-              arrastroRef.current = true;
-            }}
-            onDragEnd={(_, info) => {
-              const dy = info.offset.y;
-              if (dy < -ARRASTRE_FUERTE) responder(5);
-              else if (dy < -ARRASTRE_SUAVE) responder(4);
-              else if (dy > ARRASTRE_FUERTE) responder(1);
-              else if (dy > ARRASTRE_SUAVE) responder(2);
-              // Un tiron corto no responde: la frase vuelve a su sitio.
-              window.setTimeout(() => {
-                arrastroRef.current = false;
-              }, 60);
-            }}
-            initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 20, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1, rotate: 0 }}
-            exit={salida}
-            transition={{ duration: prefersReducedMotion ? 0.01 : 0.32, ease: [0.22, 1, 0.36, 1] }}
-            className="mx-auto w-full max-w-md cursor-grab active:cursor-grabbing"
+            key={pantalla.id}
+            initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: -18 }}
+            transition={{ duration: prefersReducedMotion ? 0.01 : 0.3, ease: [0.22, 1, 0.36, 1] }}
+            className="my-auto mx-auto w-full max-w-md space-y-5"
           >
-            <button
-              type="button"
-              onClick={() => {
-                if (arrastroRef.current) return;
-                responder(NEUTRO.valor);
-              }}
-              aria-label={NEUTRO.etiqueta}
-              className="w-full text-left rounded-[2rem] bg-[#101917]/95 backdrop-blur border border-[#23332D] shadow-2xl px-6 py-6 sm:px-8 sm:py-7 space-y-4"
-            >
-              {/* El orbe: late despacio, y mas fuerte mientras la voz habla */}
-              <span className="relative mx-auto w-14 h-14 flex items-center justify-center">
-                <span
-                  className={`absolute inset-0 rounded-full bg-[#D6A84F]/25 blur-md ${
-                    hablando ? 'animate-orbSpeak' : 'animate-orbPulse'
-                  }`}
-                />
-                <span
-                  className={`absolute inset-2 rounded-full border ${
-                    hablando ? 'border-[#D6A84F]' : 'border-[#315C45]'
-                  } transition-colors`}
-                />
-                <span className="relative text-lg">✦</span>
+            <div className="text-center space-y-3">
+              {/* El orbe: late despacio, y más fuerte mientras la voz habla */}
+              <span className="relative mx-auto w-12 h-12 flex items-center justify-center">
+                <span className={`absolute inset-0 rounded-full bg-[#D6A84F]/25 blur-md ${hablando ? 'animate-orbSpeak' : 'animate-orbPulse'}`} />
+                <span className={`absolute inset-2 rounded-full border ${hablando ? 'border-[#D6A84F]' : 'border-[#315C45]'} transition-colors`} />
+                <span className="relative text-base">✦</span>
               </span>
+              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#D6A84F]">{pantalla.cabecera}</p>
+              {pantalla.situacion && <h2 className="font-serif text-xl sm:text-2xl leading-snug text-[#F2EFE6]">{pantalla.situacion}</h2>}
+              <p className={pantalla.situacion ? 'text-sm text-[#8A968D]' : 'font-serif text-xl sm:text-2xl leading-snug text-[#F2EFE6]'}>
+                {pantalla.pregunta}
+              </p>
+            </div>
 
-              <span
-                className={`block text-center font-serif leading-snug text-[#F2EFE6] ${
-                  silencio ? 'text-xl sm:text-2xl' : 'text-lg sm:text-xl'
-                }`}
-              >
-                {pregunta.text}
-              </span>
+            <div className="space-y-2" role="radiogroup" aria-label={pantalla.pregunta}>
+              {pantalla.opciones.map((o, i) => {
+                const activa = elegida === o.arquetipo;
+                const enVoz = leyendo === i;
+                return (
+                  <button
+                    key={o.arquetipo}
+                    type="button"
+                    role="radio"
+                    aria-checked={activa}
+                    onClick={() => responder(o)}
+                    className={`w-full flex items-start gap-3 px-4 py-3.5 rounded-2xl border text-left transition-all active:scale-[0.99] ${
+                      activa
+                        ? 'bg-[#1C3529] border-[#86EFAC] text-[#F2EFE6]'
+                        : enVoz
+                          ? 'bg-[#15221D] border-[#D6A84F]/70 text-[#F2EFE6]'
+                          : 'bg-[#101917]/90 border-[#1E2A25] text-[#C5CFC7] hover:border-[#315C45]'
+                    }`}
+                  >
+                    <span
+                      className={`mt-0.5 w-6 h-6 shrink-0 rounded-full flex items-center justify-center text-[11px] font-bold border transition-colors ${
+                        enVoz || activa ? 'border-[#D6A84F] text-[#D6A84F]' : 'border-[#315C45] text-[#8A968D]'
+                      }`}
+                    >
+                      {i + 1}
+                    </span>
+                    <span className="text-[15px] leading-snug">{o.texto}</span>
+                  </button>
+                );
+              })}
+            </div>
 
-              <span className="block text-center text-[10px] font-bold uppercase tracking-[0.18em] text-[#5E6C64]">
-                Toca aquí · {NEUTRO.etiqueta}
-              </span>
-            </button>
+            <p className="text-center text-[10px] font-bold uppercase tracking-[0.18em] text-[#5E6C64]">
+              Toca la que más se parece a ti
+            </p>
           </motion.div>
         </AnimatePresence>
       </div>
-
-      {/* Las dos franjas del no */}
-      {ABAJO.map(renderFranja)}
     </div>
   );
 };
