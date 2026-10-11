@@ -126,24 +126,31 @@ function capas(c: Comparaciones, puntuacion: Record<ArchetypeId, number>): Capa[
     const libres = restantes.filter(id => [...c.leGanaron[id]].every(g => colocadas.has(g)));
     let capa = libres;
     if (!capa.length) {
-      // A quién puede llegar cada figura encadenando victorias, sin pasar por las ya colocadas.
+      // A quiénes llega cada figura encadenando victorias, sin pasar por las ya colocadas.
       const quedan = new Set(restantes);
-      const alcanza = (desde: ArchetypeId, hasta: ArchetypeId) => {
-        const vistos = new Set([desde]);
-        const pila = [desde];
+      const llegaA = new Map<ArchetypeId, Set<ArchetypeId>>();
+      for (const id of restantes) {
+        const vistos = new Set<ArchetypeId>([id]);
+        const pila = [id];
         while (pila.length) {
           const x = pila.pop()!;
-          for (const y of quedan) {
-            if (vistos.has(y) || !c.leGanaron[y].has(x)) continue;
-            if (y === hasta) return true;
-            vistos.add(y);
-            pila.push(y);
+          for (const y of restantes) {
+            if (!vistos.has(y) && c.leGanaron[y].has(x)) {
+              vistos.add(y);
+              pila.push(y);
+            }
           }
         }
-        return false;
-      };
-      // Las de un ciclo al que nadie de fuera ha ganado: cada una alcanza a todas las que le ganaron.
-      const enCabeza = restantes.filter(id => [...c.leGanaron[id]].filter(g => quedan.has(g)).every(g => alcanza(id, g)));
+        llegaA.set(id, vistos);
+      }
+      // El ciclo de una figura: las que alcanza y la alcanzan. Va en cabeza si a ninguna del
+      // ciclo le ganó alguien de fuera (mirar solo a la propia figura no basta: otra del ciclo
+      // puede haber perdido contra alguien que no está en él).
+      const cicloDe = (id: ArchetypeId) => new Set(restantes.filter(y => llegaA.get(id)!.has(y) && llegaA.get(y)!.has(id)));
+      const enCabeza = restantes.filter(id => {
+        const ciclo = cicloDe(id);
+        return [...ciclo].every(m => [...c.leGanaron[m]].every(g => !quedan.has(g) || ciclo.has(g)));
+      });
       capa = mejores(enCabeza.length ? enCabeza : restantes, conTodo, 1);
     }
     capa = [...capa].sort((a, b) => puntuacion[b] - puntuacion[a]);
@@ -169,23 +176,18 @@ export function candidatosDesempate(respuestas: RespuestaDilema[], tipo: TipoTes
 }
 
 /**
- * El orden final, con las puntuaciones de las situaciones tal cual. `resueltos`: cuántos puestos
- * de arriba (hasta dos, los de la pareja) quedaron decididos uno a uno, por comparaciones o, si
- * las respuestas se contradicen, por la tasa con los desempates. El perfil lo respeta en vez de
- * volver a deducir empates de las puntuaciones, que no cuentan los desempates.
+ * El orden final, con las puntuaciones de las situaciones tal cual, y las dos primeras capas
+ * (`cabeza`): quiénes comparten el primer puesto y quiénes el segundo. El perfil usa esos grupos
+ * en vez de volver a deducir empates de las puntuaciones, que mezclarían capas distintas y no
+ * cuentan los desempates.
  */
 export function ordenDilemas(
   respuestas: RespuestaDilema[],
   tipo: TipoTest
-): { ids: ArchetypeId[]; resueltos: 0 | 1 | 2; puntuaciones: Record<ArchetypeId, number> } {
+): { ids: ArchetypeId[]; cabeza: ArchetypeId[][]; puntuaciones: Record<ArchetypeId, number> } {
   const puntuaciones = puntuacionesDilemas(respuestas, tipo);
   const lista = capas(comparar(respuestas, tipo, true), puntuaciones);
-  let resueltos = 0;
-  for (const capa of lista) {
-    if (resueltos >= 2 || capa.ids.length !== 1) break;
-    resueltos++;
-  }
-  return { ids: lista.flatMap(capa => capa.ids), resueltos: resueltos as 0 | 1 | 2, puntuaciones };
+  return { ids: lista.flatMap(capa => capa.ids), cabeza: lista.slice(0, 2).map(capa => capa.ids), puntuaciones };
 }
 
 /** La pantalla de un desempate: lo que mueve a cada figura, sin su nombre. */
@@ -238,6 +240,6 @@ export function calcularResultadoDilemas(respuestas: RespuestaDilema[], tipo: Ti
 
   return resultadoDesdePuntuaciones(orden.puntuaciones, victorias, tipo, gender, evidenciaDe, 'dilemas', {
     ids: orden.ids,
-    resueltos: orden.resueltos,
+    cabeza: orden.cabeza,
   });
 }

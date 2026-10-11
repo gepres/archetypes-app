@@ -12,6 +12,7 @@ import {
   dilemaDeDesempate,
   dilemasDelTest,
   esDesempate,
+  ordenDilemas,
   puntuacionesDilemas,
 } from './dilemas';
 import { getMapLead } from './scoringEngine';
@@ -134,6 +135,32 @@ function respetaPrecedencias(respuestas: RespuestaDilema[], tipo: TipoTest) {
   for (const [a, vencidas] of gano)
     for (const b of vencidas)
       if (!alcanza(b, a)) assert.ok(pos.get(a)! < pos.get(b)!, `${a} ganó a ${b} y quedó detrás`);
+}
+
+/** Las figuras de un desempate van en cabeza: ninguna de su ciclo perdió contra alguien de fuera. */
+function candidatosEnCabeza(respuestas: RespuestaDilema[], tipo: TipoTest, candidatos: ArchetypeId[], caso: string) {
+  const delTest = new Map(dilemasDelTest(tipo).map(d => [d.id, d]));
+  const { cabeza } = ordenDilemas(respuestas, tipo);
+  // Si se desempata el segundo puesto, el primero ya está colocado.
+  const colocadas = new Set(cabeza[0].length > 1 ? [] : cabeza[0]);
+  const gano = new Map<ArchetypeId, Set<ArchetypeId>>(IDS.map(id => [id, new Set()]));
+  for (const r of respuestas) {
+    const otras = r.entre ?? delTest.get(r.dilemaId)!.opciones.map(o => o.arquetipo);
+    for (const o of otras) if (o !== r.arquetipo && !colocadas.has(o) && !colocadas.has(r.arquetipo)) gano.get(r.arquetipo)!.add(o);
+  }
+  const alcanza = (a: ArchetypeId, b: ArchetypeId) => {
+    const vistos = new Set([a]);
+    const pila = [a];
+    while (pila.length) for (const y of gano.get(pila.pop()!)!) {
+      if (y === b) return true;
+      if (!vistos.has(y)) { vistos.add(y); pila.push(y); }
+    }
+    return false;
+  };
+  // Todo lo que llega a una candidata tiene que estar en su ciclo (ella también llega).
+  for (const x of candidatos)
+    for (const y of IDS)
+      if (y !== x && !colocadas.has(y) && alcanza(y, x)) assert.ok(alcanza(x, y), `${caso}: ${x} va al desempate, pero ${y} le gana desde fuera de su ciclo`);
 }
 
 describe('desempate', () => {
@@ -260,6 +287,49 @@ describe('desempate', () => {
         const respuestas = dilemasDelTest(tipo).map(d => ({ dilemaId: d.id, arquetipo: barajar(d.opciones, `ciclo-${s}-${d.id}`)[0].arquetipo }));
         respetaPrecedencias(desempatar(respuestas, tipo, barajar(IDS, `pref-${s}`)), tipo);
       }
+    }
+  });
+
+  it('regresión (Codex): un desempate solo ofrece figuras de un ciclo al que nadie de fuera ha ganado', () => {
+    // Antes bastaba con que cada figura alcanzase a quien le ganó directamente: Mago entraba al
+    // desempate aunque Rebelde gana a Padre y Padre a Mago, sin camino de vuelta.
+    for (let s = 0; s < 300; s++) {
+      for (const tipo of ['quick', 'full'] as TipoTest[]) {
+        const todas: RespuestaDilema[] = dilemasDelTest(tipo).map(d => ({ dilemaId: d.id, arquetipo: barajar(d.opciones, `fuente-${s}-${d.id}`)[0].arquetipo }));
+        const preferencia = barajar(IDS, `fpref-${s}`);
+        let candidatos = candidatosDesempate(todas, tipo);
+        while (candidatos) {
+          candidatosEnCabeza(todas, tipo, candidatos, `caso ${s} ${tipo}`);
+          const elegida = [...candidatos].sort((a, b) => preferencia.indexOf(a) - preferencia.indexOf(b))[0];
+          todas.push({ dilemaId: dilemaDeDesempate(candidatos, todas.filter(esDesempate).length + 1).id, arquetipo: elegida, entre: candidatos });
+          candidatos = candidatosDesempate(todas, tipo);
+        }
+      }
+    }
+  });
+
+  it('regresión (Codex): casos en que se ofrecía al desempate una figura dominada desde fuera de su ciclo', () => {
+    // Encontrados comparando con el criterio anterior: ofrecía también a Sabio, Héroe o Sacerdote.
+    for (const s of [1373, 5737, 12124]) {
+      const respuestas = dilemasDelTest('quick').map(d => ({ dilemaId: d.id, arquetipo: barajar(d.opciones, `busca-${s}-${d.id}`)[0].arquetipo }));
+      const candidatos = candidatosDesempate(respuestas, 'quick');
+      assert.ok(candidatos, `caso ${s}: sin desempate`);
+      candidatosEnCabeza(respuestas, 'quick', candidatos!, `caso ${s}`);
+    }
+  });
+
+  it('regresión (Codex): sin desempate posible, el empate que anuncia el perfil es el del primer puesto', () => {
+    // Siete figuras en la primera capa (no se ofrece desempate): el Místico, que perdió contra
+    // dos de ellas, no puede aparecer «a la par en el primer puesto» por tener muchos puntos.
+    const respuestas = dilemasDelTest('quick').map(d => ({ dilemaId: d.id, arquetipo: barajar(d.opciones, `probe-156-${d.id}`)[0].arquetipo }));
+    const r = calcularResultadoDilemas(respuestas, 'quick', 'male');
+    assert.deepEqual([...getMapLead(r, 'male').ids].sort(), [...r.cabeza![0]].sort());
+    for (let s = 0; s < 300; s++) {
+      const azar = dilemasDelTest('quick').map(d => ({ dilemaId: d.id, arquetipo: barajar(d.opciones, `perfil-${s}-${d.id}`)[0].arquetipo }));
+      const res = calcularResultadoDilemas(desempatar(azar, 'quick', barajar(IDS, `pp-${s}`)), 'quick', 'male');
+      const lead = getMapLead(res, 'male');
+      if (lead.kind === 'tie') assert.deepEqual([...lead.ids].sort(), [...res.cabeza![0]].sort(), `caso ${s}`);
+      if (lead.kind === 'single') assert.deepEqual(res.cabeza![0], [lead.ids[0]], `caso ${s}`);
     }
   });
 

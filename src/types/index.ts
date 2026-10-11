@@ -224,6 +224,8 @@ export interface AssessmentResult {
    * empates aunque sus números se parezcan.
    */
   cabezaResuelta?: number;
+  /** Test por dilemas: quiénes comparten el primer puesto y quiénes el segundo. */
+  cabeza?: ArchetypeId[][];
 }
 
 export interface JournalEntry {
