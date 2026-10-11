@@ -15,8 +15,8 @@ interface HistoriaScreenProps {
   silencio: boolean;
   onToggleSilencio: () => void;
   onCerrar: () => void;
-  /** Al terminar el recorrido, lo natural es hacer el test. */
-  onEmpezarTest: () => void;
+  /** Al terminar el recorrido, se vuelve a elegir qué test hacer (el rápido o el completo). */
+  onElegirTest: () => void;
 }
 
 /** El último tramo no es un capítulo: es la galería de los dieciocho. */
@@ -27,7 +27,7 @@ export const HistoriaScreen: React.FC<HistoriaScreenProps> = ({
   silencio,
   onToggleSilencio,
   onCerrar,
-  onEmpezarTest,
+  onElegirTest,
 }) => {
   const prefersReducedMotion = useReducedMotion();
   const [paso, setPaso] = useState(0);
@@ -117,8 +117,8 @@ export const HistoriaScreen: React.FC<HistoriaScreenProps> = ({
     setHablando(false);
     vibrar(10);
     if (paso < TOTAL - 1) setPaso(p => p + 1);
-    else onEmpezarTest();
-  }, [paso, onEmpezarTest]);
+    else onElegirTest();
+  }, [paso, onElegirTest]);
 
   const avanzarRef = useRef(avanzar);
   useEffect(() => {
@@ -374,7 +374,7 @@ export const HistoriaScreen: React.FC<HistoriaScreenProps> = ({
           onClick={avanzar}
           className="flex-1 min-h-[48px] inline-flex items-center justify-center gap-2 px-5 rounded-2xl bg-gradient-to-r from-[#315C45] to-[#254836] border border-[#4E8B69] text-[#F2EFE6] font-semibold text-sm shadow-xl active:scale-95 transition-transform"
         >
-          {paso === TOTAL - 1 ? 'Hacer mi test' : 'Continuar'}
+          {paso === TOTAL - 1 ? 'Elegir mi test' : 'Continuar'}
           <ArrowRight className="w-4 h-4" />
         </button>
       </footer>

@@ -12,6 +12,8 @@ interface WelcomeScreenProps {
   onEmpezar: (tipo: TipoTest) => void;
   /** Para quien prefiere saber de que va antes de empezar a responder. */
   onConocerlos: () => void;
+  /** Vuelve del recorrido para elegir su test: se le señala la elección. */
+  aElegir?: boolean;
 }
 
 const CUANTAS = {
@@ -24,7 +26,7 @@ const CUANTAS = {
  * la voz -los navegadores moviles exigen un gesto antes de dejar hablar- y dar
  * la unica instruccion que hace falta, que ademas se dice en voz alta.
  */
-export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onEmpezar, onConocerlos }) => {
+export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onEmpezar, onConocerlos, aElegir = false }) => {
   const prefersReducedMotion = useReducedMotion();
   const [arrancando, setArrancando] = useState(false);
   // El corto por defecto: quien llega aqui viene de "no quiero leer".
@@ -72,10 +74,18 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onEmpezar, onConoc
 
         {/* Cuanto quieres darle. El corto es el que menos pide;
             el completo mide mejor, y quien lo pide ya sabe lo que cuesta. */}
+        <div className="space-y-2.5">
+        {aElegir && (
+          <p className="text-sm font-semibold text-[#D6A84F] animate-riseIn" role="status">
+            Ahora elige tu test: el rápido o el completo.
+          </p>
+        )}
         <div
           role="group"
           aria-label="Duración del test"
-          className="grid grid-cols-2 gap-1 p-1 rounded-2xl bg-[#101917] border border-[#1E2A25] max-w-xs mx-auto"
+          className={`grid grid-cols-2 gap-1 p-1 rounded-2xl bg-[#101917] border max-w-xs mx-auto ${
+            aElegir ? 'border-[#D6A84F]/70 shadow-[0_0_30px_-8px_rgba(214,168,79,0.5)]' : 'border-[#1E2A25]'
+          }`}
         >
           {([
             { id: 'quick' as TipoTest, titulo: 'Rápido', detalle: `${CUANTAS.quick} situaciones · 5 min` },
@@ -101,6 +111,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onEmpezar, onConoc
               </button>
             );
           })}
+        </div>
         </div>
 
         {/* El boton. Lo que late es el halo de detras, nunca el boton: un blanco

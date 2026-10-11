@@ -14,6 +14,8 @@ const CLAVE_SILENCIO = 'arquetipos_v2_silencio';
 
 export const App: React.FC = () => {
   const [paso, setPaso] = useState<Paso>('bienvenida');
+  // Quien vuelve del recorrido «¿Qué es un arquetipo?» viene a elegir su test: se le señala.
+  const [aElegir, setAElegir] = useState(false);
   const [tipo, setTipo] = useState<TipoTest>('quick');
   // Espejo del tipo para el cierre de terminarTest, que se quiere estable.
   const tipoRef = useRef<TipoTest>('quick');
@@ -65,6 +67,7 @@ export const App: React.FC = () => {
   }, []);
 
   const arrancarTest = (elegido: TipoTest) => {
+    setAElegir(false);
     duenoRef.current = leerDueno();
     setTipo(elegido);
     tipoRef.current = elegido;
@@ -76,6 +79,7 @@ export const App: React.FC = () => {
       <WelcomeScreen
         onEmpezar={arrancarTest}
         onConocerlos={() => setPaso('historia')}
+        aElegir={aElegir}
       />
     );
   }
@@ -85,8 +89,14 @@ export const App: React.FC = () => {
       <HistoriaScreen
         silencio={silencio}
         onToggleSilencio={alternarSilencio}
-        onCerrar={() => setPaso('bienvenida')}
-        onEmpezarTest={() => arrancarTest(tipoRef.current)}
+        onCerrar={() => {
+          setAElegir(false);
+          setPaso('bienvenida');
+        }}
+        onElegirTest={() => {
+          setAElegir(true);
+          setPaso('bienvenida');
+        }}
       />
     );
   }
