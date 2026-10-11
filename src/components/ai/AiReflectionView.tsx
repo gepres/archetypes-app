@@ -444,6 +444,7 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
                       }}
                       size="sm"
                       showLabel={false}
+                      disposicion="columna"
                     />
                   </div>
                 )}

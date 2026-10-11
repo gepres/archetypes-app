@@ -7,6 +7,11 @@ interface PerspectiveSwitcherProps {
   size?: 'sm' | 'md' | 'lg';
   showLabel?: boolean;
   className?: string;
+  /**
+   * En fila (la pastilla de siempre) o en columna: una opción por renglón, para espacios
+   * estrechos como un menú, donde las tres en fila no caben.
+   */
+  disposicion?: 'fila' | 'columna';
 }
 
 const OPTIONS: {
@@ -14,6 +19,8 @@ const OPTIONS: {
   glyph: string;
   glyphColor: string;
   label: string;
+  /** Cómo se nombra el primer arquetipo con esa perspectiva. */
+  ejemplo: string;
   title: string;
   activeClasses: string;
 }[] = [
@@ -22,6 +29,7 @@ const OPTIONS: {
     glyph: '♂',
     glyphColor: 'text-[#86EFAC]',
     label: 'Masculina',
+    ejemplo: 'El Rey',
     title: 'Perspectiva Masculina (El Rey, El Guerrero, El Mago, El Padre...)',
     activeClasses: 'bg-[#315C45] text-[#F2EFE6] border-[#437A5C] shadow-md ring-1 ring-[#86EFAC]/30',
   },
@@ -30,6 +38,7 @@ const OPTIONS: {
     glyph: '♀',
     glyphColor: 'text-[#F472B6]',
     label: 'Femenina',
+    ejemplo: 'La Reina',
     title: 'Perspectiva Femenina (La Reina, La Guerrera, La Maga, La Madre...)',
     activeClasses: 'bg-[#7C3AED] text-[#F2EFE6] border-[#9061F9] shadow-md ring-1 ring-[#C084FC]/30',
   },
@@ -38,6 +47,7 @@ const OPTIONS: {
     glyph: '☯',
     glyphColor: 'text-[#D6A84F]',
     label: 'Universal',
+    ejemplo: 'Rey / Reina',
     title: 'Perspectiva Universal (Rey/Reina, Guerrero/Guerrera, Padre/Madre...)',
     activeClasses: 'bg-[#D6A84F] text-[#0E1513] font-bold border-[#E5C278] shadow-md ring-1 ring-[#D6A84F]/40',
   },
@@ -53,8 +63,45 @@ export const PerspectiveSwitcher: React.FC<PerspectiveSwitcherProps> = ({
   size = 'md',
   showLabel = true,
   className = '',
+  disposicion = 'fila',
 }) => {
   const current = gender || DEFAULT_GENDER;
+
+  if (disposicion === 'columna') {
+    return (
+      <div
+        role="group"
+        aria-label="Perspectiva de exploración"
+        className={`flex flex-col gap-1 w-full bg-[#0E1513] p-1 rounded-2xl border border-[#23332D] select-none ${className}`}
+      >
+        {OPTIONS.map(opt => {
+          const isOn = current === opt.id;
+          return (
+            <button
+              key={opt.id}
+              type="button"
+              id={`perspective-btn-${opt.id}`}
+              onClick={() => onGenderChange(opt.id)}
+              aria-pressed={isOn}
+              title={opt.title}
+              className={`w-full min-h-[40px] rounded-xl border px-3 py-2 text-xs text-left font-semibold transition-all active:scale-95 flex items-center gap-2 ${
+                isOn ? opt.activeClasses : 'border-transparent text-[#9DA79F] hover:text-[#F2EFE6] hover:bg-[#16221E]'
+              }`}
+            >
+              <span
+                aria-hidden="true"
+                className={`shrink-0 w-4 text-center ${isOn && opt.id === 'universal' ? 'text-[#0E1513]' : opt.glyphColor}`}
+              >
+                {opt.glyph}
+              </span>
+              <span className="flex-1 min-w-0">{opt.label}</span>
+              <span className={`shrink-0 text-[10px] font-normal ${isOn ? 'opacity-80' : 'opacity-60'}`}>{opt.ejemplo}</span>
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
 
   const isSmall = size === 'sm';
   const isLarge = size === 'lg';
