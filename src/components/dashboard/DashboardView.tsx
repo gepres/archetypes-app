@@ -127,7 +127,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             ) : lead.kind === 'tie' ? (
               <>Sin un único dominante · </>
             ) : null}
-            Actualizado en {new Date(currentResult.date).toLocaleDateString('es-ES', { month: 'short', day: 'numeric', year: 'numeric' })}
+            Actualizado en {new Date(currentResult.date).toLocaleDateString('es-419', { month: 'short', day: 'numeric', year: 'numeric' })}
           </p>
         </div>
 
@@ -336,7 +336,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-[#9DA79F] flex items-center gap-1">
                     <Calendar className="w-3 h-3" />
-                    {new Date(h.date).toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })}
+                    {new Date(h.date).toLocaleDateString('es-419', { month: 'short', year: 'numeric' })}
                   </span>
                   <span className="font-bold text-[#D6A84F]">
                     {getArchetypeName(h.dominantArchetype.archetypeId, currentGender)}
@@ -435,7 +435,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       {entry.title}
                     </span>
                     <span className="text-[10px] text-[#6B7A72]">
-                      {new Date(entry.date).toLocaleDateString('es-ES', { month: 'short', day: 'numeric' })}
+                      {new Date(entry.date).toLocaleDateString('es-419', { month: 'short', day: 'numeric' })}
                     </span>
                   </div>
                   <p className="text-[11px] text-[#9DA79F] line-clamp-2">

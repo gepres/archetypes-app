@@ -389,7 +389,7 @@ export const ResultView: React.FC<ResultViewProps> = ({
       {compositeProfile.developmentArchetypes.length > 0 && (
         <section className="p-6 sm:p-7 rounded-2xl bg-[#121A17] border border-[#23332D] space-y-5">
           <div className="space-y-1">
-            <span className="text-xs uppercase tracking-widest text-[#D6A84F] font-bold">Para explorar, si te apetece</span>
+            <span className="text-xs uppercase tracking-widest text-[#D6A84F] font-bold">Para explorar, si quieres</span>
             <h3 className="font-serif text-xl sm:text-2xl font-bold text-[#F2EFE6]">Lo que menos apareció</h3>
             <p className="text-xs text-[#9DA79F] max-w-2xl leading-relaxed">
               Puntuar poco en una figura no es una carencia: es lo que menos salió en tus respuestas de hoy.

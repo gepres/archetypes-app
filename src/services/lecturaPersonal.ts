@@ -73,6 +73,7 @@ export function promptLectura(result: AssessmentResult, gender: GenderMode): str
     '- Termina con una sola pregunta para que la explore, sola en la última línea y en cursiva (entre asteriscos).',
     `- ${regla} Usa los nombres de los arquetipos tal como aparecen aquí; los que llevan barra (como «Rey / Reina») van sin artículo delante.`,
     '- Lenguaje neutro: no uses formas con género para referirte a mí (como «ti mismo» o «cansado»); elige expresiones que valgan para cualquiera.',
+    '- Español latinoamericano neutro: sin «vosotros» ni expresiones propias de España.',
     '- Sin títulos, listas, porcentajes ni puntuaciones. No diagnostiques ni hables de trastornos: es un modelo simbólico.',
   ].join('\n');
 }

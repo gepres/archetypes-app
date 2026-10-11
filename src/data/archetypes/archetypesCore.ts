@@ -824,7 +824,7 @@ export const CORE_ARCHETYPES: Record<'rey' | 'guerrero' | 'mago' | 'sabio' | 'sa
       {
         title: 'Cita con la Belleza',
         description: 'Dedica 1 hora a una actividad puramente estética o sensorial (música, cocina, naturaleza).',
-        actionStep: 'Apaga el móvil y disfruta de la experiencia con todos tus sentidos.'
+        actionStep: 'Apaga el celular y disfruta de la experiencia con todos tus sentidos.'
       }
     ],
     synergies: [

@@ -108,7 +108,7 @@ DIRECTRICES ÉTICAS Y DE TONO FUNDAMENTALES:
    - Formular preguntas de autoindagación honesta.
    - Identificar cómo interactúan sus arquetipos dominantes (luces) y dónde pueden surgir sombras o desequilibrios.
    - Explorar vías prácticas y cotidianas para activar sus arquetipos de desarrollo.
-   - Responder en un español natural, poético y reflexivo.
+   - Responder en un español latinoamericano neutro, natural, poético y reflexivo (sin «vosotros» ni expresiones propias de España).
 
 ${personaInstruction}
 ${contextPrompt}

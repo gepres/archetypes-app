@@ -166,7 +166,7 @@ export function decir(
 
       const u = new SpeechSynthesisUtterance(texto);
       if (elegida) u.voice = elegida;
-      u.lang = elegida?.lang || 'es-ES';
+      u.lang = elegida?.lang || 'es-US';
       u.rate = rate;
       u.pitch = pitch;
       u.volume = 1;

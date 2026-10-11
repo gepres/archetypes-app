@@ -67,7 +67,7 @@ const MITAD_RAPIDA: Dilema[] = [
     opciones: [
       { arquetipo: 'sabio', texto: 'Antes de opinar, reúno los hechos y lo pienso con calma.' },
       { arquetipo: 'integrador', texto: 'Busco lo que cada una tiene de razón y las junto a hablar.' },
-      { arquetipo: 'sanador', texto: 'Me fijo en lo que le duele a cada una debajo del enfado.' },
+      { arquetipo: 'sanador', texto: 'Me fijo en lo que le duele a cada una debajo del enojo.' },
       { arquetipo: 'creador', texto: 'Les propongo hacer juntas algo nuevo que las vuelva a unir.' },
     ],
   },
@@ -318,7 +318,7 @@ const MITAD_COMPLETA: Dilema[] = [
   {
     id: 'futuros-distintos',
     ambito: 'Pareja',
-    situacion: 'Tú y la persona más cercana a ti queréis cosas distintas para el futuro.',
+    situacion: 'Tú y la persona más cercana a ti quieren cosas distintas para el futuro.',
     pregunta: '¿Cómo lo resuelves?',
     opciones: [
       { arquetipo: 'integrador', texto: 'Busco un camino que tenga algo de lo que queremos los dos.' },

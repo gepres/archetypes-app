@@ -27,8 +27,8 @@ function formatCardDate(isoDate: string): string {
   // A mediodía para que ningún huso horario la mueva al día anterior.
   const d = new Date(`${isoDate}T12:00:00`);
   if (Number.isNaN(d.getTime())) return isoDate;
-  const weekday = d.toLocaleDateString('es-ES', { weekday: 'long' });
-  const month = d.toLocaleDateString('es-ES', { month: 'long' });
+  const weekday = d.toLocaleDateString('es-419', { weekday: 'long' });
+  const month = d.toLocaleDateString('es-419', { month: 'long' });
   return `${weekday} ${d.getDate()} de ${month}`;
 }
 import { ArchetypePortraitCard } from './ArchetypePortraitCard';

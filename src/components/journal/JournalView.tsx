@@ -352,7 +352,7 @@ export const JournalView: React.FC<JournalViewProps> = ({
                   <div className="flex items-center gap-2 text-xs text-[#9DA79F]">
                     <span className="flex items-center gap-1 font-mono text-[11px]">
                       <Calendar className="w-3 h-3 text-[#D6A84F]" />
-                      {new Date(entry.date).toLocaleDateString('es-ES', {
+                      {new Date(entry.date).toLocaleDateString('es-419', {
                         day: 'numeric',
                         month: 'long',
                         year: 'numeric',
