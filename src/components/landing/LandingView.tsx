@@ -39,7 +39,7 @@ const DIMENSIONES: { id: DimensionId; nombre: string; Icono: typeof Brain; color
 /**
  * La portada. Cabe en unas cuatro pantallas de móvil: antes eran unas trece (un panteón con
  * selector de los 18 y, además, la galería entera de los 18), y la acción principal era el test
- * de 60 preguntas. Ahora lo primero es el test rápido, con el completo al lado y la versión con
+ * de 60 preguntas (hoy, 36 situaciones). Ahora lo primero es el test rápido, con el completo al lado y la versión con
  * voz bien visible; los arquetipos se asoman en una tira que lleva a su ficha.
  */
 export const LandingView: React.FC<LandingViewProps> = ({
@@ -85,7 +85,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
               Descubrir mi mapa
               <ArrowRight className="w-4 h-4" />
             </span>
-            <span className="text-[11px] text-[#C5CFC7] font-normal">Test rápido · 24 preguntas · unos 5 minutos</span>
+            <span className="text-[11px] text-[#C5CFC7] font-normal">Test rápido · 18 situaciones · unos 4 minutos</span>
           </button>
 
           <button
@@ -94,7 +94,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
             className="sm:w-auto inline-flex flex-col items-center justify-center px-5 py-3 rounded-2xl border border-[#23332D] bg-[#121A17] hover:bg-[#1A2521] text-[#C5CFC7] hover:text-[#F2EFE6] transition-all shadow-sm"
           >
             <span className="font-medium text-sm">Test completo</span>
-            <span className="text-[11px] text-[#8A968D]">60 preguntas, más matices</span>
+            <span className="text-[11px] text-[#8A968D]">36 situaciones, más matices</span>
           </button>
         </div>
 

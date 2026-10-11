@@ -2,10 +2,12 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { contenidoParaCompartir } from './tarjetaCompartir';
 import { calculateAssessmentResult } from './scoringEngine';
-import { ARCHETYPES_LIST } from '../data/archetypesData';
+import { ARCHETYPES_LIST, getArchetype } from '../data/archetypesData';
 import { ARCHETYPE_DRIVES } from '../data/archetypePairs';
 import { QUESTIONS_DATA } from '../data/questionsData';
 import { ArchetypeId, AssessmentResult, CompositeProfile, GenderMode } from '../types';
+import { composeDailyOracleTexts } from './storageService';
+import { dilemaDeDesempate } from './dilemas';
 
 /** Un mapa a medida: las figuras de cabeza primero y el perfil con lo que importa. */
 function mapa(cabeza: ArchetypeId[], perfil: Partial<CompositeProfile>): AssessmentResult {
@@ -78,6 +80,19 @@ describe('contenidoParaCompartir: lo que cuenta la imagen', () => {
     assert.deepEqual(c.figuras, []);
     assert.equal(c.titulo, 'Sin un polo claro');
     assert.doesNotMatch(c.texto, /dominante/i);
+  });
+
+  it('lo que dice en primera persona no se cuela en segunda: «una parte de mí quiere decidir sobre mi vida»', () => {
+    // Antes salía «una parte de mí quiere decidir sobre tu propia vida» (y lo mismo con el Padre,
+    // el Sacerdote y el Héroe), en la postal, en la Carta del Día y en el desempate del test.
+    const segunda = /(tu|tus|ti|tienes|vives|te)/i;
+    for (const a of ARCHETYPES_LIST.map(x => x.id as ArchetypeId)) {
+      const b = a === 'rey' ? 'mago' : 'rey';
+      assert.doesNotMatch(contenidoParaCompartir(mapa([a, b], { pair: [a, b] }), 'universal').frase, segunda, a);
+      assert.doesNotMatch(contenidoParaCompartir(mapa([a], {}), 'universal').frase, segunda, a);
+      assert.doesNotMatch(composeDailyOracleTexts(getArchetype(a, 'universal')).affirmation, segunda, a);
+      for (const o of dilemaDeDesempate([a, b], 1).opciones) assert.doesNotMatch(o.texto, segunda, a);
+    }
   });
 
   it('en ninguna perspectiva queda «del El», «y El» ni un artículo en mayúscula a media frase', () => {

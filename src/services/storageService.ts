@@ -10,13 +10,14 @@ import {
   DailyOracleCard,
   GenderMode,
   JournalEntry,
+  ProgresoTest,
   UserProfile,
   DEFAULT_GENDER,
 } from '../types';
 import { FirebaseService } from './firebaseService';
 import { adaptAssessmentResultToGender } from './scoringEngine';
 import { CRISIS_CLOSED_NOTE } from './crisisSupport';
-import { ARCHETYPE_DRIVES } from '../data/archetypePairs';
+import { ARCHETYPE_DRIVES_YO } from '../data/archetypePairs';
 import { ORACLE_TEXTS } from '../data/oracleTexts';
 import { fechaLocal, numeroDeDia } from './fechaLocal';
 import { arquetipoDelDia } from './personalization';
@@ -203,7 +204,7 @@ export function composeDailyOracleTexts(
 ): Pick<DailyOracleCard, 'affirmation' | 'morningReflection' | 'eveningInquiry'> {
   const id = archetype.id as ArchetypeId;
   return {
-    affirmation: `Hoy elijo ${ARCHETYPE_DRIVES[id]}.`,
+    affirmation: `Hoy elijo ${ARCHETYPE_DRIVES_YO[id]}.`,
     morningReflection: ORACLE_TEXTS[id].manana,
     eveningInquiry: ORACLE_TEXTS[id].noche,
   };
@@ -284,17 +285,22 @@ export const StorageService = {
     }
   },
 
-  // In-progress test save
-  getTestProgress(): { answers: Record<number, number>; currentIndex: number; testType: 'full' | 'quick' } | null {
+  /**
+   * El test a medias. Solo vale el del test por dilemas: un progreso del test de frases que se
+   * quedara guardado de antes no se puede continuar con otras pantallas, así que se ignora.
+   */
+  getTestProgress(): ProgresoTest | null {
     try {
       const data = localStorage.getItem(STORAGE_KEYS.ACTIVE_TEST_PROGRESS);
-      return data ? JSON.parse(data) : null;
+      const p = data ? JSON.parse(data) : null;
+      if (!p || p.instrumento !== 'dilemas' || !Array.isArray(p.respuestas) || typeof p.semilla !== 'string') return null;
+      return p as ProgresoTest;
     } catch (e) {
       return null;
     }
   },
 
-  saveTestProgress(progress: { answers: Record<number, number>; currentIndex: number; testType: 'full' | 'quick' }): void {
+  saveTestProgress(progress: ProgresoTest): void {
     try {
       localStorage.setItem(STORAGE_KEYS.ACTIVE_TEST_PROGRESS, JSON.stringify(progress));
     } catch (e) {

@@ -27,6 +27,19 @@ export const ARCHETYPE_DRIVES: Record<ArchetypeId, string> = {
 };
 
 /**
+ * Lo mismo, dicho por la propia persona: completa «una parte de mí quiere…», «hoy elijo…» o
+ * «quiero…». Cuatro cambian de persona («tu propia vida» → «mi propia vida»); usar las de arriba
+ * en primera persona decía «una parte de mí quiere decidir sobre tu propia vida».
+ */
+export const ARCHETYPE_DRIVES_YO: Record<ArchetypeId, string> = {
+  ...ARCHETYPE_DRIVES,
+  sacerdote: 'dar sentido y ritual a lo que vivo',
+  padre: 'proteger y guiar a quien depende de mí',
+  heroe: 'superar la prueba que tengo delante',
+  soberano: 'decidir sobre mi propia vida sin pedir permiso',
+};
+
+/**
  * La pregunta que abre la tensión entre dos dimensiones. Diez combinaciones (cuatro consigo
  * mismas y seis cruzadas) cubren cualquier pareja de arquetipos.
  */

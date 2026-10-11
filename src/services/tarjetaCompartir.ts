@@ -7,7 +7,7 @@
  * perspectiva.
  */
 import { getArchetype } from '../data/archetypesData';
-import { ARCHETYPE_DRIVES } from '../data/archetypePairs';
+import { ARCHETYPE_DRIVES_YO } from '../data/archetypePairs';
 import { ArchetypeId, AssessmentResult, GenderMode } from '../types';
 import { getMapLead, listNames } from './scoringEngine';
 
@@ -35,7 +35,8 @@ function nombresJuntos(ids: ArchetypeId[], gender: GenderMode): string {
   return listNames(nombres.map((n, i) => (i === 0 ? n : n.replace(/^El /, 'el ').replace(/^La /, 'la '))));
 }
 
-const quiere = (id: ArchetypeId) => ARCHETYPE_DRIVES[id];
+// En primera persona: la frase es de quien comparte («una parte de mí quiere…»).
+const quiere = (id: ArchetypeId) => ARCHETYPE_DRIVES_YO[id];
 
 /**
  * «Una parte de mí quiere A; otra, B; y otra, C.» Lo que quiere cada arquetipo ya lleva «y» y

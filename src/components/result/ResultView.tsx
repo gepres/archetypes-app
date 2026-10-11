@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { DIMENSIONS, getArchetype, getDimensionShortName, withDe } from '../../data/archetypesData';
 import { LIKERT_OPTIONS, QUESTIONS_DATA } from '../../data/questionsData';
+import { DILEMAS } from '../../data/dilemasData';
 import { TIE_MAX_GAP } from '../../services/scoringEngine';
 import { AnswerEvidence, ArchetypeId, AssessmentResult, GenderMode, DEFAULT_GENDER } from '../../types';
 import { DimensionBar } from '../common/DimensionBar';
@@ -30,18 +31,44 @@ interface ResultViewProps {
 
 const QUESTION_TEXT = new Map(QUESTIONS_DATA.map(q => [q.id, q.text]));
 const likertLabel = (value: number) => LIKERT_OPTIONS.find(o => o.value === value)?.label ?? '';
+const DILEMA = new Map(DILEMAS.map(d => [d.id, d]));
 
-/** Las afirmaciones que más pesaron, tal como la persona las respondió. */
-const EvidenceList: React.FC<{ items: AnswerEvidence[]; compact?: boolean }> = ({ items, compact }) => (
+/**
+ * Lo que explica por qué salió una figura, tal como la persona respondió: en el test por dilemas,
+ * la situación y lo que eligió; en el de frases (resultados antiguos), la afirmación y su respuesta.
+ */
+const EvidenceList: React.FC<{ items: AnswerEvidence[]; archetypeId: ArchetypeId; compact?: boolean }> = ({
+  items,
+  archetypeId,
+  compact,
+}) => (
   <ul className={compact ? 'space-y-1.5' : 'space-y-2.5'}>
-    {items.map(e => (
-      <li key={e.questionId} className="text-left">
-        <p className={`font-serif italic text-[#E5D7B7] leading-snug ${compact ? 'text-xs' : 'text-sm'}`}>
-          «{QUESTION_TEXT.get(e.questionId)}»
-        </p>
-        <p className="text-[10px] uppercase tracking-wider text-[#7B8880] mt-0.5">Respondiste: {likertLabel(e.value)}</p>
-      </li>
-    ))}
+    {items.map(e => {
+      const dilema = e.dilemaId ? DILEMA.get(e.dilemaId) : undefined;
+      if (dilema) {
+        const elegida = dilema.opciones.find(o => o.arquetipo === archetypeId);
+        if (!elegida) return null;
+        return (
+          <li key={dilema.id} className="text-left">
+            <p className="text-[11px] text-[#7B8880] leading-snug">{dilema.situacion}</p>
+            <p className={`font-serif italic text-[#E5D7B7] leading-snug mt-0.5 ${compact ? 'text-xs' : 'text-sm'}`}>
+              Elegiste: «{elegida.texto}»
+            </p>
+          </li>
+        );
+      }
+      if (e.questionId === undefined) return null;
+      return (
+        <li key={e.questionId} className="text-left">
+          <p className={`font-serif italic text-[#E5D7B7] leading-snug ${compact ? 'text-xs' : 'text-sm'}`}>
+            «{QUESTION_TEXT.get(e.questionId)}»
+          </p>
+          {e.value !== undefined && (
+            <p className="text-[10px] uppercase tracking-wider text-[#7B8880] mt-0.5">Respondiste: {likertLabel(e.value)}</p>
+          )}
+        </li>
+      );
+    })}
   </ul>
 );
 
@@ -174,7 +201,7 @@ export const ResultView: React.FC<ResultViewProps> = ({
                 {dominantEvidence.length > 0 && (
                   <div className="rounded-2xl border border-[#23332D] bg-[#101917]/80 p-4 space-y-3 text-left">
                     <p className="text-[11px] font-bold uppercase tracking-widest text-[#D6A84F]">Por qué te salió</p>
-                    <EvidenceList items={dominantEvidence} />
+                    <EvidenceList items={dominantEvidence} archetypeId={dominant.id} />
                   </div>
                 )}
 
@@ -286,7 +313,7 @@ export const ResultView: React.FC<ResultViewProps> = ({
                         {getDimensionShortName(arch.dimension)}
                         {aLaParConElSiguiente ? ' · a la par con el siguiente' : ''}
                       </p>
-                      {primera && <EvidenceList items={[primera]} compact />}
+                      {primera && <EvidenceList items={[primera]} archetypeId={item.archetypeId} compact />}
                     </div>
                   </div>
                 </button>
@@ -301,9 +328,14 @@ export const ResultView: React.FC<ResultViewProps> = ({
         <div className="space-y-1">
           <h3 className="font-serif text-xl font-bold text-[#F2EFE6]">Cómo se reparte tu mapa</h3>
           <p className="text-xs text-[#9DA79F] leading-relaxed max-w-2xl">
-            Cada número es tu afinidad con las afirmaciones de esa figura, en una escala de 10 a 98. No te compara con
-            otras personas ni mide lo que eres, y una diferencia de uno o dos puntos no significa nada.
-            {isQuick && ' Con el test rápido, algunas figuras se miden con pocas afirmaciones.'}
+            {result.instrumento === 'dilemas'
+              ? 'Cada número dice cuántas veces elegiste esa figura cuando aparecía entre las opciones, en una escala de 10 a 98.'
+              : 'Cada número es tu afinidad con las afirmaciones de esa figura, en una escala de 10 a 98.'}{' '}
+            No te compara con otras personas ni mide lo que eres, y una diferencia de uno o dos puntos no significa nada.
+            {isQuick &&
+              (result.instrumento === 'dilemas'
+                ? ' Con el test rápido, cada figura aparece solo cuatro veces: el completo afina más.'
+                : ' Con el test rápido, algunas figuras se miden con pocas afirmaciones.')}
           </p>
         </div>
 

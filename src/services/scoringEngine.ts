@@ -79,6 +79,33 @@ export function calculateAssessmentResult(
     });
   });
 
+  // El orden se decide con la puntuación sin redondear: redondeada, dos arquetipos distintos
+  // empatan a menudo y el desempate lo hacía el orden en que están declarados en los datos.
+  const exactScores = {} as Record<ArchetypeId, number>;
+  (Object.keys(rawScores) as ArchetypeId[]).forEach(id => {
+    const max = maxPossibleScores[id] || 1;
+    const min = max / 5;
+    exactScores[id] = ((rawScores[id] - min) / (max - min)) * 100;
+  });
+
+  return resultadoDesdePuntuaciones(exactScores, rawScores, testType, gender, id =>
+    collectEvidence(id, activeQuestions, answerMap)
+  );
+}
+
+/**
+ * Del mapa de puntuaciones (0–100 sin redondear) al resultado: ranking, dimensiones, perfil y
+ * «por qué te salió». Común a los dos tests: el de frases y el de dilemas solo difieren en cómo
+ * se calculan las puntuaciones.
+ */
+export function resultadoDesdePuntuaciones(
+  exactScores: Record<ArchetypeId, number>,
+  rawScores: Record<ArchetypeId, number>,
+  testType: 'full' | 'quick',
+  gender: GenderMode,
+  evidenciaDe: (id: ArchetypeId) => AnswerEvidence[],
+  instrumento?: 'dilemas'
+): AssessmentResult {
   // Calculate normalized percentage (0 - 100)
   const normalizedScores: Record<ArchetypeId, number> = {
     rey: 0,
@@ -101,17 +128,8 @@ export function calculateAssessmentResult(
     integrador: 0,
   };
 
-  // El orden se decide con la puntuación sin redondear: redondeada, dos arquetipos distintos
-  // empatan a menudo y el desempate lo hacía el orden en que están declarados en los datos.
-  const exactScores = {} as Record<ArchetypeId, number>;
-
-  (Object.keys(rawScores) as ArchetypeId[]).forEach(id => {
-    const max = maxPossibleScores[id] || 1;
-    const min = max / 5;
-    const scoreVal = rawScores[id];
-    exactScores[id] = ((scoreVal - min) / (max - min)) * 100;
-    const percentage = Math.round(exactScores[id]);
-    normalizedScores[id] = Math.max(10, Math.min(98, percentage));
+  (Object.keys(exactScores) as ArchetypeId[]).forEach(id => {
+    normalizedScores[id] = Math.max(10, Math.min(98, Math.round(exactScores[id])));
   });
 
   // Create ranking array with gender-adapted names
@@ -177,7 +195,7 @@ export function calculateAssessmentResult(
 
   const evidence: Partial<Record<ArchetypeId, AnswerEvidence[]>> = {};
   top3.forEach(item => {
-    evidence[item.archetypeId] = collectEvidence(item.archetypeId, activeQuestions, answerMap);
+    evidence[item.archetypeId] = evidenciaDe(item.archetypeId);
   });
 
   // Una sola lista de lo que menos apareció para todo (perfil, Mi Mapa, IA), con la regla del
@@ -198,6 +216,7 @@ export function calculateAssessmentResult(
     dimensionScores,
     compositeProfile,
     evidence,
+    ...(instrumento ? { instrumento } : {}),
   };
 }
 

@@ -172,9 +172,34 @@ export interface CompositeProfile {
 }
 
 /** Una respuesta que pesó en un arquetipo: el *por qué te salió*. */
+/**
+ * Una respuesta que explica por qué salió un arquetipo. Del test de frases (los resultados
+ * antiguos): la afirmación y lo que se respondió. Del test por dilemas: la situación en la que se
+ * eligió a ese arquetipo.
+ */
 export interface AnswerEvidence {
-  questionId: number;
-  value: number; // 1 a 5, lo que respondió la persona
+  questionId?: number;
+  value?: number; // 1 a 5, lo que respondió la persona
+  dilemaId?: string;
+}
+
+/** El test por dilemas a medias, para retomarlo donde se dejó. */
+export interface ProgresoTest {
+  instrumento: 'dilemas';
+  testType: 'full' | 'quick';
+  /** Las elecciones de las situaciones (los desempates no se guardan: se repiten al final). */
+  respuestas: RespuestaDilema[];
+  currentIndex: number;
+  /** Con ella se baraja el orden de las opciones: el mismo al volver. */
+  semilla: string;
+}
+
+/** Una elección en el test por dilemas. */
+export interface RespuestaDilema {
+  dilemaId: string;
+  arquetipo: ArchetypeId;
+  /** Solo en los desempates: entre qué figuras se eligió. */
+  entre?: ArchetypeId[];
 }
 
 export interface AssessmentResult {
@@ -192,6 +217,8 @@ export interface AssessmentResult {
   compositeProfile: CompositeProfile;
   /** Las respuestas que más pesaron en cada uno de los tres primeros. No existe en resultados antiguos. */
   evidence?: Partial<Record<ArchetypeId, AnswerEvidence[]>>;
+  /** Con qué test se hizo. Sin él, es el de frases de 1 a 5 (todos los resultados antiguos). */
+  instrumento?: 'dilemas';
 }
 
 export interface JournalEntry {

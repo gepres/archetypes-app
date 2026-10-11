@@ -236,7 +236,7 @@ describe('por qué te salió', () => {
           const q = QUESTIONS_DATA.find(x => x.id === e.questionId)!;
           const peso = q.weights.find(w => w.archetypeId === id)?.weight ?? 0;
           assert.ok(peso >= 2, `la ${e.questionId} no pesa lo bastante en ${id} (peso ${peso})`);
-          assert.ok(e.value >= 4);
+          assert.ok(e.value! >= 4);
           assert.equal(respuestas.find(x => x.questionId === e.questionId)!.value, e.value);
         }
       }
@@ -247,7 +247,7 @@ describe('por qué te salió', () => {
     const quick = QUESTIONS_DATA.filter(q => QUICK_QUESTION_IDS.includes(q.id)).map(q => ({ questionId: q.id, value: 5 }));
     const res = calculateAssessmentResult(quick, 'quick', 'male');
     for (const lista of Object.values(res.evidence ?? {})) {
-      for (const e of lista) assert.ok(QUICK_QUESTION_IDS.includes(e.questionId));
+      for (const e of lista) assert.ok(QUICK_QUESTION_IDS.includes(e.questionId!));
     }
   });
 

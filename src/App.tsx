@@ -220,7 +220,7 @@ export default function App() {
   };
 
   // El test se hace a pantalla completa, sin barra lateral, cabecera ni
-  // navegacion inferior. Responder sesenta afirmaciones con el menu de la app
+  // navegacion inferior. Responder treinta y seis situaciones con el menu de la app
   // alrededor invita a irse; sin el, lo unico que hay que hacer es contestar.
   // La bienvenida también es una página completa, no una ventana sobre la app.
   // Las dos se ponen encima de la app, que se queda montada y oculta debajo: si la sustituyeran,
