@@ -96,7 +96,9 @@ export const ShareResultImageModal: React.FC<ShareResultImageModalProps> = ({ re
 
   const contenido = contenidoParaCompartir(result, gender);
   const nombreFichero = `mapa-arquetipos-${comoNombreDeFichero(contenido.titulo)}-${formato}.png`;
-  const listo = !!postal && postal.clave === clave && !preparando && !fallo;
+  // Mientras el nombre escrito no se ha aplicado aún (los 350 ms de espera), la imagen que hay
+  // lleva el anterior: no se exporta, por si se acababa de borrar.
+  const listo = !!postal && postal.clave === clave && alias === nombre.trim() && !preparando && !fallo;
 
   const descargar = () => {
     if (!postal || !listo) return;

@@ -399,6 +399,9 @@ export async function generarPostal(datos: DatosPostal, tema: TemaPostal, semill
   await cargarFuentes();
   const ids = datos.contenido.figuras.slice(0, 3);
   const imagenes = new Map(await Promise.all(ids.map(async id => [id, await retrato(id)] as const)));
+  // Una postal sin uno de sus retratos no se da por buena: mejor que se pueda reintentar (V1) o
+  // que se comparta solo el texto (V2) que una imagen con una carta vacía.
+  if (ids.some(id => !imagenes.get(id))) throw new Error('No se pudo cargar algún retrato.');
 
   const { ancho, alto } = MEDIDAS_POSTAL[datos.formato];
   const lienzo = document.createElement('canvas');
