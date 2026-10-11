@@ -17,11 +17,11 @@ import {
 import { ARCHETYPE_VISUALS } from '../../data/archetypeImages';
 import { getArchetypeList, getArchetypeName, getArchetypeNarrative, withDe } from '../../data/archetypesData';
 import { getMapLead } from '../../services/scoringEngine';
-import { SenalCrisis, crisisInConversation, senalesDeCrisis } from '../../services/crisisSupport';
-import { apuntarCrisis, cerrarCrisisDelChat } from '../../services/crisisVigente';
+import { SenalCrisis, crisisInConversation, senalesDeCrisis, ultimoCierreDeCrisis } from '../../services/crisisSupport';
+import { apuntarCrisis, cerrarCrisisDelChat, cerrarCrisisRegistradas } from '../../services/crisisVigente';
 import { GeminiService } from '../../services/geminiService';
 import { AIProviderService, describirEstadoIA } from '../../services/aiProviderService';
-import { StorageService, insertarRespuesta, unirConversaciones } from '../../services/storageService';
+import { StorageService, conCierreDeCrisis, insertarRespuesta, unirConversaciones } from '../../services/storageService';
 import { suggestedPrompts } from '../../services/personalization';
 import { ArchetypeId, AssessmentResult, ChatMessage, GenderMode, UserProfile, DEFAULT_GENDER } from '../../types';
 import { ArchetypeIllustratedArtwork } from '../archetypes/ArchetypeIllustratedArtwork';
@@ -61,6 +61,11 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
   const [messages, setMessages] = useState<ChatMessage[]>(() =>
     StorageService.getChatMessages()
   );
+  // De quién es la conversación a la vista: de la cuenta abierta al montarse. Si otra pestaña
+  // cambia de cuenta, esta vista no escribe en la conversación de la otra (la app la vuelve a
+  // montar con la cuenta nueva).
+  const duenoDeLaVista = useRef(StorageService.getUserProfile().id);
+  const esDeLaCuentaAbierta = () => StorageService.getUserProfile().id === duenoDeLaVista.current;
   // La conversación vigente, al instante. El estado tarda un render en reflejar un cambio, y en
   // ese hueco pueden pasar cosas que la necesitan: una respuesta inmediata busca su pregunta, o
   // al volver a la pestaña se recarga la conversación y en el mismo momento se envía una
@@ -254,8 +259,13 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
     if (!text || isLoading || enviandoRef.current) return false;
     enviandoRef.current = true;
     // De quién es esta conversación. Si mientras llega la respuesta se cambia de cuenta, la
-    // respuesta no se guarda: sería guardar la conversación de una cuenta en otra.
+    // respuesta no se guarda: sería guardar la conversación de una cuenta en otra. Y si ya se
+    // cambió en otra pestaña, esta vista (de la cuenta anterior) no envía nada.
     const dueno = StorageService.getUserProfile().id;
+    if (dueno !== duenoDeLaVista.current) {
+      enviandoRef.current = false;
+      return false;
+    }
 
     const voz = personaOptions.find(p => p.id === persona) ?? selectedPersonaObj;
     const userMsg: ChatMessage = {
@@ -337,8 +347,14 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
   // señales anteriores a él.
   const senalesClave = JSON.stringify(senalesDeCrisis(messages));
   useEffect(() => {
-    for (const senal of JSON.parse(senalesClave) as SenalCrisis[]) void apuntarCrisis(userProfile.id, senal);
-  }, [userProfile.id, senalesClave]);
+    for (const senal of JSON.parse(senalesClave) as SenalCrisis[]) void apuntarCrisis(duenoDeLaVista.current, senal);
+  }, [senalesClave]);
+  // Y su último «Ya estoy a salvo», con su momento: si solo llegó a guardarse en el chat, que no
+  // se pierda al reiniciar la conversación.
+  const ultimoCierre = ultimoCierreDeCrisis(messages);
+  useEffect(() => {
+    if (ultimoCierre !== null) void cerrarCrisisRegistradas(duenoDeLaVista.current, ultimoCierre);
+  }, [ultimoCierre]);
 
   // Cómo se nombra la cabeza del mapa en la cabecera: sin inventar un dominante si no lo hay.
   const lead = currentResult ? getMapLead(currentResult, currentGender) : null;
@@ -597,9 +613,12 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
             type="button"
             onClick={() => {
               // En el registro común también (hasta este momento, el mismo que lleva la marca del
-              // chat), aunque el cierre no llegue a guardarse en el chat.
-              const { messages: cerrada, guardada } = cerrarCrisisDelChat(userProfile.id, momento =>
-                StorageService.closeCrisis(conversacionVigente(), momento)
+              // chat), aunque el cierre no llegue a guardarse en el chat. Si otra pestaña cambió
+              // de cuenta, se cierra la de esta conversación, y no se guarda en la de la otra.
+              const { messages: cerrada, guardada } = cerrarCrisisDelChat(duenoDeLaVista.current, momento =>
+                esDeLaCuentaAbierta()
+                  ? StorageService.closeCrisis(conversacionVigente(), momento)
+                  : { messages: conCierreDeCrisis(mensajesRef.current, momento), guardada: false }
               );
               if (guardada) reinicioSinGuardarRef.current = false;
               ponerMensajes(cerrada);

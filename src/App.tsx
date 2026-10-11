@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ArchetypeId, AssessmentResult, Challenge, DailyOracleCard, GenderMode, JournalEntry, UserProfile, DEFAULT_GENDER } from './types';
 import { borrarRegistroCrisis } from './services/crisisVigente';
 import { StorageService } from './services/storageService';
@@ -75,6 +75,27 @@ export default function App() {
   const [userProfile, setUserProfile] = useState<UserProfile>(() =>
     StorageService.getUserProfile()
   );
+  // Si otra pestaña cambia de cuenta o borra los datos, esta se pone al día: si no, seguiría
+  // enseñando (y escribiendo en) los datos de la cuenta anterior. El chat se vuelve a montar.
+  const cuentaRef = useRef(userProfile.id);
+  cuentaRef.current = userProfile.id;
+  useEffect(() => {
+    const alCambiar = (e: StorageEvent) => {
+      if (e.key !== null && e.key !== 'archetypes_user_profile') return;
+      const perfil = StorageService.getUserProfile();
+      setUserProfile(perfil);
+      if (perfil.id === cuentaRef.current && e.key !== null) return; // la misma cuenta: nada más
+      cuentaRef.current = perfil.id;
+      setChatEpoch(n => n + 1);
+      setCurrentResult(StorageService.getCurrentResult());
+      setHistory(StorageService.getAssessmentHistory());
+      setChallenges(StorageService.getChallenges());
+      setJournalEntries(StorageService.getJournalEntries());
+    };
+    window.addEventListener('storage', alCambiar);
+    return () => window.removeEventListener('storage', alCambiar);
+  }, []);
+
   // Al cambiar de cuenta, la consulta pendiente y la voz que la acompañaba se quedan con quien
   // las pidió (el chat de la nueva cuenta ya no la recibe, ver aiPeticion): aquí se olvidan.
   useEffect(() => {

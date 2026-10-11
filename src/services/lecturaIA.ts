@@ -4,7 +4,7 @@
  */
 import { AIProviderService } from './aiProviderService';
 import { CRISIS_FOLLOWUP, crisisInConversation } from './crisisSupport';
-import { cerrarCrisisRegistradas, crisisAbiertaEnRegistro, suscribirCrisis } from './crisisVigente';
+import { ILEGIBLE, cerrarCrisisRegistradas, crisisAbiertaEnRegistro, crisisDelChatGuardado, suscribirCrisis } from './crisisVigente';
 import { StorageService } from './storageService';
 import { crearLecturas } from './lecturaCore';
 
@@ -69,8 +69,13 @@ export async function declararASalvo(): Promise<void> {
   const dueno = StorageService.getUserProfile().id;
   const momento = new Date();
   try {
-    const chat = StorageService.getChatMessages();
-    if (crisisInConversation(chat)) StorageService.closeCrisis(chat, momento);
+    // Un chat guardado que no se puede leer bloquearía siempre (cuenta como abierta): se
+    // sustituye por uno legible con la marca de cierre. La app ya lo trataba como vacío.
+    if (crisisDelChatGuardado(localStorage.getItem(CHAT)) === ILEGIBLE) StorageService.closeCrisis([], momento);
+    else {
+      const chat = StorageService.getChatMessages();
+      if (crisisInConversation(chat)) StorageService.closeCrisis(chat, momento);
+    }
   } catch {
     // El registro se cierra igual.
   }

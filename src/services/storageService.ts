@@ -222,6 +222,14 @@ export const JOURNAL_PROMPTS = [
   "¿Cómo puedo honrar hoy la voz de mi arquetipo de desarrollo sin forzar una identidad ajena?",
 ];
 
+/** La conversación con la marca de «Ya estoy a salvo» al final, con su momento (sin guardarla). */
+export function conCierreDeCrisis(mensajes: ChatMessage[], momento: Date): ChatMessage[] {
+  return [
+    ...mensajes,
+    { id: `msg-safe-${momento.getTime()}`, role: 'model', content: CRISIS_CLOSED_NOTE, timestamp: momento.toISOString(), crisisClosed: true },
+  ];
+}
+
 export const StorageService = {
   // Current assessment result
   /**
@@ -445,10 +453,7 @@ export const StorageService = {
    * se pudo guardar, cerrar no lo borra. Devuelve también si se pudo guardar.
    */
   closeCrisis(actual?: ChatMessage[], momento: Date = new Date()): { messages: ChatMessage[]; guardada: boolean } {
-    const messages = [
-      ...(actual ?? this.getChatMessages()),
-      { id: `msg-safe-${momento.getTime()}`, role: 'model' as const, content: CRISIS_CLOSED_NOTE, timestamp: momento.toISOString(), crisisClosed: true },
-    ];
+    const messages = conCierreDeCrisis(actual ?? this.getChatMessages(), momento);
     return { messages, guardada: this.saveChatMessages(messages) };
   },
 
