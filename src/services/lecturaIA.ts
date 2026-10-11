@@ -3,7 +3,7 @@
  * y el almacenamiento del navegador. La lógica vive en lecturaCore.ts.
  */
 import { AIProviderService } from './aiProviderService';
-import { CRISIS_FOLLOWUP, crisisInConversation } from './crisisSupport';
+import { CRISIS_FOLLOWUP } from './crisisSupport';
 import { ILEGIBLE, cerrarCrisisRegistradas, crisisAbiertaEnRegistro, crisisDelChatGuardado, suscribirCrisis } from './crisisVigente';
 import { StorageService } from './storageService';
 import { crearLecturas } from './lecturaCore';
@@ -75,8 +75,10 @@ export async function declararASalvo(): Promise<void> {
     if (crisisDelChatGuardado(localStorage.getItem(CHAT)) === ILEGIBLE) {
       if (!StorageService.closeCrisis([], momento).guardada) localStorage.removeItem(CHAT);
     } else {
-      const chat = StorageService.getChatMessages();
-      if (crisisInConversation(chat)) StorageService.closeCrisis(chat, momento);
+      // La marca se guarda siempre, aunque el chat no tenga ya la crisis (se reinició la
+      // conversación y la señal sigue en el registro): si el registro no pudiera apuntar el
+      // cierre, el chat lo recuerda al recargar.
+      StorageService.closeCrisis(StorageService.getChatMessages(), momento);
     }
   } catch {
     // El registro se cierra igual.

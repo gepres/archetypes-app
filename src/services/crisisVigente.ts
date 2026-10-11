@@ -441,9 +441,13 @@ function almacenEnNavegador(): AlmacenCrisis | null {
         const todos = s.getAll();
         // Se escribe en la misma transacción en que se leyó.
         todos.onsuccess = () => {
-          const c = cambios((todos.result as RegistroCrisis[]).filter(x => x?.dueno === dueno));
-          for (const clave of c.quitar) s.delete(clave);
-          for (const r of c.poner) s.put(r);
+          try {
+            const c = cambios((todos.result as RegistroCrisis[]).filter(x => x?.dueno === dueno));
+            for (const clave of c.quitar) s.delete(clave);
+            for (const r of c.poner) s.put(r);
+          } catch {
+            todos.transaction?.abort(); // no se escribe nada (y la promesa se rechaza)
+          }
         };
         return todos;
       });
@@ -454,9 +458,13 @@ function almacenEnNavegador(): AlmacenCrisis | null {
       await enTransaccion('readwrite', s => {
         const todos = s.getAll();
         todos.onsuccess = () => {
-          const c = cambiosDeReinicio(todos.result as RegistroCrisis[], reinicio);
-          for (const clave of c.quitar) s.delete(clave);
-          for (const r of c.poner) s.put(r);
+          try {
+            const c = cambiosDeReinicio(todos.result as RegistroCrisis[], reinicio);
+            for (const clave of c.quitar) s.delete(clave);
+            for (const r of c.poner) s.put(r);
+          } catch {
+            todos.transaction?.abort();
+          }
         };
         return todos;
       });
