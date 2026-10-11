@@ -166,10 +166,11 @@ export const FirebaseService = {
     const auth = getFirebaseAuth();
     const cred = await signInWithEmailAndPassword(auth, email.trim(), pass);
 
-    // Try loading cloud profile
+    // El perfil guardado en la nube; quien entra con sus credenciales tiene cuenta, aunque ese
+    // perfil diga otra cosa (uno antiguo, de cuando era invitado).
     const existing = await this.loadUserProfileFromCloud(cred.user.uid);
     if (existing) {
-      return existing;
+      return { ...existing, isGuest: false };
     }
 
     const profile: UserProfile = {
@@ -191,9 +192,10 @@ export const FirebaseService = {
     provider.setCustomParameters({ prompt: 'select_account' });
     const cred = await signInWithPopup(auth, provider);
 
+    // Como al entrar con correo: quien entra con Google tiene cuenta.
     const existing = await this.loadUserProfileFromCloud(cred.user.uid);
     if (existing) {
-      return existing;
+      return { ...existing, isGuest: false };
     }
 
     const profile: UserProfile = {

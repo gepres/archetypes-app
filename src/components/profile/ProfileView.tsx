@@ -268,7 +268,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           className="w-full sm:w-auto min-h-[44px] px-5 py-3 bg-[#315C45] hover:bg-[#3D7055] text-[#F2EFE6] rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all shadow-md active:scale-95 shrink-0"
         >
           <LogIn className="w-4 h-4" />
-          <span>{userProfile.isGuest ? 'Iniciar Sesión / Registrar' : 'Cambiar de Cuenta'}</span>
+          <span>{userProfile.isGuest ? 'Iniciar Sesión / Registrar' : 'Gestionar cuenta'}</span>
         </button>
       </div>
       <Seccion id="nube" titulo="Sincronización en la nube" resumen="Respaldo automático de tus datos" icono={Cloud} abierta={abierta} onToggle={alternar}>

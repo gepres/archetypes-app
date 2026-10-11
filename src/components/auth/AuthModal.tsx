@@ -196,7 +196,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           </button>
         </div>
 
-        {/* Mode Selector Tabs */}
+        {/* Mode Selector Tabs: iniciar sesión y crear cuenta, solo sin sesión */}
+        {currentUser.isGuest && (
         <div className="flex border-b border-[#1E2A25] bg-[#0C1310] px-6 pt-3 gap-2">
           <button
             onClick={() => {
@@ -240,6 +241,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </button>
           )}
         </div>
+        )}
 
         {/* Content */}
         <div className="p-6 overflow-y-auto space-y-5">
@@ -266,7 +268,46 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </label>
           )}
 
-          {tab === 'switch' && savedAccounts.length > 0 ? (
+          {!currentUser.isGuest ? (
+            // Con sesión iniciada: la cuenta, las demás cuentas guardadas y cerrar sesión (abajo).
+            // Iniciar sesión y crear cuenta solo se ofrecen sin sesión.
+            <div className="space-y-4">
+              <div className="flex items-center gap-3 p-4 rounded-xl bg-[#121A17] border border-[#315C45]">
+                <span className="text-3xl shrink-0">{currentUser.avatarEmoji || '👑'}</span>
+                <div className="min-w-0">
+                  <p className="font-semibold text-sm text-[#F2EFE6] truncate">{currentUser.name}</p>
+                  <p className="text-xs text-[#9DA79F] truncate">{currentUser.email}</p>
+                </div>
+                <span className="ml-auto shrink-0 text-[10px] bg-[#315C45] text-[#86EFAC] px-2.5 py-0.5 rounded-full border border-[#437A5C] font-bold">
+                  Sesión iniciada
+                </span>
+              </div>
+              {savedAccounts.some(acc => acc.email.toLowerCase() !== currentUser.email.toLowerCase()) && (
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold text-[#C5CFC7]">Cambiar a otra cuenta guardada</p>
+                  {savedAccounts
+                    .filter(acc => acc.email.toLowerCase() !== currentUser.email.toLowerCase())
+                    .map(acc => (
+                      <button
+                        type="button"
+                        key={acc.id}
+                        onClick={() => handleSelectExistingAccount(acc)}
+                        className="w-full p-3 rounded-xl border bg-[#121A17]/60 border-[#23332D] hover:border-[#315C45] hover:bg-[#121A17] transition-all flex items-center gap-3 text-left"
+                      >
+                        <span className="text-2xl shrink-0">{acc.avatarEmoji || '👑'}</span>
+                        <span className="min-w-0">
+                          <span className="block font-semibold text-sm text-[#F2EFE6] truncate">{acc.name}</span>
+                          <span className="block text-xs text-[#9DA79F] truncate">{acc.email}</span>
+                        </span>
+                      </button>
+                    ))}
+                </div>
+              )}
+              <p className="text-[11px] text-[#7B8880] leading-relaxed">
+                Para entrar con otra cuenta o crear una nueva, primero cierra sesión.
+              </p>
+            </div>
+          ) : tab === 'switch' && savedAccounts.length > 0 ? (
             <div className="space-y-3">
               <p className="text-xs text-[#9DA79F]">
                 Selecciona una cuenta guardada para cambiar de perfil con tus datos y notas aisladas:
