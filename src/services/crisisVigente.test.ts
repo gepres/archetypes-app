@@ -3,6 +3,12 @@ import assert from 'node:assert/strict';
 import { crearCrisisVigente, crisisEnChatGuardado } from './crisisVigente';
 
 const esperar = (ms = 30) => new Promise(r => setTimeout(r, ms));
+/** Espera a que se cumpla (los mensajes entre pestañas tardan más con la máquina cargada). */
+async function hastaQue(cond: () => boolean, tope = 2000) {
+  const fin = Date.now() + tope;
+  while (!cond() && Date.now() < fin) await esperar(10);
+  return cond();
+}
 let n = 0;
 /** Pestañas de mentira que se hablan por un BroadcastChannel de verdad (Node lo tiene). */
 const pestana = (nombre: string) => crearCrisisVigente(() => new BroadcastChannel(`prueba-crisis-${nombre}`));
@@ -25,8 +31,7 @@ describe('crisis vigente entre pestañas', () => {
     a.marcar('cuenta', true);
     const b = pestana(canal);
     b.abierta('cuenta'); // se incorpora: pregunta
-    await esperar();
-    assert.equal(b.abierta('cuenta'), true);
+    assert.equal(await hastaQue(() => b.abierta('cuenta')), true);
     a.cerrar();
     b.cerrar();
   });
@@ -36,15 +41,14 @@ describe('crisis vigente entre pestañas', () => {
     const a = pestana(canal);
     const b = pestana(canal);
     a.marcar('cuenta', true);
-    await esperar();
+    assert.equal(await hastaQue(() => b.abierta('cuenta')), true);
     b.marcar('cuenta', false); // su conversación no tiene el mensaje (no se pudo guardar)
     await esperar();
     assert.equal(a.abierta('cuenta'), true);
     assert.equal(b.abierta('cuenta'), true);
     a.marcar('cuenta', false); // quien la tenía, la cierra
-    await esperar();
     assert.equal(a.abierta('cuenta'), false);
-    assert.equal(b.abierta('cuenta'), false);
+    assert.equal(await hastaQue(() => !b.abierta('cuenta')), true);
     a.cerrar();
     b.cerrar();
   });
@@ -56,11 +60,9 @@ describe('crisis vigente entre pestañas', () => {
     let avisos = 0;
     const dejar = b.suscribir(() => avisos++);
     a.marcar('cuenta', true);
-    await esperar();
-    assert.equal(avisos, 1);
+    assert.equal(await hastaQue(() => avisos === 1), true);
     a.marcar('cuenta', false);
-    await esperar();
-    assert.equal(avisos, 2);
+    assert.equal(await hastaQue(() => avisos === 2), true);
     dejar();
     a.cerrar();
     b.cerrar();
