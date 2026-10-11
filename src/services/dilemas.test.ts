@@ -15,7 +15,7 @@ import {
   ordenDilemas,
   puntuacionesDilemas,
 } from './dilemas';
-import { getMapLead } from './scoringEngine';
+import { adaptAssessmentResultToGender, getMapLead } from './scoringEngine';
 
 const IDS = ARCHETYPES_LIST.map(a => a.id as ArchetypeId);
 const DIM_DE = Object.fromEntries(
@@ -379,6 +379,30 @@ describe('el resultado', () => {
       for (const c of citas) {
         assert.ok(c.dilemaId && !c.dilemaId.startsWith('desempate'));
         assert.equal(respuestas.find(x => x.dilemaId === c.dilemaId)?.arquetipo, s.archetypeId);
+      }
+    }
+  });
+
+  it('regresión (Codex): «lo que menos apareció» se busca por puntuación, no por la última posición', () => {
+    // Con el orden por capas, las últimas no son las de menos puntos: aquí Rey, Padre y Creador
+    // tienen 10 y nunca se eligieron; con tres empatadas abajo no se recomienda ninguna.
+    const respuestas = dilemasDelTest('full').map(d => ({ dilemaId: d.id, arquetipo: barajar(d.opciones, `adversarial-220-${d.id}`)[0].arquetipo }));
+    const preferencia = ['cuidador', ...IDS.filter(id => id !== 'cuidador')] as ArchetypeId[];
+    const r = calcularResultadoDilemas(desempatar(respuestas, 'full', preferencia), 'full', 'male');
+    assert.deepEqual(r.developmentArchetypes.map(s => s.archetypeId), []);
+    assert.deepEqual(adaptAssessmentResultToGender(r, 'female').developmentArchetypes.map(s => s.archetypeId), []);
+  });
+
+  it('lo que se recomienda desarrollar nunca tiene más puntos que otra figura que no se recomienda', () => {
+    for (let s = 0; s < 300; s++) {
+      for (const tipo of ['quick', 'full'] as TipoTest[]) {
+        const respuestas = dilemasDelTest(tipo).map(d => ({ dilemaId: d.id, arquetipo: barajar(d.opciones, `minimos-${s}-${d.id}`)[0].arquetipo }));
+        const r = calcularResultadoDilemas(desempatar(respuestas, tipo, barajar(IDS, `mp-${s}`)), tipo, 'male');
+        for (const res of [r, adaptAssessmentResultToGender(r, 'universal')]) {
+          const dev = new Set(res.developmentArchetypes.map(x => x.archetypeId));
+          const maxDev = Math.max(...res.ranking.filter(x => dev.has(x.archetypeId)).map(x => x.normalizedScore));
+          for (const x of res.ranking) if (!dev.has(x.archetypeId)) assert.ok(!dev.size || x.normalizedScore >= maxDev, `caso ${s} ${tipo}: ${x.archetypeId} (${x.normalizedScore}) tiene menos que lo recomendado`);
+        }
       }
     }
   });

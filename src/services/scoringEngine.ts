@@ -405,7 +405,10 @@ function generateCompositeProfile(
   const deIds = (ids: ArchetypeId[] = []) =>
     ids.map(id => ranking.find(s => s.archetypeId === id)).filter((s): s is ArchetypeScore => !!s);
   const [first, second, third] = ranking;
-  const last = ranking[ranking.length - 1];
+  // Lo más bajo se busca por puntuación, no por posición: en el test por dilemas el orden sale de
+  // las comparaciones, y la última posición no tiene por qué ser la de menos puntos.
+  const porPuntuacion = [...ranking].sort((x, y) => y.normalizedScore - x.normalizedScore);
+  const last = porPuntuacion[porPuntuacion.length - 1];
   const a = getArchetype(first.archetypeId, gender);
   const b = getArchetype(second.archetypeId, gender);
   const c = getArchetype(third.archetypeId, gender);
@@ -417,7 +420,7 @@ function generateCompositeProfile(
   // distinguen: se toma desde abajo mientras cada una se separe de la siguiente. Si abajo hay
   // tres o más empatadas, no se recomienda ninguna.
   const lowestIds: ArchetypeId[] = [];
-  const grupoDe = (s: ArchetypeScore) => ranking.filter(x => Math.abs(x.normalizedScore - s.normalizedScore) <= TIE_MAX_GAP);
+  const grupoDe = (s: ArchetypeScore) => porPuntuacion.filter(x => Math.abs(x.normalizedScore - s.normalizedScore) <= TIE_MAX_GAP);
   // Lo elegido tiene que quedar cerrado: ninguna elegida puede estar empatada con una que se
   // queda fuera (con 10, 11 y 12, elegir 10 y 11 dejaría fuera a 12, empatada con 11).
   const cerrado = (ids: ArchetypeId[]) =>
@@ -426,7 +429,7 @@ function generateCompositeProfile(
   if (grupoFinal.length <= 2 && cerrado(grupoFinal)) {
     lowestIds.push(...grupoFinal);
     if (lowestIds.length === 1) {
-      const siguiente = ranking[ranking.length - 2].archetypeId;
+      const siguiente = porPuntuacion[porPuntuacion.length - 2].archetypeId;
       if (cerrado([...lowestIds, siguiente])) lowestIds.push(siguiente);
     }
   }
@@ -445,7 +448,7 @@ function generateCompositeProfile(
     : '';
 
   // Si todo el mapa cabe en unos pocos puntos y nadie se despega, no se inventa una identidad.
-  const range = first.normalizedScore - last.normalizedScore;
+  const range = porPuntuacion[0].normalizedScore - last.normalizedScore;
   if (!cabeza && range <= FLAT_MAX_RANGE && first.normalizedScore - second.normalizedScore <= FLAT_MAX_LEAD) {
     return {
       archetypeKey,
