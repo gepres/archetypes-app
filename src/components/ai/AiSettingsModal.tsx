@@ -22,6 +22,7 @@ import {
 } from '../../types';
 import {
   AIProviderService,
+  DEFAULT_COURTESY_DAILY_LIMIT,
   PROVIDER_OPTIONS,
 } from '../../services/aiProviderService';
 import { ModalBase } from '../common/ModalBase';
@@ -57,6 +58,10 @@ export const AiSettingsModal: React.FC<AiSettingsModalProps> = ({
 
   const usageStatus = AIProviderService.getUsageStatus();
   const currentProviderOpt = PROVIDER_OPTIONS[activeTab];
+  // La clave de cortesía del proveedor que se está mirando, y su cupo (común a todos).
+  const conCortesia = activeTab !== 'local' && Boolean(AIProviderService.getAppKeyFor(activeTab));
+  const cortesiaMax = settings.courtesyQuota?.maxDaily || DEFAULT_COURTESY_DAILY_LIMIT;
+  const cortesiaRestante = Math.max(0, cortesiaMax - (settings.courtesyQuota?.usedToday || 0));
 
   const handleProviderSelect = (prov: AIProviderId) => {
     setActiveTab(prov);
@@ -274,17 +279,15 @@ export const AiSettingsModal: React.FC<AiSettingsModalProps> = ({
                 >
                   <span className="text-2xl mb-1">{opt.icon}</span>
                   <span className="text-xs font-medium line-clamp-1">{opt.name}</span>
-                  {provId === 'openrouter' && (
-                    <span className="text-[9px] text-amber-400/80 font-mono mt-0.5">Requiere Clave</span>
-                  )}
-                  {provId === 'gemini' && (
-                    <span className="text-[9px] text-amber-400/80 font-mono mt-0.5">Requiere Clave</span>
-                  )}
-                  {provId === 'openai' && (
-                    <span className="text-[9px] text-neutral-500 font-mono mt-0.5">Requiere Clave</span>
-                  )}
-                  {provId === 'local' && (
-                    <span className="text-[9px] text-emerald-400/80 font-mono mt-0.5">100% Offline</span>
+                  {/* OpenRouter y Gemini traen una clave de cortesía: no «requieren» la tuya. */}
+                  {provId === 'local' ? (
+                    <span className="text-[10px] text-emerald-400/90 mt-0.5">Sin conexión</span>
+                  ) : AIProviderService.getAppKeyFor(provId) ? (
+                    <span className="text-[10px] text-emerald-400/90 mt-0.5 inline-flex items-center gap-1">
+                      <Gift className="w-3 h-3" /> Incluido
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-amber-400/80 mt-0.5">Requiere tu clave</span>
                   )}
                 </button>
               );
@@ -316,18 +319,36 @@ export const AiSettingsModal: React.FC<AiSettingsModalProps> = ({
             )}
           </div>
 
-          {/* Mode selection for OpenRouter and Gemini */}
-          {/* Campo de clave: obligatorio para todos los proveedores remotos */}
+          {/* La clave de cortesía: OpenRouter y Gemini se pueden usar sin configurar nada */}
+          {activeTab !== 'local' && conCortesia && (
+            <div className="p-3 rounded-lg bg-emerald-950/30 border border-emerald-800/40 flex items-start gap-2.5">
+              <Gift className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+              <p className="text-[11px] text-neutral-300 leading-relaxed">
+                <span className="font-semibold text-emerald-300">Clave de cortesía incluida.</span> Puedes usar{' '}
+                {currentProviderOpt.name} sin configurar nada: la app trae una clave de cortesía con {cortesiaMax}{' '}
+                consultas al día (hoy te quedan {cortesiaRestante}). Si pegas tu propia clave, conversas con tu cuenta y
+                sin ese límite.
+              </p>
+            </div>
+          )}
+
+          {/* Campo de clave: la propia (opcional si hay de cortesía) */}
           {activeTab !== 'local' && (
             <div className="space-y-1.5 pt-1">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <label className="text-xs font-medium text-neutral-300 flex items-center gap-1.5">
                   <Key className="w-3.5 h-3.5 text-amber-400" />
-                  Pega tu API Key personal de {currentProviderOpt.name}
+                  {conCortesia
+                    ? `Tu propia clave de ${currentProviderOpt.name} (opcional)`
+                    : `Pega tu clave de ${currentProviderOpt.name}`}
                 </label>
                 {getCurrentKey(activeTab) ? (
                   <span className="text-[10px] text-emerald-400 bg-emerald-950/60 border border-emerald-800/40 px-2 py-0.5 rounded font-medium">
-                    ✓ Clave configurada (Ilimitado)
+                    ✓ Clave propia · sin límite
+                  </span>
+                ) : conCortesia ? (
+                  <span className="text-[10px] text-emerald-300 bg-emerald-950/40 border border-emerald-800/40 px-2 py-0.5 rounded">
+                    Usando la de cortesía
                   </span>
                 ) : (
                   <span className="text-[10px] text-amber-300 bg-amber-950/60 border border-amber-800/40 px-2 py-0.5 rounded">
@@ -387,11 +408,11 @@ export const AiSettingsModal: React.FC<AiSettingsModalProps> = ({
                     }`}
                   >
                     <div>
-                      <div className="text-xs font-semibold flex items-center gap-2">
+                      <div className="text-xs font-semibold flex flex-wrap items-center gap-x-2 gap-y-1">
                         {mod.name}
                         {mod.recommended && (
-                          <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-400/20 text-amber-300 border border-amber-400/30">
-                            Recomendado por defecto
+                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-400/20 text-amber-300 border border-amber-400/30 whitespace-nowrap">
+                            Recomendado
                           </span>
                         )}
                       </div>

@@ -58,30 +58,38 @@ export const PROVIDER_OPTIONS: Record<AIProviderId, ProviderOption> = {
   openrouter: {
     id: 'openrouter',
     name: 'OpenRouter',
-    tagline: 'Acceso a múltiples modelos de vanguardia (Llama 3.3, Claude, DeepSeek, Gemini)',
+    tagline: 'Varios modelos actuales en un solo lugar: Claude, Gemini, GPT, DeepSeek y Llama.',
     icon: '🌐',
-    defaultModel: 'meta-llama/llama-3.3-70b-instruct',
+    // Modelos comprobados en octubre de 2026 (lista pública de OpenRouter y una llamada de
+    // prueba con la clave de cortesía). Si uno se retira, los ajustes guardados pasan al
+    // recomendado (ver normalizeSettings).
+    defaultModel: 'anthropic/claude-haiku-5.5',
     availableModels: [
       {
-        id: 'meta-llama/llama-3.3-70b-instruct',
-        name: 'Llama 3.3 70B Instruct (Recomendado)',
-        description: 'Modelo potente y equilibrado para análisis y reflexiones profundas.',
+        id: 'anthropic/claude-haiku-5.5',
+        name: 'Claude Haiku 5.5',
+        description: 'Tono cálido, preciso y empático. El más económico de la lista.',
         recommended: true,
       },
       {
-        id: 'google/gemini-2.5-flash',
-        name: 'Gemini 2.5 Flash',
-        description: 'Ultra veloz y excelente comprensión de contextos en español.',
+        id: 'google/gemini-3.8-flash',
+        name: 'Gemini 3.8 Flash',
+        description: 'Rápido y muy bueno en español, con buen razonamiento.',
       },
       {
-        id: 'deepseek/deepseek-chat',
-        name: 'DeepSeek V3 Chat',
-        description: 'Alta agudeza filosófica y razonamiento socrático.',
+        id: 'openai/gpt-6-luna',
+        name: 'GPT-6 Luna',
+        description: 'Versátil y económico, con respuestas claras y ordenadas.',
       },
       {
-        id: 'anthropic/claude-3.5-haiku',
-        name: 'Claude 3.5 Haiku',
-        description: 'Tono reflexivo, sobrio y empático de alta precisión.',
+        id: 'deepseek/deepseek-v4.1-flash',
+        name: 'DeepSeek V4.1 Flash',
+        description: 'Razonamiento cuidadoso para preguntas que piden pensar despacio.',
+      },
+      {
+        id: 'meta-llama/llama-4-maverick',
+        name: 'Llama 4 Maverick',
+        description: 'Modelo abierto de Meta, equilibrado y directo.',
       },
     ],
     keyPlaceholder: 'sk-or-v1-...',
@@ -90,25 +98,26 @@ export const PROVIDER_OPTIONS: Record<AIProviderId, ProviderOption> = {
   gemini: {
     id: 'gemini',
     name: 'Google Gemini',
-    tagline: 'Modelos de última generación de Google con alta capacidad de razonamiento',
+    tagline: 'Los modelos Gemini de Google, directamente desde Google AI Studio.',
     icon: '🔮',
-    defaultModel: 'gemini-2.5-flash',
+    // Comprobados en octubre de 2026 con la clave de cortesía (los Pro no entran en su cupo).
+    defaultModel: 'gemini-3.8-flash',
     availableModels: [
       {
-        id: 'gemini-2.5-flash',
-        name: 'Gemini 2.5 Flash',
-        description: 'Excelente balance entre velocidad, inteligencia y razonamiento reflexivo.',
+        id: 'gemini-3.8-flash',
+        name: 'Gemini 3.8 Flash',
+        description: 'El Flash más reciente: rápido, muy bueno en español y con buen razonamiento.',
         recommended: true,
       },
       {
-        id: 'gemini-2.5-pro',
-        name: 'Gemini 2.5 Pro',
-        description: 'Máxima profundidad para análisis arquetípico exhaustivo.',
+        id: 'gemini-3.5-flash-lite',
+        name: 'Gemini 3.5 Flash-Lite',
+        description: 'El más ligero y rápido, para respuestas breves.',
       },
       {
-        id: 'gemini-2.0-flash',
-        name: 'Gemini 2.0 Flash',
-        description: 'Respuesta inmediata de baja latencia.',
+        id: 'gemini-2.5-flash',
+        name: 'Gemini 2.5 Flash',
+        description: 'Estable y probado, de la generación anterior.',
       },
     ],
     keyPlaceholder: 'AIzaSy...',
@@ -117,20 +126,20 @@ export const PROVIDER_OPTIONS: Record<AIProviderId, ProviderOption> = {
   openai: {
     id: 'openai',
     name: 'OpenAI / ChatGPT',
-    tagline: 'Modelos GPT de OpenAI para estructuración y guía personal',
+    tagline: 'Los modelos GPT de OpenAI, con tu propia clave.',
     icon: '🤖',
-    defaultModel: 'gpt-4o-mini',
+    defaultModel: 'gpt-6-luna',
     availableModels: [
       {
-        id: 'gpt-4o-mini',
-        name: 'GPT-4o Mini',
-        description: 'Económico, rápido y muy certero en respuestas estructuradas.',
+        id: 'gpt-6-luna',
+        name: 'GPT-6 Luna',
+        description: 'Económico y rápido, con respuestas claras y ordenadas.',
         recommended: true,
       },
       {
-        id: 'gpt-4o',
-        name: 'GPT-4o',
-        description: 'El modelo insignia con la mayor sofisticación verbal.',
+        id: 'gpt-6-sol',
+        name: 'GPT-6 Sol',
+        description: 'El más capaz de OpenAI, para conversaciones más profundas.',
       },
     ],
     keyPlaceholder: 'sk-...',
@@ -201,6 +210,16 @@ export const AIProviderService = {
 
   normalizeSettings(settings: Partial<AISettings>): AISettings {
     const defaults = this.getDefaultSettings();
+    // Un modelo guardado que ya no se ofrece (se retiró, como Claude 3.5 Haiku) daría error al
+    // conversar: pasa al recomendado de su proveedor.
+    const vigente = (provider: 'openrouter' | 'gemini' | 'openai', id: string | undefined) =>
+      id && PROVIDER_OPTIONS[provider].availableModels.some(m => m.id === id) ? id : undefined;
+    settings = {
+      ...settings,
+      openrouterModel: vigente('openrouter', settings.openrouterModel),
+      geminiModel: vigente('gemini', settings.geminiModel),
+      openaiModel: vigente('openai', settings.openaiModel),
+    };
     const today = fechaLocal();
 
     const quota = settings.courtesyQuota || defaults.courtesyQuota;
@@ -466,7 +485,7 @@ ${resultContext}
         ];
 
         const fallbackModels = Array.from(
-          new Set([model, 'deepseek/deepseek-chat', 'mistralai/mistral-small-24b-instruct-2501'])
+          new Set([model, 'anthropic/claude-haiku-5.5', 'openai/gpt-6-luna'])
         ).slice(0, 3);
 
         const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -650,7 +669,7 @@ ${resultContext}
         }
 
         const fallbackModels = Array.from(
-          new Set([model, 'deepseek/deepseek-chat', 'mistralai/mistral-small-24b-instruct-2501'])
+          new Set([model, 'anthropic/claude-haiku-5.5', 'openai/gpt-6-luna'])
         ).slice(0, 3);
 
         const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
