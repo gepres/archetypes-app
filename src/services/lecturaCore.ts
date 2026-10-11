@@ -62,12 +62,16 @@ export function crearLecturas(deps: DependenciasLectura) {
     invalidada: true,
   };
 
+  const cambiada: RespuestaLectura = {
+    ok: false,
+    motivo: 'La cuenta o sus datos cambiaron mientras llegaba la lectura, así que no se muestra.',
+    invalidada: true,
+  };
+
   /** Lo que se entrega al llegar la respuesta, si todo sigue en pie: crisis, cuenta y resultado. */
   const alEntregar = (r: { ok: true; texto: string }, dueno: string, resultId: string): RespuestaLectura => {
     if (deps.crisisAbierta()) return cuidado;
-    if (deps.dueno() !== dueno || !deps.resultadoExiste(resultId)) {
-      return { ok: false, motivo: 'La cuenta o sus datos cambiaron mientras llegaba la lectura, así que no se muestra.', invalidada: true };
-    }
+    if (deps.dueno() !== dueno || !deps.resultadoExiste(resultId)) return cambiada;
     return r;
   };
 
@@ -103,6 +107,9 @@ export function crearLecturas(deps: DependenciasLectura) {
         if (!prompt) return { ok: false, motivo: 'La lectura personal está disponible para el test por situaciones.' };
         const maxDaily = deps.maxDaily();
         const respuesta = await deps.enviar(prompt, result, gender);
+        // Al llegar, antes de nada (también si falló la conexión): crisis, cuenta y resultado.
+        if (deps.crisisAbierta()) return cuidado;
+        if (deps.dueno() !== dueno || !deps.resultadoExiste(result.id)) return cambiada;
         // Si respondió el mapa simbólico en vez de una IA, no hay lectura: presentarla como
         // «de IA» sería engañoso.
         if (respuesta.provider === 'local') return { ok: false, motivo: motivoSinLectura(respuesta, maxDaily) };

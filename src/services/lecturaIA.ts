@@ -3,12 +3,14 @@
  * y el almacenamiento del navegador. La lógica vive en lecturaCore.ts.
  */
 import { AIProviderService } from './aiProviderService';
-import { CRISIS_FOLLOWUP, crisisInConversation } from './crisisSupport';
-import { crisisMarcada } from './crisisVigente';
+import { CRISIS_FOLLOWUP } from './crisisSupport';
+import { crisisEnChatGuardado, crisisMarcada } from './crisisVigente';
 import { StorageService } from './storageService';
 import { crearLecturas } from './lecturaCore';
 
 export type { RespuestaLectura } from './lecturaCore';
+// Para que una lectura a la vista se retire si se abre una crisis (también en otra pestaña).
+export { suscribirCrisis } from './crisisVigente';
 
 export const lecturas = crearLecturas({
   // Sin el perfil de la persona: su nombre no hace falta para leer un mapa.
@@ -16,12 +18,13 @@ export const lecturas = crearLecturas({
   maxDaily: () => AIProviderService.getUsageStatus().maxDaily,
   dueno: () => StorageService.getUserProfile().id,
   resultadoExiste: id => StorageService.getCurrentResult()?.id === id || StorageService.getAssessmentHistory().some(r => r.id === id),
-  // Lo que el chat dice ahora (aunque no se haya podido guardar) o lo guardado. Si no se puede
-  // saber, se trata como abierta: mejor no entregar una interpretación que entregarla mal.
+  // Lo que dicen los chats abiertos ahora (aunque no se haya podido guardar) o lo guardado. Se
+  // lee el chat guardado tal cual (no con getChatMessages, que ante un error devuelve una
+  // conversación vacía): si no se puede leer, se trata como abierta.
   crisisAbierta: () => {
     try {
       const dueno = StorageService.getUserProfile().id;
-      return crisisMarcada(dueno) || crisisInConversation(StorageService.getChatMessages());
+      return crisisMarcada(dueno) || crisisEnChatGuardado(localStorage.getItem('archetypes_chat_messages'));
     } catch {
       return true;
     }

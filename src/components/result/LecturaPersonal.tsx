@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Loader2, RotateCcw, Sparkles } from 'lucide-react';
-import { RespuestaLectura, estadoLectura, lecturas } from '../../services/lecturaIA';
+import { RespuestaLectura, estadoLectura, lecturas, suscribirCrisis } from '../../services/lecturaIA';
 import { AssessmentResult, GenderMode } from '../../types';
 import { MarkdownRenderer } from '../common/MarkdownRenderer';
 
@@ -22,6 +22,10 @@ export const LecturaPersonal: React.FC<LecturaPersonalProps> = ({ result, gender
   // Cada petición lleva su número: solo la vigente toca la pantalla. Al cambiar de resultado o de
   // perspectiva, o al salir, ninguna respuesta vieja la toca (aunque se guarde bajo su clave).
   const peticion = useRef(0);
+  // Cambia cuando se abre o se cierra una crisis (también en otra pestaña): se vuelve a decidir
+  // qué se muestra.
+  const [revision, setRevision] = useState(0);
+  useEffect(() => suscribirCrisis(() => setRevision(n => n + 1)), []);
 
   const aplicar = (r: RespuestaLectura, anterior: string | null) => {
     if (!r.ok) {
@@ -63,7 +67,7 @@ export const LecturaPersonal: React.FC<LecturaPersonalProps> = ({ result, gender
     return () => {
       peticion.current++;
     };
-  }, [clave]);
+  }, [clave, revision]);
 
   const { disponible, aviso } = estadoLectura();
 

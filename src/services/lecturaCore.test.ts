@@ -143,6 +143,29 @@ describe('lectura con IA: cuidados', () => {
     assert.equal(!res2.ok && res2.invalidada, undefined);
   });
 
+  it('regresión (Codex): si la conexión falla al llegar, también se miran crisis, cuenta y resultado', async () => {
+    const casos: [string, (e: { crisis: boolean; dueno: string; existentes: Set<string> }) => void, (r: unknown) => boolean][] = [
+      ['crisis', e => { e.crisis = true; }, r => (r as { cuidado?: boolean }).cuidado === true],
+      ['cuenta', e => { e.dueno = 'cuenta-2'; }, r => (r as { invalidada?: boolean }).invalidada === true],
+      ['borrado', e => { e.existentes.clear(); }, r => (r as { invalidada?: boolean }).invalidada === true],
+    ];
+    for (const [nombre, cambiar, esperado] of casos) {
+      let soltar: () => void = () => {};
+      const f = falsas({
+        enviar: () => new Promise(resolve => {
+          soltar = () => resolve({ text: ['reflexión local', '---', '*No pude conectar.*'].join('\n'), modelUsed: 'Fallback Local', provider: 'local' });
+        }),
+      });
+      const r = resultado(`fallo-${nombre}`);
+      f.estado.existentes.add(r.id);
+      const p = crearLecturas(f.deps).pedir(r, 'male');
+      await tick();
+      cambiar(f.estado);
+      soltar();
+      assert.ok(esperado(await p), nombre);
+    }
+  });
+
   it('expone si hay una crisis abierta y lo que se muestra en su lugar', () => {
     const f = falsas();
     const l = crearLecturas(f.deps);

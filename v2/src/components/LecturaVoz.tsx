@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Loader2, RotateCcw, Sparkles, Volume2 } from 'lucide-react';
-import { estadoLectura, lecturas, parrafosLectura, textoParaVoz } from '../lib/domain';
+import { estadoLectura, lecturas, parrafosLectura, suscribirCrisis, textoParaVoz } from '../lib/domain';
 import type { AssessmentResult, ParrafoLectura, RespuestaLectura } from '../lib/domain';
 import { callar, decir } from '../lib/voice';
 
@@ -50,6 +50,17 @@ export const LecturaVoz: React.FC<LecturaVozProps> = ({ resultado, silencio }) =
   // El silencio de ahora, no el de cuando se pidió: activarlo durante la espera tiene que valer.
   const silencioRef = useRef(silencio);
   silencioRef.current = silencio;
+  // Cambia cuando se abre o se cierra una crisis (también en otra pestaña): se vuelve a decidir
+  // qué se muestra, y si se abrió, la voz se calla al instante.
+  const [revision, setRevision] = useState(0);
+  useEffect(
+    () =>
+      suscribirCrisis(() => {
+        if (lecturas.crisisAbierta()) callar();
+        setRevision(n => n + 1);
+      }),
+    []
+  );
 
   const aplicar = (r: RespuestaLectura, anterior: string | null, leer: boolean) => {
     if (!r.ok) {
@@ -93,7 +104,7 @@ export const LecturaVoz: React.FC<LecturaVozProps> = ({ resultado, silencio }) =
     return () => {
       peticion.current++;
     };
-  }, [clave]);
+  }, [clave, revision]);
 
   const { disponible, aviso } = estadoLectura();
 
