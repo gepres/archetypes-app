@@ -28,7 +28,9 @@ function almacenEnMemoria() {
     cambiar: async (dueno, cambios) => {
       await pausa();
       if (fallo.escribir) throw new Error('no se puede escribir');
-      for (const r of cambios([...datos.values()].filter(x => x.dueno === dueno).map(x => ({ ...x })))) datos.set(r.clave, { ...r });
+      const c = cambios([...datos.values()].filter(x => x.dueno === dueno).map(x => ({ ...x })));
+      for (const r of c.poner) datos.set(r.clave, { ...r });
+      for (const clave of c.quitar) datos.delete(clave);
     },
     vaciar: async reinicio => {
       await pausa();
@@ -279,6 +281,69 @@ describe('registro de crisis', () => {
     }
   });
 
+  it('regresión (Codex): un registro que no se entiende (de otra versión) cuenta como abierta, y «Ya estoy a salvo» lo limpia', async () => {
+    const { almacen, datos } = almacenEnMemoria();
+    const r = crearRegistroCrisis(almacen);
+    // Como los de la versión anterior: sin tipo ni momento.
+    datos.set('cuenta:m0', { clave: 'cuenta:m0', dueno: 'cuenta', abierta: false, fecha: 'x' } as unknown as RegistroCrisis);
+    assert.equal(await r.abierta('cuenta', null), true);
+    await r.abrir('cuenta', senal('m1', 100));
+    assert.equal(await r.abierta('cuenta', chatCon(deCrisis('m1', 100))), true);
+    await r.cerrarTodas('cuenta', 200);
+    assert.equal(datos.has('cuenta:m0'), false);
+    assert.equal(await r.abierta('cuenta', null), false);
+    await r.abrir('cuenta', senal('m2', 300));
+    assert.equal(await r.abierta('cuenta', null), true);
+  });
+
+  it('regresión (Codex): un aviso de reinicio que llega tarde no borra una señal posterior al reinicio', async () => {
+    const { almacen, fallo } = almacenEnMemoria();
+    const { pestana, cerrarTodo } = conCanal();
+    try {
+      const a = pestana(almacen);
+      const b = pestana(almacen);
+      await a.abierta('cuenta', null);
+      await b.abierta('cuenta', null);
+      fallo.escribir = true;
+      // B recibe una señal (posterior al reinicio que está a punto de hacer A) y no la puede apuntar.
+      await b.abrir('cuenta', senal('m2', Date.now() + 60_000));
+      await hastaQue(() => a.abierta('cuenta', null));
+      await a.olvidarTodo(); // el reinicio de A, anterior a la señal; su aviso llega a B después
+      await new Promise(r => setTimeout(r, 30));
+      assert.equal(await b.abierta('cuenta', null), true, 'B la conserva');
+      assert.equal(await a.abierta('cuenta', null), true, 'y A también');
+    } finally {
+      cerrarTodo();
+    }
+  });
+
+  it('regresión (Codex): un cierre que solo llegó al chat se apunta en el registro, y no se pierde al reiniciar la conversación', async () => {
+    const { almacen } = almacenEnMemoria();
+    await crearRegistroCrisis(almacen).abrir('cuenta', senal('m1', 100));
+    // El cierre llegó al chat pero no al registro, y la pestaña que lo hizo ya se cerró.
+    const b = crearRegistroCrisis(almacen);
+    assert.equal(await b.abierta('cuenta', chatCon(deCrisis('m1', 100), cierreEnChat(200))), false);
+    // Se reinicia la conversación: ya no está la marca del chat, pero el registro la aprendió.
+    assert.equal(await crearRegistroCrisis(almacen).abierta('cuenta', null), false);
+  });
+
+  it('cuando una pestaña nueva pregunta, las demás reintentan apuntar lo que no pudieron', async () => {
+    const { almacen, fallo } = almacenEnMemoria();
+    const { pestana, cerrarTodo } = conCanal();
+    try {
+      const a = pestana(almacen);
+      fallo.escribir = true;
+      await a.abrir('cuenta', senal('m1', 100)); // A no la puede apuntar, y nadie más comprueba en A
+      fallo.escribir = false; // el registro vuelve a funcionar
+      const c = pestana(almacen); // C se abre: pregunta, y A, al oírlo, la apunta
+      assert.equal(await c.abierta('cuenta', null), true);
+      await hastaQue(() => crearRegistroCrisis(almacen).abierta('cuenta', null));
+      assert.equal(await crearRegistroCrisis(almacen).abierta('cuenta', null), true, 'consta ya en el registro');
+    } finally {
+      cerrarTodo();
+    }
+  });
+
   it('regresión (Codex): reiniciar los datos olvida el registro y lo que sabían las pestañas', async () => {
     const { almacen, fallo } = almacenEnMemoria();
     const { pestana, cerrarTodo } = conCanal();
@@ -309,7 +374,11 @@ describe('registro de crisis', () => {
 
   it('sin registro (sin IndexedDB) se mira lo de esta pestaña y el chat guardado', async () => {
     const r = crearRegistroCrisis(null);
+    assert.equal(await r.abierta('cuenta', null), false);
     assert.equal(await r.abierta('cuenta', chatCon(deCrisis('m1', 100))), true);
+    // Lo aprendido del chat se recuerda aunque se reinicie la conversación: lo cierra «Ya estoy a salvo».
+    assert.equal(await r.abierta('cuenta', null), true);
+    await r.cerrarTodas('cuenta', 150);
     assert.equal(await r.abierta('cuenta', null), false);
     await r.abrir('cuenta', senal('m2', 200));
     assert.equal(await r.abierta('cuenta', null), true);
