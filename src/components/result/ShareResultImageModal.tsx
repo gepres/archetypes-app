@@ -41,7 +41,9 @@ export const ShareResultImageModal: React.FC<ShareResultImageModalProps> = ({ re
   const [alias, setAlias] = useState('');
   const [conDimensiones, setConDimensiones] = useState(false);
   const [conTop3, setConTop3] = useState(false);
-  const [postal, setPostal] = useState<{ blob: Blob; url: string } | null>(null);
+  // La imagen va con la clave de las opciones con que se hizo: solo se exporta si coincide con
+  // lo que hay elegido ahora. Si una regeneración falla, la anterior se ve, pero no se exporta.
+  const [postal, setPostal] = useState<{ blob: Blob; url: string; clave: string } | null>(null);
   const [preparando, setPreparando] = useState(false);
   const [fallo, setFallo] = useState(false);
   const [intento, setIntento] = useState(0);
@@ -56,6 +58,8 @@ export const ShareResultImageModal: React.FC<ShareResultImageModalProps> = ({ re
 
   // La imagen se prepara en cuanto cambia algo, no al tocar «Compartir»: la vista previa ES la
   // imagen que se descarga, y la hoja de compartir del móvil la recibe sin esperar.
+  const clave = JSON.stringify([result.id, gender, formato, tema, alias, conDimensiones, conTop3]);
+
   useEffect(() => {
     if (!isOpen) return;
     let vigente = true;
@@ -67,7 +71,7 @@ export const ShareResultImageModal: React.FC<ShareResultImageModalProps> = ({ re
         const url = URL.createObjectURL(blob);
         if (urlRef.current) URL.revokeObjectURL(urlRef.current);
         urlRef.current = url;
-        setPostal({ blob, url });
+        setPostal({ blob, url, clave });
       })
       .catch(err => {
         console.error('No se pudo preparar la postal:', err);
@@ -79,7 +83,7 @@ export const ShareResultImageModal: React.FC<ShareResultImageModalProps> = ({ re
     return () => {
       vigente = false;
     };
-  }, [isOpen, result, gender, formato, tema, alias, conDimensiones, conTop3, intento]);
+  }, [isOpen, result, gender, formato, tema, alias, conDimensiones, conTop3, intento, clave]);
 
   useEffect(
     () => () => {
@@ -92,10 +96,10 @@ export const ShareResultImageModal: React.FC<ShareResultImageModalProps> = ({ re
 
   const contenido = contenidoParaCompartir(result, gender);
   const nombreFichero = `mapa-arquetipos-${comoNombreDeFichero(contenido.titulo)}-${formato}.png`;
-  const listo = !!postal && !preparando;
+  const listo = !!postal && postal.clave === clave && !preparando && !fallo;
 
   const descargar = () => {
-    if (!postal) return;
+    if (!postal || !listo) return;
     const enlace = document.createElement('a');
     enlace.download = nombreFichero;
     enlace.href = postal.url;
@@ -103,7 +107,7 @@ export const ShareResultImageModal: React.FC<ShareResultImageModalProps> = ({ re
   };
 
   const copiar = async () => {
-    if (!postal) return;
+    if (!postal || !listo) return;
     try {
       if (!navigator.clipboard || !window.ClipboardItem) throw new Error('Sin portapapeles de imágenes');
       await navigator.clipboard.write([new ClipboardItem({ 'image/png': postal.blob })]);
@@ -116,7 +120,7 @@ export const ShareResultImageModal: React.FC<ShareResultImageModalProps> = ({ re
   };
 
   const compartir = async () => {
-    if (!postal) return;
+    if (!postal || !listo) return;
     const archivo = new File([postal.blob], nombreFichero, { type: 'image/png' });
     if (!navigator.share || !navigator.canShare?.({ files: [archivo] })) {
       descargar();

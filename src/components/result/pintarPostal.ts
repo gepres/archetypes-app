@@ -392,7 +392,14 @@ function pintarBarras(ctx: CanvasRenderingContext2D, b: BloqueBarras, tema: Tema
 
 /** La postal como PNG, a su medida real. */
 export async function generarPostal(datos: DatosPostal, tema: TemaPostal, semilla = 'postal'): Promise<Blob> {
+  // Todo lo que se espera, antes de medir: las fuentes y los retratos. Si se midiera antes de
+  // esperar a los retratos y la fuente buena llegara mientras tanto, se pintaría con una letra
+  // distinta de la medida. De aquí al final, medir y pintar van seguidos, sin ninguna espera:
+  // ninguna fuente puede cambiar entre las dos cosas.
   await cargarFuentes();
+  const ids = datos.contenido.figuras.slice(0, 3);
+  const imagenes = new Map(await Promise.all(ids.map(async id => [id, await retrato(id)] as const)));
+
   const { ancho, alto } = MEDIDAS_POSTAL[datos.formato];
   const lienzo = document.createElement('canvas');
   lienzo.width = ancho;
@@ -410,8 +417,6 @@ export async function generarPostal(datos: DatosPostal, tema: TemaPostal, semill
   };
 
   const postal = disenarPostal(datos, medir);
-  const imagenes = new Map(await Promise.all(postal.cartas.map(async c => [c.id, await retrato(c.id)] as const)));
-
   pintarFondo(ctx, postal, tema, semilla);
   pintarHuella(ctx, postal.huella, tema);
   for (const c of postal.cartas) pintarCarta(ctx, c, imagenes.get(c.id) ?? null, tema, medir);
