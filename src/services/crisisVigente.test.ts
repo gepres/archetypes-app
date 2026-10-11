@@ -3,24 +3,32 @@ import assert from 'node:assert/strict';
 import { AlmacenCrisis, ILEGIBLE, RegistroCrisis, crearRegistroCrisis, crisisDelChatGuardado } from './crisisVigente';
 import { crisisAbiertaDesde } from './crisisSupport';
 
-/** Un almacén en memoria, como el IndexedDB que comparten las pestañas. */
+/**
+ * Un almacén en memoria, como el IndexedDB que comparten las pestañas: cada `cambiar` es una
+ * transacción (lee y escribe de una vez, tras una espera que se puede alargar para cruzarlas).
+ */
 function almacenEnMemoria() {
   const datos = new Map<string, RegistroCrisis>();
   const fallo = { leer: false, escribir: false };
+  const espera = { ms: (): number => 0 };
+  const pausa = () => new Promise(r => setTimeout(r, espera.ms()));
   const almacen: AlmacenCrisis = {
     deDueno: async dueno => {
+      await pausa();
       if (fallo.leer) throw new Error('no se puede leer');
-      return [...datos.values()].filter(r => r.dueno === dueno);
+      return [...datos.values()].filter(r => r.dueno === dueno).map(r => ({ ...r }));
     },
-    poner: async r => {
+    cambiar: async (dueno, cambios) => {
+      await pausa();
       if (fallo.escribir) throw new Error('no se puede escribir');
-      datos.set(r.clave, { ...r });
+      for (const r of cambios([...datos.values()].filter(x => x.dueno === dueno).map(x => ({ ...x })))) datos.set(r.clave, { ...r });
     },
-    borrarTodo: async () => {
+    vaciar: async () => {
+      await pausa();
       datos.clear();
     },
   };
-  return { almacen, datos, fallo };
+  return { almacen, datos, fallo, espera };
 }
 
 const chatCon = (...mensajes: { id: string; role: string; content: string; crisisClosed?: boolean }[]) => JSON.stringify(mensajes);
@@ -94,6 +102,57 @@ describe('registro de crisis', () => {
     assert.equal(await r.abierta('cuenta', null), true);
     await r.cerrarTodas('cuenta');
     assert.equal(await r.abierta('cuenta', null), false);
+  });
+
+  it('regresión (Codex): una apertura a la vez que «Ya estoy a salvo» en otra pestaña no pisa el cierre', async () => {
+    for (let i = 0; i < 60; i++) {
+      const { almacen, espera } = almacenEnMemoria();
+      espera.ms = () => Math.floor(Math.random() * 4);
+      const a = crearRegistroCrisis(almacen); // el chat de A apunta la crisis m1
+      const b = crearRegistroCrisis(almacen); // en B se pulsa «Ya estoy a salvo», conociendo m1
+      const pasos = [() => a.abrir('cuenta', 'm1'), () => b.cerrarTodas('cuenta', ['m1'])];
+      if (i % 2) pasos.reverse();
+      await Promise.all(pasos.map(f => f()));
+      assert.equal(await crearRegistroCrisis(almacen).abierta('cuenta', null), false, `vuelta ${i}`);
+    }
+  });
+
+  it('una apertura pedida antes de «Ya estoy a salvo» en la misma pestaña no se apunta después', async () => {
+    const { almacen, espera } = almacenEnMemoria();
+    const r = crearRegistroCrisis(almacen);
+    let lenta = true;
+    espera.ms = () => (lenta ? ((lenta = false), 20) : 0); // la apertura llega al registro después
+    const abriendo = r.abrir('cuenta', 'm1');
+    await r.cerrarTodas('cuenta'); // sin conocer m1 (el chat no llegó a guardarla)
+    await abriendo;
+    assert.equal(await r.abierta('cuenta', null), false);
+  });
+
+  it('regresión (Codex): lo que esta pestaña no pudo apuntar respeta el cierre hecho en otra', async () => {
+    const { almacen, fallo } = almacenEnMemoria();
+    const a = crearRegistroCrisis(almacen);
+    const b = crearRegistroCrisis(almacen);
+    fallo.escribir = true;
+    await a.abrir('cuenta', 'm1'); // A no puede apuntarla: la recuerda
+    assert.equal(await a.abierta('cuenta', null), true); // y mientras no pueda, cuenta como abierta
+    fallo.escribir = false;
+    await b.cerrarTodas('cuenta', ['m1']); // B, que la conoce, la cierra
+    assert.equal(await a.abierta('cuenta', null), false);
+    assert.equal(await b.abierta('cuenta', null), false);
+  });
+
+  it('lo que esta pestaña no pudo apuntar se apunta en cuanto se puede, y cuenta para todas', async () => {
+    const { almacen, fallo } = almacenEnMemoria();
+    const a = crearRegistroCrisis(almacen);
+    const b = crearRegistroCrisis(almacen);
+    fallo.escribir = true;
+    await a.abrir('cuenta', 'm1');
+    fallo.escribir = false;
+    await b.cerrarTodas('cuenta'); // B no conoce m1: no puede cerrarla
+    assert.equal(await a.abierta('cuenta', null), true); // A la apunta ahora: sigue abierta…
+    assert.equal(await b.abierta('cuenta', null), true); // …también para B
+    await b.cerrarTodas('cuenta'); // y un «Ya estoy a salvo» en cualquiera la cierra
+    assert.equal(await a.abierta('cuenta', null), false);
   });
 
   it('regresión (Codex): reiniciar los datos olvida el registro y lo que esta pestaña recordaba', async () => {

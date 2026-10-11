@@ -11,6 +11,8 @@
  * - Una crisis cerrada no se vuelve a abrir aunque reaparezca una copia antigua del chat.
  * - Si el registro no se puede usar, se mira lo que se sepa (lo de esta pestaña y el chat
  *   guardado), y si tampoco se puede leer, cuenta como abierta.
+ * Abrir y cerrar se hacen cada uno en una sola transacción (leer y escribir de una vez): así una
+ * apertura que llega a la vez que un cierre no lo pisa.
  * Los avisos entre pestañas solo sirven para que una lectura a la vista se vuelva a comprobar:
  * no deciden nada.
  */
@@ -27,9 +29,13 @@ export interface RegistroCrisis {
 
 export interface AlmacenCrisis {
   deDueno(dueno: string): Promise<RegistroCrisis[]>;
-  poner(r: RegistroCrisis): Promise<void>;
-  /** Borra todo (al reiniciar los datos), cerrando antes lo que lo impediría. */
-  borrarTodo(): Promise<void>;
+  /**
+   * Lee los de la cuenta y guarda los que devuelva `cambios`, todo en una sola transacción: nadie
+   * escribe entre medias.
+   */
+  cambiar(dueno: string, cambios: (rs: RegistroCrisis[]) => RegistroCrisis[]): Promise<void>;
+  /** Lo vacía (al reiniciar los datos). */
+  vaciar(): Promise<void>;
 }
 
 /** El chat guardado no se pudo leer. */
@@ -55,9 +61,20 @@ const registro = (dueno: string, mensajeId: string, abierta: boolean): RegistroC
   fecha: new Date().toISOString(),
 });
 
+/** Abiertas las de esos mensajes que aún no consten; las que constan (sobre todo, cerradas) no se tocan. */
+const abrirNuevas = (dueno: string, ids: string[]) => (rs: RegistroCrisis[]) =>
+  ids.filter(id => !rs.some(r => r.mensajeId === id)).map(id => registro(dueno, id, true));
+
 export function crearRegistroCrisis(almacen: AlmacenCrisis | null, abrirCanal: () => BroadcastChannel | null = () => null) {
   /** Lo que esta pestaña no pudo apuntar en el registro (si falló), para no perderlo. */
   const sinApuntar = new Map<string, Set<string>>();
+  /**
+   * Cuántas veces se ha cerrado (o reiniciado) cada cuenta en esta pestaña. Una apertura pedida
+   * antes de un cierre no se apunta después de él: el cierre manda.
+   */
+  const cierres = new Map<string, number>();
+  let reinicios = 0;
+  const vez = (dueno: string) => `${reinicios}:${cierres.get(dueno) ?? 0}`;
   const oyentes = new Set<() => void>();
   let canal: BroadcastChannel | null = null;
   let iniciado = false;
@@ -88,14 +105,18 @@ export function crearRegistroCrisis(almacen: AlmacenCrisis | null, abrirCanal: (
     /** El chat tiene abierta la crisis que abrió ese mensaje. Si ya se cerró, no se reabre. */
     async abrir(dueno: string, mensajeId: string): Promise<void> {
       iniciar();
+      const pedida = vez(dueno);
       try {
         if (!almacen) throw new Error('sin registro');
-        const rs = await almacen.deDueno(dueno);
-        if (!rs.some(r => r.mensajeId === mensajeId)) await almacen.poner(registro(dueno, mensajeId, true));
+        // Se decide dentro de la transacción: si consta (abierta o cerrada) no se toca, y si esta
+        // pestaña la cerró entretanto, tampoco.
+        await almacen.cambiar(dueno, rs => (vez(dueno) === pedida ? abrirNuevas(dueno, [mensajeId])(rs) : []));
       } catch {
-        const s = sinApuntar.get(dueno) ?? new Set<string>();
-        s.add(mensajeId);
-        sinApuntar.set(dueno, s);
+        if (vez(dueno) === pedida) {
+          const s = sinApuntar.get(dueno) ?? new Set<string>();
+          s.add(mensajeId);
+          sinApuntar.set(dueno, s);
+        }
       }
       avisar();
     },
@@ -103,12 +124,15 @@ export function crearRegistroCrisis(almacen: AlmacenCrisis | null, abrirCanal: (
     /** «Ya estoy a salvo»: se cierran todas las de la cuenta (y las conocidas, aunque no constaran). */
     async cerrarTodas(dueno: string, conocidas: string[] = []): Promise<void> {
       iniciar();
+      cierres.set(dueno, (cierres.get(dueno) ?? 0) + 1);
       sinApuntar.delete(dueno);
       try {
         if (almacen) {
-          const rs = await almacen.deDueno(dueno);
-          for (const r of rs) if (r.abierta) await almacen.poner({ ...r, abierta: false, fecha: new Date().toISOString() });
-          for (const id of conocidas) if (!rs.some(r => r.mensajeId === id)) await almacen.poner(registro(dueno, id, false));
+          const fecha = new Date().toISOString();
+          await almacen.cambiar(dueno, rs => [
+            ...rs.filter(r => r.abierta).map(r => ({ ...r, abierta: false, fecha })),
+            ...conocidas.filter(id => !rs.some(r => r.mensajeId === id)).map(id => registro(dueno, id, false)),
+          ]);
         }
       } catch {
         // Lo que no se pudo apuntar se comprueba igual con el chat guardado.
@@ -119,10 +143,23 @@ export function crearRegistroCrisis(almacen: AlmacenCrisis | null, abrirCanal: (
     /** Si hay una crisis abierta en esa cuenta. `guardado`: el chat guardado, tal cual. */
     async abierta(dueno: string, guardado: string | null): Promise<boolean> {
       iniciar();
-      if (sinApuntar.get(dueno)?.size) return true;
       const enChat = crisisDelChatGuardado(guardado);
       if (enChat === ILEGIBLE) return true;
-      if (!almacen) return enChat !== null;
+      const pendientes = [...(sinApuntar.get(dueno) ?? [])];
+      if (!almacen) return pendientes.length > 0 || enChat !== null;
+      if (pendientes.length) {
+        // Lo que esta pestaña no pudo apuntar se apunta ahora, sin pisar un cierre que ya conste
+        // (de otra pestaña, por ejemplo): desde ahí manda el registro. Si sigue sin poder, cuenta
+        // como abierta.
+        const pedida = vez(dueno);
+        try {
+          await almacen.cambiar(dueno, rs => (vez(dueno) === pedida ? abrirNuevas(dueno, pendientes)(rs) : []));
+        } catch {
+          return true;
+        }
+        const s = sinApuntar.get(dueno);
+        for (const id of pendientes) s?.delete(id);
+      }
       let rs: RegistroCrisis[];
       try {
         rs = await almacen.deDueno(dueno);
@@ -137,9 +174,10 @@ export function crearRegistroCrisis(almacen: AlmacenCrisis | null, abrirCanal: (
     /** Reiniciar todos los datos: se olvida todo, también lo que esta pestaña recordaba. */
     async olvidarTodo(): Promise<void> {
       iniciar();
+      reinicios++;
       sinApuntar.clear();
       try {
-        await almacen?.borrarTodo();
+        await almacen?.vaciar();
       } catch {
         // Si no se pudo borrar, lo que quede se sigue respetando (y «Ya estoy a salvo» lo cierra).
       }
@@ -169,7 +207,19 @@ function almacenEnNavegador(): AlmacenCrisis | null {
     db ??= new Promise<IDBDatabase>((resolve, reject) => {
       const r = indexedDB.open('archetypes-crisis', 1);
       r.onupgradeneeded = () => r.result.createObjectStore('crisis', { keyPath: 'clave' });
-      r.onsuccess = () => resolve(r.result);
+      r.onsuccess = () => {
+        // Si alguna vez otra pestaña necesita cambiar o borrar la base, esta no se lo impide:
+        // cierra y la próxima vez abre de nuevo.
+        r.result.onversionchange = () => {
+          r.result.close();
+          db = null;
+        };
+        // Si el navegador la cierra por su cuenta, también.
+        r.result.onclose = () => {
+          db = null;
+        };
+        resolve(r.result);
+      };
       r.onerror = () => reject(r.error);
       r.onblocked = () => reject(new Error('registro de crisis bloqueado'));
     }).catch(e => {
@@ -178,10 +228,17 @@ function almacenEnNavegador(): AlmacenCrisis | null {
     });
     return db;
   };
+  /** Una transacción entera: se da por hecha solo cuando se completa. */
   const enTransaccion = async <T>(modo: IDBTransactionMode, hacer: (s: IDBObjectStore) => IDBRequest<T>): Promise<T> => {
     const d = await abrirDb();
     return new Promise<T>((resolve, reject) => {
-      const t = d.transaction('crisis', modo);
+      let t: IDBTransaction;
+      try {
+        t = d.transaction('crisis', modo);
+      } catch (e) {
+        db = null; // una conexión que ya no sirve: la próxima vez se abre otra
+        throw e;
+      }
       const peticion = hacer(t.objectStore('crisis'));
       t.oncomplete = () => resolve(peticion.result);
       t.onerror = () => reject(t.error);
@@ -190,26 +247,19 @@ function almacenEnNavegador(): AlmacenCrisis | null {
   };
   return {
     deDueno: async dueno => ((await enTransaccion('readonly', s => s.getAll())) as RegistroCrisis[]).filter(r => r.dueno === dueno),
-    poner: async r => {
-      await enTransaccion('readwrite', s => s.put(r));
-    },
-    borrarTodo: async () => {
-      // La conexión abierta impediría borrar la base: se cierra antes.
-      if (db) {
-        try {
-          (await db).close();
-        } catch {
-          // Si no llegó a abrirse, no hay nada que cerrar.
-        }
-        db = null;
-      }
-      await new Promise<void>((resolve, reject) => {
-        const r = indexedDB.deleteDatabase('archetypes-crisis');
-        r.onsuccess = () => resolve();
-        r.onerror = () => reject(r.error);
-        // Otra pestaña con la base abierta: se borra cuando la cierre; no se espera.
-        r.onblocked = () => resolve();
+    cambiar: async (dueno, cambios) => {
+      await enTransaccion('readwrite', s => {
+        const todos = s.getAll();
+        // Se escribe en la misma transacción en que se leyó.
+        todos.onsuccess = () => {
+          for (const r of cambios((todos.result as RegistroCrisis[]).filter(x => x.dueno === dueno))) s.put(r);
+        };
+        return todos;
       });
+    },
+    // Se vacía en vez de borrar la base: borrarla esperaría a que la cerraran las demás pestañas.
+    vaciar: async () => {
+      await enTransaccion('readwrite', s => s.clear());
     },
   };
 }
