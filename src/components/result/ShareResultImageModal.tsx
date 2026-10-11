@@ -1,23 +1,9 @@
-import React, { useRef, useState } from 'react';
-import { toPng, toBlob } from 'html-to-image';
-import {
-  Share2,
-  Download,
-  Copy,
-  Check,
-  X,
-  Smartphone,
-  Square,
-  Palette,
-  Eye,
-  Loader2,
-  CheckCircle2,
-} from 'lucide-react';
-import { getArchetype } from '../../data/archetypesData';
-import { getMapLead } from '../../services/scoringEngine';
+import React, { useEffect, useRef, useState } from 'react';
+import { Share2, Download, Copy, Check, X, Smartphone, Square, Loader2, CheckCircle2, SlidersHorizontal, RotateCcw } from 'lucide-react';
 import { AssessmentResult, GenderMode, DEFAULT_GENDER } from '../../types';
-import { TarjetaParaCompartir, TEMAS_TARJETA } from './TarjetaParaCompartir';
+import { FormatoPostal, datosPostalDe } from '../../services/disenoPostal';
 import { contenidoParaCompartir } from '../../services/tarjetaCompartir';
+import { NombreTemaPostal, TEMAS_POSTAL, generarPostal } from './pintarPostal';
 
 interface ShareResultImageModalProps {
   result: AssessmentResult;
@@ -27,419 +13,278 @@ interface ShareResultImageModalProps {
   onClose: () => void;
 }
 
-type CardFormat = 'story' | 'square';
-type CardTheme = 'emerald-gold' | 'obsidian-cosmic' | 'crimson-amber';
-const TEMA_DE: Record<CardTheme, keyof typeof TEMAS_TARJETA> = {
-  'emerald-gold': 'esmeralda',
-  'obsidian-cosmic': 'obsidiana',
-  'crimson-amber': 'carmesi',
-};
+const SITIO = 'https://archetypes-mystical.web.app/';
 
-export const ShareResultImageModal: React.FC<ShareResultImageModalProps> = ({
-  result,
-  gender = DEFAULT_GENDER,
-  isOpen,
-  onClose,
-}) => {
-  const [format, setFormat] = useState<CardFormat>('story');
-  const [theme, setTheme] = useState<CardTheme>('emerald-gold');
-  const [userName, setUserName] = useState('');
-  // Menos ruido: lo que cuenta la tarjeta es la pareja y su frase; lo demás, si se pide.
-  const [showDimensions, setShowDimensions] = useState(false);
-  const [showTop3, setShowTop3] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [copiedToast, setCopiedToast] = useState(false);
-  const [shareSuccess, setShareSuccess] = useState(false);
+const TEMAS: { id: NombreTemaPostal; nombre: string }[] = [
+  { id: 'esmeralda', nombre: 'Esmeralda' },
+  { id: 'obsidiana', nombre: 'Obsidiana' },
+  { id: 'carmesi', nombre: 'Rubí' },
+];
 
-  const cardRef = useRef<HTMLDivElement>(null);
+/** Un nombre de fichero válido. */
+function comoNombreDeFichero(texto: string): string {
+  return (
+    texto
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'mapa'
+  );
+}
+
+export const ShareResultImageModal: React.FC<ShareResultImageModalProps> = ({ result, gender = DEFAULT_GENDER, isOpen, onClose }) => {
+  const [formato, setFormato] = useState<FormatoPostal>('story');
+  const [tema, setTema] = useState<NombreTemaPostal>('esmeralda');
+  const [nombre, setNombre] = useState('');
+  // El nombre se aplica al dejar de escribir: no hace falta repintar con cada letra.
+  const [alias, setAlias] = useState('');
+  const [conDimensiones, setConDimensiones] = useState(false);
+  const [conTop3, setConTop3] = useState(false);
+  const [postal, setPostal] = useState<{ blob: Blob; url: string } | null>(null);
+  const [preparando, setPreparando] = useState(false);
+  const [fallo, setFallo] = useState(false);
+  const [intento, setIntento] = useState(0);
+  const [copiada, setCopiada] = useState(false);
+  const [compartida, setCompartida] = useState(false);
+  const urlRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const t = window.setTimeout(() => setAlias(nombre.trim()), 350);
+    return () => window.clearTimeout(t);
+  }, [nombre]);
+
+  // La imagen se prepara en cuanto cambia algo, no al tocar «Compartir»: la vista previa ES la
+  // imagen que se descarga, y la hoja de compartir del móvil la recibe sin esperar.
+  useEffect(() => {
+    if (!isOpen) return;
+    let vigente = true;
+    setPreparando(true);
+    setFallo(false);
+    generarPostal(datosPostalDe(result, gender, { formato, alias, conDimensiones, conTop3 }), TEMAS_POSTAL[tema], result.id)
+      .then(blob => {
+        if (!vigente) return;
+        const url = URL.createObjectURL(blob);
+        if (urlRef.current) URL.revokeObjectURL(urlRef.current);
+        urlRef.current = url;
+        setPostal({ blob, url });
+      })
+      .catch(err => {
+        console.error('No se pudo preparar la postal:', err);
+        if (vigente) setFallo(true);
+      })
+      .finally(() => {
+        if (vigente) setPreparando(false);
+      });
+    return () => {
+      vigente = false;
+    };
+  }, [isOpen, result, gender, formato, tema, alias, conDimensiones, conTop3, intento]);
+
+  useEffect(
+    () => () => {
+      if (urlRef.current) URL.revokeObjectURL(urlRef.current);
+    },
+    []
+  );
 
   if (!isOpen) return null;
 
-  const dominant = getArchetype(result.dominantArchetype.archetypeId, gender);
-  // La imagen sale a redes: no puede proclamar un dominante que las respuestas no sostienen.
-  const lead = getMapLead(result, gender);
   const contenido = contenidoParaCompartir(result, gender);
+  const nombreFichero = `mapa-arquetipos-${comoNombreDeFichero(contenido.titulo)}-${formato}.png`;
+  const listo = !!postal && !preparando;
 
-  // Theme styling configurations
-  const themeStyles = {
-    'emerald-gold': {
-      bg: 'bg-gradient-to-b from-[#0B1511] via-[#0E1B15] to-[#070D0B]',
-      border: 'border-[#315C45]',
-      accentColor: '#D6A84F',
-      accentText: 'text-[#D6A84F]',
-      badgeBg: 'bg-[#15271F] border-[#315C45] text-[#D6A84F]',
-      subtleBox: 'bg-[#101F18]/90 border-[#233F31]',
-      glow: 'rgba(214, 168, 79, 0.25)',
-      cardBorder: '#D6A84F',
-    },
-    'obsidian-cosmic': {
-      bg: 'bg-gradient-to-b from-[#0A0E1A] via-[#10172A] to-[#070912]',
-      border: 'border-[#2E3C66]',
-      accentColor: '#60A5FA',
-      accentText: 'text-[#60A5FA]',
-      badgeBg: 'bg-[#16213E] border-[#2E3C66] text-[#60A5FA]',
-      subtleBox: 'bg-[#11192E]/90 border-[#1E2B4D]',
-      glow: 'rgba(96, 165, 250, 0.25)',
-      cardBorder: '#60A5FA',
-    },
-    'crimson-amber': {
-      bg: 'bg-gradient-to-b from-[#180A0E] via-[#240F16] to-[#0E0508]',
-      border: 'border-[#5A2332]',
-      accentColor: '#F59E0B',
-      accentText: 'text-[#F59E0B]',
-      badgeBg: 'bg-[#2E121C] border-[#5A2332] text-[#F59E0B]',
-      subtleBox: 'bg-[#200C13]/90 border-[#421723]',
-      glow: 'rgba(245, 158, 11, 0.25)',
-      cardBorder: '#F59E0B',
-    },
-  }[theme];
+  const descargar = () => {
+    if (!postal) return;
+    const enlace = document.createElement('a');
+    enlace.download = nombreFichero;
+    enlace.href = postal.url;
+    enlace.click();
+  };
 
-  const generateImageBlob = async (): Promise<Blob | null> => {
-    if (!cardRef.current) return null;
+  const copiar = async () => {
+    if (!postal) return;
     try {
-      setIsGenerating(true);
-      const blob = await toBlob(cardRef.current, {
-        cacheBust: true,
-        pixelRatio: 2.5, // Crisp 2.5x high resolution
-        quality: 0.95,
-      });
-      return blob;
-    } catch (err) {
-      console.error('Error generating image blob:', err);
-      return null;
-    } finally {
-      setIsGenerating(false);
+      if (!navigator.clipboard || !window.ClipboardItem) throw new Error('Sin portapapeles de imágenes');
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': postal.blob })]);
+      setCopiada(true);
+      window.setTimeout(() => setCopiada(false), 2500);
+    } catch {
+      // Sin portapapeles de imágenes, se descarga: que la persona no se quede sin ella.
+      descargar();
     }
   };
 
-const SITIO = 'https://archetypes-mystical.web.app/';
-
-/** Un nombre de fichero valido a partir del nombre del arquetipo. */
-function comoNombreDeFichero(texto: string): string {
-  return texto
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '') || 'arquetipo';
-}
-
-  const handleDownload = async () => {
-    if (!cardRef.current) return;
+  const compartir = async () => {
+    if (!postal) return;
+    const archivo = new File([postal.blob], nombreFichero, { type: 'image/png' });
+    if (!navigator.share || !navigator.canShare?.({ files: [archivo] })) {
+      descargar();
+      return;
+    }
     try {
-      setIsGenerating(true);
-      const dataUrl = await toPng(cardRef.current, {
-        cacheBust: true,
-        pixelRatio: 2.5,
-        quality: 0.95,
-      });
-      const link = document.createElement('a');
-      link.download = `mapa-arquetipico-${comoNombreDeFichero(dominant.name)}-${format}.png`;
-      link.href = dataUrl;
-      link.click();
+      await navigator.share({ files: [archivo], title: 'Mi mapa de arquetipos', text: `${contenido.texto} Descubre el tuyo: ${SITIO}` });
+      setCompartida(true);
+      window.setTimeout(() => setCompartida(false), 2500);
     } catch (err) {
-      console.error('Failed to download image:', err);
-      alert('Hubo un error al generar la imagen. Inténtalo de nuevo.');
-    } finally {
-      setIsGenerating(false);
+      if ((err as Error).name !== 'AbortError') descargar();
     }
   };
 
-  const handleCopyImage = async () => {
-    try {
-      setIsGenerating(true);
-      const blob = await generateImageBlob();
-      if (!blob) throw new Error('Blob generation failed');
-
-      if (navigator.clipboard && window.ClipboardItem) {
-        await navigator.clipboard.write([
-          new ClipboardItem({ 'image/png': blob }),
-        ]);
-        setCopiedToast(true);
-        setTimeout(() => setCopiedToast(false), 3000);
-      } else {
-        // Fallback to direct download
-        handleDownload();
-      }
-    } catch (err) {
-      console.error('Failed to copy image to clipboard:', err);
-      // Fallback
-      handleDownload();
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  const handleNativeShare = async () => {
-    try {
-      setIsGenerating(true);
-      const blob = await generateImageBlob();
-      if (!blob) throw new Error('Blob generation failed');
-
-      const file = new File(
-        [blob],
-        `mapa-arquetipico-${comoNombreDeFichero(dominant.name)}.png`,
-        { type: 'image/png' }
-      );
-
-      if (
-        navigator.share &&
-        navigator.canShare &&
-        navigator.canShare({ files: [file] })
-      ) {
-        await navigator.share({
-          files: [file],
-          title: 'Mi mapa de arquetipos',
-          text: `${contenido.texto} Descubre el tuyo: ${SITIO}`,
-        });
-        setShareSuccess(true);
-        setTimeout(() => setShareSuccess(false), 3000);
-      } else {
-        // If file share is not supported by device/browser, copy or trigger download
-        handleDownload();
-      }
-    } catch (err) {
-      // Ignore user cancellation in share sheet
-      if ((err as Error).name !== 'AbortError') {
-        console.error('Error sharing:', err);
-        handleDownload();
-      }
-    } finally {
-      setIsGenerating(false);
-    }
-  };
+  const boton = (activo: boolean) =>
+    `flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
+      activo ? 'bg-[#1E2C26] text-[#F2EFE6] ring-1 ring-[#D6A84F]' : 'text-[#9DA79F] hover:text-[#F2EFE6]'
+    }`;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/80 backdrop-blur-md overflow-y-auto animate-fadeIn">
-      <div className="relative w-full max-w-4xl bg-[#121A17] border border-[#23332D] rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
-        {/* Header Modal Bar */}
-        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-[#1E2A25] bg-[#0E1513]">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-[#315C45]/30 border border-[#315C45] flex items-center justify-center text-[#D6A84F]">
-              <Share2 className="w-4 h-4" />
-            </div>
-            <div>
-              <h2 className="font-serif text-lg sm:text-xl font-bold text-[#F2EFE6]">
-                Compartir Mapa en Redes Sociales
-              </h2>
-              <p className="text-xs text-[#9DA79F]">
-                Exporta una tarjeta ilustrada en alta resolución lista para publicar
-              </p>
-            </div>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-5 bg-black/80 backdrop-blur-md animate-fadeIn" role="dialog" aria-modal="true" aria-labelledby="titulo-postal">
+      <div className="relative w-full sm:max-w-4xl bg-[#121A17] border border-[#23332D] rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[94dvh]">
+        <div className="flex items-center justify-between px-4 py-3 sm:p-5 border-b border-[#1E2A25] bg-[#0E1513]">
+          <div className="min-w-0">
+            <h2 id="titulo-postal" className="font-serif text-lg sm:text-xl font-bold text-[#F2EFE6]">
+              Comparte tu mapa
+            </h2>
+            <p className="text-[11px] sm:text-xs text-[#9DA79F] truncate">Una postal lista para historias y publicaciones</p>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-xl text-[#9DA79F] hover:text-[#F2EFE6] hover:bg-[#1A2521] transition-colors"
-          >
+          <button onClick={onClose} aria-label="Cerrar" className="p-2 -mr-1 rounded-xl text-[#9DA79F] hover:text-[#F2EFE6] hover:bg-[#1A2521] transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Modal Body: Controls Left / Preview Right */}
-        <div className="p-4 sm:p-6 overflow-y-auto flex-1 flex flex-col lg:grid lg:grid-cols-12 gap-6 lg:items-start">
-          {/* Controls Column */}
-          <div className="lg:col-span-5 shrink-0 space-y-5 text-left">
-            {/* Format Selector */}
+        <div className="overflow-y-auto flex-1 p-4 sm:p-6 flex flex-col lg:grid lg:grid-cols-12 gap-4 sm:gap-6 lg:items-start">
+          {/* La vista previa: es la imagen que se descarga, tal cual. */}
+          <div className="lg:col-span-7 lg:order-2 flex flex-col items-center gap-3">
+            <div
+              className={`relative flex items-center justify-center rounded-2xl bg-[#0B100E] border border-[#1E2A25] overflow-hidden ${
+                formato === 'story' ? 'aspect-[9/16] h-[min(52dvh,560px)] lg:h-[min(70vh,640px)]' : 'aspect-square w-full max-w-[min(100%,46dvh)] lg:max-w-[520px]'
+              }`}
+            >
+              {postal && <img src={postal.url} alt={`Vista previa de la postal: ${contenido.titulo}`} className="w-full h-full object-contain" />}
+              {preparando && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                  <Loader2 className="w-6 h-6 animate-spin text-[#D6A84F]" aria-label="Preparando la imagen" />
+                </div>
+              )}
+              {fallo && !preparando && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-4 text-center bg-[#0B100E]">
+                  <p className="text-xs text-[#C5CFC7]">No se pudo preparar la imagen.</p>
+                  <button
+                    type="button"
+                    onClick={() => setIntento(n => n + 1)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#315C45] text-xs text-[#D6A84F]"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" /> Reintentar
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="w-full max-w-sm flex gap-1 p-1 rounded-2xl bg-[#0E1513] border border-[#1E2A25]" role="group" aria-label="Formato">
+              <button type="button" onClick={() => setFormato('story')} aria-pressed={formato === 'story'} className={boton(formato === 'story')}>
+                <Smartphone className="w-3.5 h-3.5 text-[#D6A84F]" /> Historia 9:16
+              </button>
+              <button type="button" onClick={() => setFormato('square')} aria-pressed={formato === 'square'} className={boton(formato === 'square')}>
+                <Square className="w-3.5 h-3.5 text-[#D6A84F]" /> Cuadrado 1:1
+              </button>
+            </div>
+          </div>
+
+          {/* Acciones y ajustes */}
+          <div className="lg:col-span-5 lg:order-1 space-y-4 text-left">
             <div className="space-y-2">
-              <label className="text-xs font-bold uppercase tracking-wider text-[#D6A84F] flex items-center gap-1.5">
-                <Smartphone className="w-3.5 h-3.5" />
-                <span>Formato de Publicación</span>
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setFormat('story')}
-                  className={`p-3 rounded-2xl border text-xs font-semibold flex flex-col items-center gap-1.5 transition-all ${
-                    format === 'story'
-                      ? 'bg-[#1E2C26] border-[#D6A84F] text-[#F2EFE6] shadow-md'
-                      : 'bg-[#0E1513] border-[#1E2A25] text-[#9DA79F] hover:text-[#F2EFE6]'
-                  }`}
-                >
-                  <Smartphone className="w-4 h-4 text-[#D6A84F]" />
-                  <span>Historia / Reels (9:16)</span>
-                  <span className="text-[10px] text-[#86968D]">Stories, WhatsApp, TikTok</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFormat('square')}
-                  className={`p-3 rounded-2xl border text-xs font-semibold flex flex-col items-center gap-1.5 transition-all ${
-                    format === 'square'
-                      ? 'bg-[#1E2C26] border-[#D6A84F] text-[#F2EFE6] shadow-md'
-                      : 'bg-[#0E1513] border-[#1E2A25] text-[#9DA79F] hover:text-[#F2EFE6]'
-                  }`}
-                >
-                  <Square className="w-4 h-4 text-[#D6A84F]" />
-                  <span>Post Cuadrado (1:1)</span>
-                  <span className="text-[10px] text-[#86968D]">Feed, X, LinkedIn</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Theme Selector */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold uppercase tracking-wider text-[#D6A84F] flex items-center gap-1.5">
-                <Palette className="w-3.5 h-3.5" />
-                <span>Estilo Visual</span>
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setTheme('emerald-gold')}
-                  className={`p-2.5 rounded-xl border text-[11px] font-medium transition-all text-center ${
-                    theme === 'emerald-gold'
-                      ? 'bg-[#172B22] border-[#D6A84F] text-[#F2EFE6] ring-1 ring-[#D6A84F]'
-                      : 'bg-[#0E1513] border-[#1E2A25] text-[#9DA79F]'
-                  }`}
-                >
-                  <span className="w-3 h-3 rounded-full bg-[#D6A84F] inline-block mb-1 mx-auto" />
-                  <span className="block truncate">Esmeralda & Oro</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setTheme('obsidian-cosmic')}
-                  className={`p-2.5 rounded-xl border text-[11px] font-medium transition-all text-center ${
-                    theme === 'obsidian-cosmic'
-                      ? 'bg-[#15203D] border-[#60A5FA] text-[#F2EFE6] ring-1 ring-[#60A5FA]'
-                      : 'bg-[#0E1513] border-[#1E2A25] text-[#9DA79F]'
-                  }`}
-                >
-                  <span className="w-3 h-3 rounded-full bg-[#60A5FA] inline-block mb-1 mx-auto" />
-                  <span className="block truncate">Obsidiana Cósmica</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setTheme('crimson-amber')}
-                  className={`p-2.5 rounded-xl border text-[11px] font-medium transition-all text-center ${
-                    theme === 'crimson-amber'
-                      ? 'bg-[#2D121B] border-[#F59E0B] text-[#F2EFE6] ring-1 ring-[#F59E0B]'
-                      : 'bg-[#0E1513] border-[#1E2A25] text-[#9DA79F]'
-                  }`}
-                >
-                  <span className="w-3 h-3 rounded-full bg-[#F59E0B] inline-block mb-1 mx-auto" />
-                  <span className="block truncate">Rubí & Ámbar</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Customization Options */}
-            <div className="space-y-3 p-3.5 rounded-2xl bg-[#0E1513] border border-[#1E2A25]">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#9DA79F] block">
-                Personalización
-              </span>
-
-              <div className="space-y-1.5">
-                <label className="text-xs text-[#C5CFC7]">Tu Nombre o Alias (opcional):</label>
-                <input
-                  type="text"
-                  maxLength={30}
-                  placeholder="Ej: Ana Lucía / @tu_usuario"
-                  value={userName}
-                  onChange={(e) => setUserName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-[#16201D] border border-[#23332D] text-xs text-[#F2EFE6] placeholder-[#6B7A72] focus:outline-none focus:border-[#D6A84F]"
-                />
-              </div>
-
-              <div className="pt-2 flex flex-col gap-2">
-                <label className="flex items-center gap-2 text-xs text-[#C5CFC7] cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={showDimensions}
-                    onChange={(e) => setShowDimensions(e.target.checked)}
-                    className="rounded border-[#23332D] text-[#315C45] focus:ring-0 bg-[#16201D]"
-                  />
-                  <span>Mostrar barras de las 4 Dimensiones</span>
-                </label>
-                <label className="flex items-center gap-2 text-xs text-[#C5CFC7] cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={showTop3}
-                    onChange={(e) => setShowTop3(e.target.checked)}
-                    className="rounded border-[#23332D] text-[#315C45] focus:ring-0 bg-[#16201D]"
-                  />
-                  <span>Mostrar podio Top 3 arquetipos</span>
-                </label>
-              </div>
-            </div>
-
-            {/* Quick Action buttons on Desktop & Mobile */}
-            <div className="space-y-2.5 pt-2">
               <button
                 type="button"
-                onClick={handleNativeShare}
-                disabled={isGenerating}
-                className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-[#315C45] to-[#254836] hover:from-[#3D7055] hover:to-[#315C45] text-[#F2EFE6] font-semibold text-xs sm:text-sm transition-all shadow-xl flex items-center justify-center gap-2 border border-[#4E8B69]/40 active:scale-95 disabled:opacity-50"
+                onClick={compartir}
+                disabled={!listo}
+                className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-[#315C45] to-[#254836] hover:from-[#3D7055] hover:to-[#315C45] text-[#F2EFE6] font-semibold text-sm transition-all shadow-xl flex items-center justify-center gap-2 border border-[#4E8B69]/40 active:scale-[0.98] disabled:opacity-50"
               >
-                {isGenerating ? (
-                  <Loader2 className="w-4 h-4 animate-spin text-[#D6A84F]" />
-                ) : (
-                  <Share2 className="w-4 h-4 text-[#D6A84F]" />
-                )}
-                <span>Compartir Directo en Redes</span>
+                {listo ? <Share2 className="w-4 h-4 text-[#D6A84F]" /> : <Loader2 className="w-4 h-4 animate-spin text-[#D6A84F]" />}
+                Compartir
               </button>
-
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
-                  onClick={handleDownload}
-                  disabled={isGenerating}
-                  className="py-2.5 px-3 rounded-xl bg-[#1A2521] hover:bg-[#23332D] border border-[#23332D] text-xs font-medium text-[#F2EFE6] transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
+                  onClick={descargar}
+                  disabled={!listo}
+                  className="py-2.5 px-3 rounded-xl bg-[#1A2521] hover:bg-[#23332D] border border-[#23332D] text-xs font-medium text-[#F2EFE6] flex items-center justify-center gap-1.5 disabled:opacity-50"
                 >
-                  <Download className="w-3.5 h-3.5 text-[#D6A84F]" />
-                  <span>Descargar PNG</span>
+                  <Download className="w-3.5 h-3.5 text-[#D6A84F]" /> Descargar
                 </button>
-
                 <button
                   type="button"
-                  onClick={handleCopyImage}
-                  disabled={isGenerating}
-                  className="py-2.5 px-3 rounded-xl bg-[#1A2521] hover:bg-[#23332D] border border-[#23332D] text-xs font-medium text-[#F2EFE6] transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
+                  onClick={copiar}
+                  disabled={!listo}
+                  className="py-2.5 px-3 rounded-xl bg-[#1A2521] hover:bg-[#23332D] border border-[#23332D] text-xs font-medium text-[#F2EFE6] flex items-center justify-center gap-1.5 disabled:opacity-50"
                 >
-                  {copiedToast ? (
+                  {copiada ? (
                     <>
-                      <Check className="w-3.5 h-3.5 text-[#10B981]" />
-                      <span className="text-[#10B981]">¡Copiada!</span>
+                      <Check className="w-3.5 h-3.5 text-[#10B981]" /> <span className="text-[#10B981]">Copiada</span>
                     </>
                   ) : (
                     <>
-                      <Copy className="w-3.5 h-3.5 text-[#D6A84F]" />
-                      <span>Copiar Imagen</span>
+                      <Copy className="w-3.5 h-3.5 text-[#D6A84F]" /> Copiar imagen
                     </>
                   )}
                 </button>
               </div>
-
-              {shareSuccess && (
-                <div className="p-2.5 rounded-xl bg-[#10B981]/15 border border-[#10B981]/30 text-[#86EFAC] text-xs flex items-center justify-center gap-1.5 animate-fadeIn">
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>¡Tarjeta compartida con éxito!</span>
-                </div>
+              {compartida && (
+                <p className="p-2.5 rounded-xl bg-[#10B981]/15 border border-[#10B981]/30 text-[#86EFAC] text-xs flex items-center justify-center gap-1.5" role="status">
+                  <CheckCircle2 className="w-4 h-4" /> Compartida
+                </p>
               )}
             </div>
-          </div>
 
-          {/* Card Preview Column */}
-          <div className="lg:col-span-7 shrink-0 flex flex-col items-center justify-center bg-[#0B100E] p-2 sm:p-6 rounded-3xl border border-[#1E2A25] w-full overflow-hidden">
-            <div className="text-center mb-3">
-              <span className="text-[11px] text-[#9DA79F] inline-flex items-center gap-1">
-                <Eye className="w-3 h-3 text-[#D6A84F]" />
-                <span>Vista Previa de la Tarjeta</span>
-              </span>
+            <div className="space-y-2">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#9DA79F] block">Color</span>
+              <div className="flex gap-2" role="group" aria-label="Color">
+                {TEMAS.map(t => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => setTema(t.id)}
+                    aria-pressed={tema === t.id}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl border text-xs font-medium transition-colors ${
+                      tema === t.id ? 'border-[#D6A84F] bg-[#172B22] text-[#F2EFE6]' : 'border-[#1E2A25] bg-[#0E1513] text-[#9DA79F]'
+                    }`}
+                  >
+                    <span
+                      className="w-3.5 h-3.5 rounded-full border border-white/20"
+                      style={{ background: `linear-gradient(135deg, ${TEMAS_POSTAL[t.id].fondo[0]} 45%, ${TEMAS_POSTAL[t.id].acento} 55%)` }}
+                    />
+                    {t.nombre}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {/* La tarjeta que se captura (html-to-image): la misma que comparte la V2. */}
-            <TarjetaParaCompartir
-              ref={cardRef}
-              contenido={contenido}
-              formato={format}
-              tema={TEMAS_TARJETA[TEMA_DE[theme]]}
-              nombre={userName || undefined}
-              dimensiones={showDimensions ? result.dimensionScores : null}
-              top3={
-                showTop3 && lead.kind !== 'flat'
-                  ? result.ranking.slice(0, 3).map(s => ({ emoji: s.emoji, name: getArchetype(s.archetypeId, gender).name, score: s.normalizedScore }))
-                  : null
-              }
-            />
+            <details className="group rounded-2xl bg-[#0E1513] border border-[#1E2A25]">
+              <summary className="flex items-center gap-2 px-3.5 py-3 cursor-pointer list-none text-xs font-semibold text-[#C5CFC7]">
+                <SlidersHorizontal className="w-3.5 h-3.5 text-[#D6A84F]" />
+                Personalizar
+                <span className="ml-auto text-[10px] text-[#6B7A72] group-open:hidden">nombre, dimensiones, podio</span>
+              </summary>
+              <div className="px-3.5 pb-3.5 space-y-3">
+                <label className="block space-y-1.5">
+                  <span className="text-xs text-[#C5CFC7]">Tu nombre o alias (opcional)</span>
+                  <input
+                    type="text"
+                    maxLength={30}
+                    placeholder="Ej: Ana Lucía / @tu_usuario"
+                    value={nombre}
+                    onChange={e => setNombre(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl bg-[#16201D] border border-[#23332D] text-sm text-[#F2EFE6] placeholder-[#6B7A72] focus:outline-none focus:border-[#D6A84F]"
+                  />
+                </label>
+                <label className="flex items-center gap-2.5 text-xs text-[#C5CFC7] cursor-pointer py-1">
+                  <input type="checkbox" checked={conDimensiones} onChange={e => setConDimensiones(e.target.checked)} className="w-4 h-4 rounded border-[#23332D] bg-[#16201D]" />
+                  Añadir las 4 dimensiones
+                </label>
+                <label className="flex items-center gap-2.5 text-xs text-[#C5CFC7] cursor-pointer py-1">
+                  <input type="checkbox" checked={conTop3} onChange={e => setConTop3(e.target.checked)} className="w-4 h-4 rounded border-[#23332D] bg-[#16201D]" />
+                  Añadir el podio de tus 3 primeros
+                </label>
+              </div>
+            </details>
           </div>
         </div>
       </div>

@@ -1,13 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import { ArrowRight, Check, RotateCcw, Share2, Volume2, VolumeX } from 'lucide-react';
-import { toBlob } from 'html-to-image';
 import {
   ArchetypeIllustratedArtwork,
   DIMENSIONS,
-  TEMAS_TARJETA,
-  TarjetaParaCompartir,
+  TEMAS_POSTAL,
   contenidoParaCompartir,
+  datosPostalDe,
+  generarPostal,
   getArchetype,
   getMapLead,
   listNames,
@@ -72,24 +72,20 @@ export const RevealScreen: React.FC<RevealScreenProps> = ({
     return () => window.clearTimeout(t);
   }, [prefersReducedMotion]);
 
-  // La imagen que se comparte (la misma tarjeta que la V1) se prepara al revelar, no al tocar
-  // «Compartir»: algunos navegadores solo abren la hoja de compartir si se llama en el mismo
-  // gesto, y generar la imagen entonces llegaría tarde.
+  // La imagen que se comparte (la misma postal que la V1, en historia 9:16) se prepara al
+  // revelar, no al tocar «Compartir»: algunos navegadores solo abren la hoja de compartir si se
+  // llama en el mismo gesto, y generar la imagen entonces llegaría tarde.
   const contenido = contenidoParaCompartir(resultado, 'universal');
-  const tarjetaRef = useRef<HTMLDivElement>(null);
   const imagenRef = useRef<File | null>(null);
   useEffect(() => {
     let vigente = true;
-    (async () => {
-      try {
-        await document.fonts?.ready;
-        if (!tarjetaRef.current) return;
-        const blob = await toBlob(tarjetaRef.current, { cacheBust: true, pixelRatio: 2.5 });
-        if (vigente && blob) imagenRef.current = new File([blob], 'mi-mapa-de-arquetipos.png', { type: 'image/png' });
-      } catch {
+    generarPostal(datosPostalDe(resultado, 'universal', { formato: 'story' }), TEMAS_POSTAL.esmeralda, resultado.id)
+      .then(blob => {
+        if (vigente) imagenRef.current = new File([blob], 'mi-mapa-de-arquetipos.png', { type: 'image/png' });
+      })
+      .catch(() => {
         // Sin imagen, se comparte el texto, como antes.
-      }
-    })();
+      });
     return () => {
       vigente = false;
     };
@@ -193,11 +189,6 @@ Descubre el tuyo escuchando:`;
 
   return (
     <div className="relative min-h-[100dvh] flex flex-col items-center px-5 py-8 overflow-y-auto">
-      {/* La tarjeta que se comparte, fuera de la vista: solo sirve para generar la imagen. */}
-      <div aria-hidden="true" style={{ position: 'fixed', left: -10000, top: 0, pointerEvents: 'none' }}>
-        <TarjetaParaCompartir ref={tarjetaRef} contenido={contenido} formato="story" tema={TEMAS_TARJETA.esmeralda} />
-      </div>
-
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div
           className="absolute top-0 left-1/2 -translate-x-1/2 w-[620px] h-[620px] rounded-full blur-3xl opacity-30"

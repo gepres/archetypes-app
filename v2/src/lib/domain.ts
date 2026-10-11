@@ -26,7 +26,8 @@ export { ArchetypeIllustratedArtwork } from '@v1/components/archetypes/Archetype
 // La imagen para compartir: la misma tarjeta que en la V1, con estilos en línea para que salga
 // igual aunque cada app genere sus estilos por separado.
 export { contenidoParaCompartir } from '@v1/services/tarjetaCompartir';
-export { TarjetaParaCompartir, TEMAS_TARJETA } from '@v1/components/result/TarjetaParaCompartir';
+export { datosPostalDe } from '@v1/services/disenoPostal';
+export { TEMAS_POSTAL, generarPostal } from '@v1/components/result/pintarPostal';
 
 export type {
   Archetype,
