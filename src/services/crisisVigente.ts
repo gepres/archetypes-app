@@ -22,7 +22,8 @@
  *   mientras el reinicio esperaba. Se lo cuenta a las demás pestañas con su momento: olvidan lo
  *   anterior a él, no lo posterior.
  * - Si no se puede leer el registro o el chat guardado, o el registro tiene algo que no se
- *   entiende, cuenta como abierta. «Ya estoy a salvo» limpia lo que no se entiende.
+ *   entiende, cuenta como abierta. Solo lo limpia un «Ya estoy a salvo» pulsado (no un cierre
+ *   antiguo que se aprende del chat), y no lo que sea posterior a él.
  * Hay una crisis abierta si alguna señal es posterior al último cierre que se conozca. (Se cuenta
  * con que el reloj del dispositivo no retrocede.)
  */
@@ -108,10 +109,11 @@ const deReinicio = (momento: number): RegistroCrisis => ({ clave: '__reinicio', 
 
 /**
  * Lo que falta en el registro: las señales que no consten, y el cierre si va más allá del que
- * hay. Un cierre también quita lo que no se entiende (si no, bloquearía para siempre).
+ * hay. Con `limpiarHasta` (un «Ya estoy a salvo» pulsado ahora), quita también lo que no se
+ * entiende (si no, bloquearía para siempre), salvo lo que sea posterior a ese momento.
  */
 const loQueFalta =
-  (dueno: string, senales: SenalCrisis[], cierre: number | null) =>
+  (dueno: string, senales: SenalCrisis[], cierre: number | null, limpiarHasta: number | null = null) =>
   (rs: RegistroCrisis[]): CambiosCrisis => {
     const buenos = rs.filter(valido);
     const nuevas = senales.filter(s => !buenos.some(r => r.tipo === 'senal' && r.mensajeId === s.id)).map(s => deSenal(dueno, s));
@@ -120,7 +122,10 @@ const loQueFalta =
     const poner = avanza ? [...nuevas, deCierre(dueno, cierre)] : nuevas;
     // Lo que se quita no incluye lo que se va a poner en su lugar (y se quita antes de poner).
     const claves = new Set(poner.map(r => r.clave));
-    return { poner, quitar: cierre !== null ? rs.filter(r => !valido(r) && !claves.has(r.clave)).map(r => r.clave) : [] };
+    const posterior = (r: RegistroCrisis) => Number.isFinite(r?.momento) && r.momento > (limpiarHasta ?? Infinity);
+    const quitar =
+      limpiarHasta === null ? [] : rs.filter(r => !valido(r) && !claves.has(r.clave) && !posterior(r)).map(r => r.clave);
+    return { poner, quitar };
   };
 
 /** Lo que una pestaña sabe de una cuenta y aún no consta en el registro. */
@@ -257,12 +262,15 @@ export function crearRegistroCrisis(
     alAbrir = new Promise(r => setTimeout(r, esperaAlAbrir));
   };
 
-  /** Apunta una señal o un cierre; si no se puede, se recuerda y se cuenta a las demás. */
-  const apuntar = async (dueno: string, senales: SenalCrisis[], cierre: number | null) => {
+  /**
+   * Apunta una señal o un cierre; si no se puede, se recuerda y se cuenta a las demás. `pulsado`:
+   * un «Ya estoy a salvo» de ahora (limpia lo que no se entiende, hasta su momento).
+   */
+  const apuntar = async (dueno: string, senales: SenalCrisis[], cierre: number | null, pulsado = false) => {
     iniciar();
     try {
       if (!almacen) throw new Error('sin registro');
-      await almacen.cambiar(dueno, loQueFalta(dueno, senales, cierre));
+      await almacen.cambiar(dueno, loQueFalta(dueno, senales, cierre, pulsado ? cierre : null));
     } catch {
       recordar(dueno, senales, cierre);
       contar(dueno);
@@ -278,6 +286,11 @@ export function crearRegistroCrisis(
 
     /** «Ya estoy a salvo»: cierra toda señal de la cuenta anterior a `hasta`, y ninguna posterior. */
     cerrarTodas(dueno: string, hasta: number = Date.now()): Promise<void> {
+      return apuntar(dueno, [], hasta, true);
+    },
+
+    /** Un «Ya estoy a salvo» que ya se pulsó (lo que dice el chat): se apunta, sin limpiar nada. */
+    aprenderCierre(dueno: string, hasta: number): Promise<void> {
       return apuntar(dueno, [], hasta);
     },
 
@@ -440,6 +453,7 @@ const deLaApp = crearRegistroCrisis(almacenEnNavegador(), () =>
 );
 export const apuntarCrisis = deLaApp.abrir;
 export const cerrarCrisisRegistradas = deLaApp.cerrarTodas;
+export const apuntarCierreDelChat = deLaApp.aprenderCierre;
 export const crisisAbiertaEnRegistro = deLaApp.abierta;
 export const suscribirCrisis = deLaApp.suscribir;
 /** «Ya estoy a salvo» en el chat: el cierre del registro y la marca del chat, con el mismo momento. */

@@ -298,6 +298,26 @@ describe('registro de crisis', () => {
     assert.equal(await r.abierta('cuenta', null), true);
   });
 
+  it('regresión (Codex): un cierre aprendido del chat no limpia nada, y uno pulsado no limpia lo posterior a él', async () => {
+    const { almacen, datos } = almacenEnMemoria();
+    const r = crearRegistroCrisis(almacen);
+    // Una señal dañada (sin su mensaje) de momento 300, y otra sin momento.
+    datos.set('cuenta:x', { clave: 'cuenta:x', dueno: 'cuenta', tipo: 'senal', momento: 300 } as RegistroCrisis);
+    datos.set('cuenta:y', { clave: 'cuenta:y', dueno: 'cuenta', tipo: 'senal', mensajeId: 'y' } as unknown as RegistroCrisis);
+    // Un cierre antiguo del chat (200), aprendido al comprobar y al cargar el chat: no limpia.
+    assert.equal(await r.abierta('cuenta', chatCon(deCrisis('m1', 100), cierreEnChat(200))), true);
+    await r.aprenderCierre('cuenta', 200);
+    assert.equal(datos.has('cuenta:x') && datos.has('cuenta:y'), true);
+    // «Ya estoy a salvo» pulsado en 250: quita la que no tiene momento, no la de 300.
+    await r.cerrarTodas('cuenta', 250);
+    assert.equal(datos.has('cuenta:y'), false);
+    assert.equal(datos.has('cuenta:x'), true);
+    assert.equal(await r.abierta('cuenta', null), true);
+    // Pulsado después de ella, sí.
+    await r.cerrarTodas('cuenta', 400);
+    assert.equal(await r.abierta('cuenta', null), false);
+  });
+
   it('regresión (Codex): un registro dañado con la clave del cierre no se lleva el cierre nuevo', async () => {
     const { almacen, datos } = almacenEnMemoria();
     const r = crearRegistroCrisis(almacen);

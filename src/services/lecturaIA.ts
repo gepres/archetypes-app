@@ -70,9 +70,11 @@ export async function declararASalvo(): Promise<void> {
   const momento = new Date();
   try {
     // Un chat guardado que no se puede leer bloquearía siempre (cuenta como abierta): se
-    // sustituye por uno legible con la marca de cierre. La app ya lo trataba como vacío.
-    if (crisisDelChatGuardado(localStorage.getItem(CHAT)) === ILEGIBLE) StorageService.closeCrisis([], momento);
-    else {
+    // sustituye por uno legible con la marca de cierre (la app ya lo trataba como vacío), y si
+    // no cabe, se quita; el cierre queda en el registro.
+    if (crisisDelChatGuardado(localStorage.getItem(CHAT)) === ILEGIBLE) {
+      if (!StorageService.closeCrisis([], momento).guardada) localStorage.removeItem(CHAT);
+    } else {
       const chat = StorageService.getChatMessages();
       if (crisisInConversation(chat)) StorageService.closeCrisis(chat, momento);
     }

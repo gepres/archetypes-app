@@ -18,7 +18,7 @@ import { ARCHETYPE_VISUALS } from '../../data/archetypeImages';
 import { getArchetypeList, getArchetypeName, getArchetypeNarrative, withDe } from '../../data/archetypesData';
 import { getMapLead } from '../../services/scoringEngine';
 import { SenalCrisis, crisisInConversation, senalesDeCrisis, ultimoCierreDeCrisis } from '../../services/crisisSupport';
-import { apuntarCrisis, cerrarCrisisDelChat, cerrarCrisisRegistradas } from '../../services/crisisVigente';
+import { apuntarCierreDelChat, apuntarCrisis, cerrarCrisisDelChat } from '../../services/crisisVigente';
 import { GeminiService } from '../../services/geminiService';
 import { AIProviderService, describirEstadoIA } from '../../services/aiProviderService';
 import { StorageService, conCierreDeCrisis, insertarRespuesta, unirConversaciones } from '../../services/storageService';
@@ -353,7 +353,7 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
   // se pierda al reiniciar la conversación.
   const ultimoCierre = ultimoCierreDeCrisis(messages);
   useEffect(() => {
-    if (ultimoCierre !== null) void cerrarCrisisRegistradas(duenoDeLaVista.current, ultimoCierre);
+    if (ultimoCierre !== null) void apuntarCierreDelChat(duenoDeLaVista.current, ultimoCierre);
   }, [ultimoCierre]);
 
   // Cómo se nombra la cabeza del mapa en la cabecera: sin inventar un dominante si no lo hay.
