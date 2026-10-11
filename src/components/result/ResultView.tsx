@@ -20,6 +20,8 @@ import { RadarChartComponent } from '../common/RadarChartComponent';
 import { ArchetypeIllustratedArtwork } from '../archetypes/ArchetypeIllustratedArtwork';
 import { NavTab } from '../layout/Sidebar';
 import { ShareResultImageModal } from './ShareResultImageModal';
+import { LecturaPersonal } from './LecturaPersonal';
+import { admiteLectura } from '../../services/lecturaPersonal';
 
 interface ResultViewProps {
   result: AssessmentResult;
@@ -278,6 +280,9 @@ export const ResultView: React.FC<ResultViewProps> = ({
           )}
         </section>
       )}
+
+      {/* La lectura personal con IA: interpreta el mapa, no lo calcula. Solo con el test por dilemas. */}
+      {admiteLectura(result) && <LecturaPersonal result={result} gender={gender} />}
 
       {/* 3. Los tres primeros, con su rostro */}
       {!plano && (

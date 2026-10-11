@@ -242,8 +242,14 @@ export function calcularResultadoDilemas(respuestas: RespuestaDilema[], tipo: Ti
       .slice(0, EVIDENCIAS_POR_FIGURA)
       .map(d => ({ dilemaId: d.id }));
 
-  return resultadoDesdePuntuaciones(orden.puntuaciones, victorias, tipo, gender, evidenciaDe, 'dilemas', {
+  const resultado = resultadoDesdePuntuaciones(orden.puntuaciones, victorias, tipo, gender, evidenciaDe, 'dilemas', {
     ids: orden.ids,
     cabeza: orden.cabeza,
   });
+  // Lo elegido en cada situación, en el orden del test: lo interpreta la lectura personal.
+  const elecciones = delTest.flatMap(d => {
+    const arquetipo = eleccionPorDilema.get(d.id);
+    return arquetipo ? [{ dilemaId: d.id, arquetipo }] : [];
+  });
+  return { ...resultado, elecciones };
 }

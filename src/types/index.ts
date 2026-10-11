@@ -231,6 +231,11 @@ export interface AssessmentResult {
    */
   cabezaResuelta?: number;
   /**
+   * Test por dilemas: lo que se eligió en cada situación (sin los desempates). Lo usa la lectura
+   * personal con IA, que interpreta el resultado sin cambiarlo.
+   */
+  elecciones?: { dilemaId: string; arquetipo: ArchetypeId }[];
+  /**
    * Test por dilemas: quiénes comparten el primer puesto y quiénes el segundo. Un objeto y no una
    * lista de listas: Firestore no admite listas anidadas y rechazaría la cuenta entera al
    * sincronizar.
