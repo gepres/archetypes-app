@@ -17,9 +17,10 @@
  *   otra pestaña pregunta) y se lo cuenta a las demás pestañas abiertas, que hacen lo mismo; una
  *   pestaña nueva lo pregunta al abrirse y espera un momento la respuesta antes de su primera
  *   comprobación. Si la respuesta llega después, la comprobación se repite.
- * - Reiniciar los datos vacía el registro y deja apuntado el reinicio, que cierra todo lo anterior
- *   (de cualquier cuenta), y se lo cuenta a las demás pestañas con su momento: olvidan lo anterior
- *   a él, no lo posterior.
+ * - Reiniciar los datos borra del registro todo lo anterior al reinicio (de cualquier cuenta) y
+ *   deja apuntado el reinicio, que lo cierra; lo posterior se conserva, aunque se apuntara
+ *   mientras el reinicio esperaba. Se lo cuenta a las demás pestañas con su momento: olvidan lo
+ *   anterior a él, no lo posterior.
  * - Si no se puede leer el registro o el chat guardado, o el registro tiene algo que no se
  *   entiende, cuenta como abierta. «Ya estoy a salvo» limpia lo que no se entiende.
  * Hay una crisis abierta si alguna señal es posterior al último cierre que se conozca. (Se cuenta
@@ -43,7 +44,7 @@ export interface RegistroCrisis {
   momento: number;
 }
 
-/** Lo que se escribe en el registro de una vez: lo que se pone y las claves que se quitan. */
+/** Lo que se escribe en el registro de una vez: las claves que se quitan y, después, lo que se pone. */
 export interface CambiosCrisis {
   poner: RegistroCrisis[];
   quitar: string[];
@@ -57,8 +58,11 @@ export interface AlmacenCrisis {
    * nadie escribe entre medias.
    */
   cambiar(dueno: string, cambios: (rs: RegistroCrisis[]) => CambiosCrisis): Promise<void>;
-  /** Lo vacía y deja apuntado `reinicio`, de una vez (al reiniciar los datos). */
-  vaciar(reinicio: RegistroCrisis): Promise<void>;
+  /**
+   * Al reiniciar los datos, de una vez: borra todo lo anterior a `reinicio` (o que no se entienda),
+   * conserva lo posterior y lo apunta (salvo que ya conste uno más reciente).
+   */
+  reiniciar(reinicio: RegistroCrisis): Promise<void>;
 }
 
 /** El chat guardado no se pudo leer. */
@@ -83,6 +87,15 @@ const TIPOS = new Set(['senal', 'cierre', 'reinicio']);
 const valido = (r: RegistroCrisis): boolean =>
   !!r && TIPOS.has(r.tipo) && Number.isFinite(r.momento) && (r.tipo !== 'senal' || typeof r.mensajeId === 'string');
 
+/** Lo que cambia un reinicio en el registro entero (todas las cuentas). */
+export const cambiosDeReinicio = (todos: RegistroCrisis[], reinicio: RegistroCrisis): CambiosCrisis => {
+  const actual = todos.find(r => valido(r) && r.tipo === 'reinicio');
+  return {
+    quitar: todos.filter(r => r.tipo !== 'reinicio' && (!valido(r) || r.momento <= reinicio.momento)).map(r => r.clave),
+    poner: actual && actual.momento >= reinicio.momento ? [] : [reinicio],
+  };
+};
+
 const deSenal = (dueno: string, s: SenalCrisis): RegistroCrisis => ({
   clave: `${dueno}:${s.id}`,
   dueno,
@@ -104,10 +117,10 @@ const loQueFalta =
     const nuevas = senales.filter(s => !buenos.some(r => r.tipo === 'senal' && r.mensajeId === s.id)).map(s => deSenal(dueno, s));
     const actual = buenos.find(r => r.tipo === 'cierre');
     const avanza = cierre !== null && (!actual || actual.momento < cierre);
-    return {
-      poner: avanza ? [...nuevas, deCierre(dueno, cierre)] : nuevas,
-      quitar: cierre !== null ? rs.filter(r => !valido(r)).map(r => r.clave) : [],
-    };
+    const poner = avanza ? [...nuevas, deCierre(dueno, cierre)] : nuevas;
+    // Lo que se quita no incluye lo que se va a poner en su lugar (y se quita antes de poner).
+    const claves = new Set(poner.map(r => r.clave));
+    return { poner, quitar: cierre !== null ? rs.filter(r => !valido(r) && !claves.has(r.clave)).map(r => r.clave) : [] };
   };
 
 /** Lo que una pestaña sabe de una cuenta y aún no consta en el registro. */
@@ -303,7 +316,7 @@ export function crearRegistroCrisis(
       const momento = Date.now();
       olvidarHasta(momento);
       try {
-        await almacen?.vaciar(deReinicio(momento));
+        await almacen?.reiniciar(deReinicio(momento));
       } catch {
         // Si no se pudo vaciar, lo que quede se sigue respetando (y «Ya estoy a salvo» lo cierra).
       }
@@ -400,17 +413,23 @@ function almacenEnNavegador(): AlmacenCrisis | null {
         // Se escribe en la misma transacción en que se leyó.
         todos.onsuccess = () => {
           const c = cambios((todos.result as RegistroCrisis[]).filter(x => x?.dueno === dueno));
-          for (const r of c.poner) s.put(r);
           for (const clave of c.quitar) s.delete(clave);
+          for (const r of c.poner) s.put(r);
         };
         return todos;
       });
     },
-    // Se vacía en vez de borrar la base: borrarla esperaría a que la cerraran las demás pestañas.
-    vaciar: async reinicio => {
+    // Se borra lo anterior en vez de la base: borrarla esperaría a que la cerraran las demás
+    // pestañas, y se llevaría lo que se apuntara mientras tanto.
+    reiniciar: async reinicio => {
       await enTransaccion('readwrite', s => {
-        s.clear();
-        return s.put(reinicio);
+        const todos = s.getAll();
+        todos.onsuccess = () => {
+          const c = cambiosDeReinicio(todos.result as RegistroCrisis[], reinicio);
+          for (const clave of c.quitar) s.delete(clave);
+          for (const r of c.poner) s.put(r);
+        };
+        return todos;
       });
     },
   };

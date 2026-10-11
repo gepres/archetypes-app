@@ -4,6 +4,7 @@ import {
   AlmacenCrisis,
   ILEGIBLE,
   RegistroCrisis,
+  cambiosDeReinicio,
   cerrarCrisisDeConversacion,
   crearRegistroCrisis,
   crisisDelChatGuardado,
@@ -29,14 +30,15 @@ function almacenEnMemoria() {
       await pausa();
       if (fallo.escribir) throw new Error('no se puede escribir');
       const c = cambios([...datos.values()].filter(x => x.dueno === dueno).map(x => ({ ...x })));
-      for (const r of c.poner) datos.set(r.clave, { ...r });
       for (const clave of c.quitar) datos.delete(clave);
+      for (const r of c.poner) datos.set(r.clave, { ...r });
     },
-    vaciar: async reinicio => {
+    reiniciar: async reinicio => {
       await pausa();
       if (fallo.escribir) throw new Error('no se puede escribir');
-      datos.clear();
-      datos.set(reinicio.clave, { ...reinicio });
+      const c = cambiosDeReinicio([...datos.values()].map(x => ({ ...x })), reinicio);
+      for (const clave of c.quitar) datos.delete(clave);
+      for (const r of c.poner) datos.set(r.clave, { ...r });
     },
   };
   return { almacen, datos, fallo, espera };
@@ -294,6 +296,46 @@ describe('registro de crisis', () => {
     assert.equal(await r.abierta('cuenta', null), false);
     await r.abrir('cuenta', senal('m2', 300));
     assert.equal(await r.abierta('cuenta', null), true);
+  });
+
+  it('regresión (Codex): un registro dañado con la clave del cierre no se lleva el cierre nuevo', async () => {
+    const { almacen, datos } = almacenEnMemoria();
+    const r = crearRegistroCrisis(almacen);
+    await r.abrir('cuenta', senal('m1', 100));
+    datos.set('cuenta:__cierre', { clave: 'cuenta:__cierre', dueno: 'cuenta', abierta: true } as unknown as RegistroCrisis);
+    await r.cerrarTodas('cuenta', 200);
+    assert.equal(datos.get('cuenta:__cierre')?.momento, 200);
+    assert.equal(await r.abierta('cuenta', null), false);
+  });
+
+  it('regresión (Codex): un reinicio que tarda en escribirse no borra una señal apuntada mientras tanto', async () => {
+    const { almacen, espera } = almacenEnMemoria();
+    const a = crearRegistroCrisis(almacen);
+    const b = crearRegistroCrisis(almacen);
+    await a.abrir('cuenta', senal('m1', 100));
+    let lenta = true;
+    espera.ms = () => (lenta ? ((lenta = false), 30) : 0); // el reinicio de A tarda en llegar al registro
+    const reiniciando = a.olvidarTodo();
+    await b.abrir('cuenta', senal('m2', Date.now() + 60_000)); // B apunta una señal posterior, y llega antes
+    await reiniciando;
+    assert.equal(await crearRegistroCrisis(almacen).abierta('cuenta', null), true, 'm2 sigue en el registro');
+    await b.cerrarTodas('cuenta', Date.now() + 120_000);
+    assert.equal(await crearRegistroCrisis(almacen).abierta('cuenta', null), false);
+  });
+
+  it('un reinicio borra lo anterior a él (de todas las cuentas) y no retrocede', () => {
+    const r = (clave: string, dueno: string, tipo: RegistroCrisis['tipo'], momento: number): RegistroCrisis => ({
+      clave,
+      dueno,
+      tipo,
+      momento,
+      mensajeId: tipo === 'senal' ? clave : undefined,
+    });
+    const todos = [r('a:1', 'a', 'senal', 100), r('b:2', 'b', 'senal', 300), r('a:__cierre', 'a', 'cierre', 150), r('__reinicio', '*', 'reinicio', 50)];
+    const c = cambiosDeReinicio(todos, r('__reinicio', '*', 'reinicio', 200));
+    assert.deepEqual(c.quitar.sort(), ['a:1', 'a:__cierre']);
+    assert.deepEqual(c.poner.map(x => x.momento), [200]);
+    assert.deepEqual(cambiosDeReinicio([r('__reinicio', '*', 'reinicio', 500)], r('__reinicio', '*', 'reinicio', 200)).poner, []);
   });
 
   it('regresión (Codex): un aviso de reinicio que llega tarde no borra una señal posterior al reinicio', async () => {
