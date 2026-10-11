@@ -3,14 +3,16 @@
  * y el almacenamiento del navegador. La lógica vive en lecturaCore.ts.
  */
 import { AIProviderService } from './aiProviderService';
-import { CRISIS_FOLLOWUP } from './crisisSupport';
-import { crisisEnChatGuardado, crisisSincronizada, estadoCrisis } from './crisisVigente';
+import { CRISIS_FOLLOWUP, crisisAbiertaDesde, crisisInConversation } from './crisisSupport';
+import { cerrarCrisisRegistradas, crisisAbiertaEnRegistro } from './crisisVigente';
 import { StorageService } from './storageService';
 import { crearLecturas } from './lecturaCore';
 
 export type { RespuestaLectura } from './lecturaCore';
-// Para que una lectura a la vista se retire si se abre una crisis (también en otra pestaña).
+// Para que una lectura a la vista se vuelva a comprobar si se abre o cierra una crisis.
 export { suscribirCrisis } from './crisisVigente';
+
+const CHAT = 'archetypes_chat_messages';
 
 export const lecturas = crearLecturas({
   // Sin el perfil de la persona: su nombre no hace falta para leer un mapa.
@@ -18,26 +20,15 @@ export const lecturas = crearLecturas({
   maxDaily: () => AIProviderService.getUsageStatus().maxDaily,
   dueno: () => StorageService.getUserProfile().id,
   resultadoExiste: id => StorageService.getCurrentResult()?.id === id || StorageService.getAssessmentHistory().some(r => r.id === id),
-  // Lo que dicen los chats abiertos ahora (aunque no se haya podido guardar) o lo guardado. Se
-  // lee el chat guardado tal cual (no con getChatMessages, que ante un error devuelve una
-  // conversación vacía): si no se puede leer, se trata como abierta.
-  // Mientras esta pestaña no sabe lo de las demás («pendiente»), también cuenta como abierta.
-  crisisAbierta: () => {
+  // El registro común de crisis y el chat guardado tal cual (no con getChatMessages, que ante un
+  // error devuelve una conversación vacía). Si no se puede saber, cuenta como abierta.
+  crisisAbierta: async () => {
     try {
-      const dueno = StorageService.getUserProfile().id;
-      return estadoCrisis(dueno) !== 'cerrada' || crisisEnChatGuardado(localStorage.getItem('archetypes_chat_messages'));
+      return await crisisAbiertaEnRegistro(StorageService.getUserProfile().id, localStorage.getItem(CHAT));
     } catch {
       return true;
     }
   },
-  listo: () => {
-    try {
-      return estadoCrisis(StorageService.getUserProfile().id) !== 'pendiente';
-    } catch {
-      return true;
-    }
-  },
-  esperarListo: () => crisisSincronizada(),
   textoDeCuidado: CRISIS_FOLLOWUP,
   almacen: {
     getItem: k => {
@@ -50,6 +41,24 @@ export const lecturas = crearLecturas({
     setItem: (k, v) => localStorage.setItem(k, v),
   },
 });
+
+/**
+ * «Ya estoy a salvo» desde la lectura: lo mismo que el botón del chat (cierra la crisis en el
+ * chat y en el registro común). Así nadie se queda bloqueado por una crisis que ya no se ve en
+ * ningún chat (una pestaña que la tenía y se cerró sin poder guardarla).
+ */
+export async function declararASalvo(): Promise<void> {
+  const dueno = StorageService.getUserProfile().id;
+  let abierta: string | null = null;
+  try {
+    const chat = StorageService.getChatMessages();
+    abierta = crisisAbiertaDesde(chat);
+    if (crisisInConversation(chat)) StorageService.closeCrisis(chat);
+  } catch {
+    // El registro se cierra igual.
+  }
+  await cerrarCrisisRegistradas(dueno, abierta ? [abierta] : []);
+}
 
 /** Si se puede pedir ahora, y la línea que lo acompaña (qué se envía y lo que cuesta). */
 export function estadoLectura(): { disponible: boolean; aviso: string } {

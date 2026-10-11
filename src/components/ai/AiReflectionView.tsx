@@ -18,7 +18,7 @@ import { ARCHETYPE_VISUALS } from '../../data/archetypeImages';
 import { getArchetypeList, getArchetypeName, getArchetypeNarrative, withDe } from '../../data/archetypesData';
 import { getMapLead } from '../../services/scoringEngine';
 import { crisisAbiertaDesde, crisisInConversation } from '../../services/crisisSupport';
-import { marcarCrisis } from '../../services/crisisVigente';
+import { apuntarCrisis, cerrarCrisisRegistradas } from '../../services/crisisVigente';
 import { GeminiService } from '../../services/geminiService';
 import { AIProviderService, describirEstadoIA } from '../../services/aiProviderService';
 import { StorageService, insertarRespuesta, unirConversaciones } from '../../services/storageService';
@@ -335,15 +335,9 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
   // podido guardar (almacenamiento lleno): se avisa de la crisis abierta (por el mensaje que la
   // abrió) y de un cierre explícito, que vale en todas las pestañas.
   const crisisDesde = crisisAbiertaDesde(messages);
-  const crisisAvisadaRef = useRef<string | null>(null);
   useEffect(() => {
-    const previa = crisisAvisadaRef.current;
-    // Se cerró con el botón si la que estaba abierta sigue en la conversación pero ya no es la
-    // abierta. Si desapareció (conversación borrada o distinta), no se anuncia ningún cierre.
-    const cerrada = previa && previa !== crisisDesde && messages.some(m => m.id === previa) ? previa : undefined;
-    marcarCrisis(userProfile.id, crisisDesde, cerrada);
-    crisisAvisadaRef.current = crisisDesde;
-  }, [userProfile.id, crisisDesde, messages]);
+    if (crisisDesde) void apuntarCrisis(userProfile.id, crisisDesde);
+  }, [userProfile.id, crisisDesde]);
 
   // Cómo se nombra la cabeza del mapa en la cabecera: sin inventar un dominante si no lo hay.
   const lead = currentResult ? getMapLead(currentResult, currentGender) : null;
@@ -601,6 +595,8 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
           <button
             type="button"
             onClick={() => {
+              // En el registro común también, aunque el cierre no llegue a guardarse en el chat.
+              void cerrarCrisisRegistradas(userProfile.id, crisisDesde ? [crisisDesde] : []);
               const { messages: cerrada, guardada } = StorageService.closeCrisis(conversacionVigente());
               if (guardada) reinicioSinGuardarRef.current = false;
               ponerMensajes(cerrada);

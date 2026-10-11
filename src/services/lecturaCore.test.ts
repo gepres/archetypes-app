@@ -23,9 +23,7 @@ function falsas(extra: Partial<DependenciasLectura> = {}) {
     maxDaily: () => 10,
     dueno: () => estado.dueno,
     resultadoExiste: id => estado.existentes.has(id),
-    crisisAbierta: () => estado.crisis,
-    listo: () => true,
-    esperarListo: async () => {},
+    crisisAbierta: async () => estado.crisis,
     textoDeCuidado: 'Sigo aquí contigo.',
     almacen: { getItem: k => almacen.get(k) ?? null, setItem: (k, v) => void almacen.set(k, v) },
     ...extra,
@@ -168,12 +166,12 @@ describe('lectura con IA: cuidados', () => {
     }
   });
 
-  it('expone si hay una crisis abierta y lo que se muestra en su lugar', () => {
+  it('expone si hay una crisis abierta y lo que se muestra en su lugar', async () => {
     const f = falsas();
     const l = crearLecturas(f.deps);
-    assert.equal(l.crisisAbierta(), false);
+    assert.equal(await l.crisisAbierta(), false);
     f.estado.crisis = true;
-    assert.equal(l.crisisAbierta(), true);
+    assert.equal(await l.crisisAbierta(), true);
     assert.deepEqual(l.cuidado, { ok: false, motivo: 'Sigo aquí contigo.', cuidado: true });
   });
 

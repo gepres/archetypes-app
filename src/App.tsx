@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { ArchetypeId, AssessmentResult, Challenge, DailyOracleCard, GenderMode, JournalEntry, UserProfile, DEFAULT_GENDER } from './types';
+import { borrarRegistroCrisis } from './services/crisisVigente';
 import { StorageService } from './services/storageService';
 import { adaptAssessmentResultToGender } from './services/scoringEngine';
 import { Sidebar, NavTab } from './components/layout/Sidebar';
@@ -198,6 +199,7 @@ export default function App() {
       )
     ) {
       localStorage.clear();
+      borrarRegistroCrisis();
       // Lo que el chat tenía en pantalla tampoco sobrevive al reinicio, ni una consulta pendiente.
       setChatAbierto(false);
       setChatEpoch(e => e + 1);

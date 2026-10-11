@@ -35,10 +35,8 @@ export interface DependenciasLectura {
   dueno(): string;
   /** Si ese resultado sigue en los datos de la cuenta abierta. */
   resultadoExiste(resultId: string): boolean;
-  crisisAbierta(): boolean;
-  /** Si ya se sabe el estado de crisis de las demás pestañas (y si no, esperar a saberlo). */
-  listo(): boolean;
-  esperarListo(): Promise<void>;
+  /** Si hay una crisis abierta en esa cuenta (el registro común y el chat guardado). */
+  crisisAbierta(): Promise<boolean>;
   /** El texto con el que se responde ante una crisis abierta. */
   textoDeCuidado: string;
   almacen: { getItem(k: string): string | null; setItem(k: string, v: string): void };
@@ -72,8 +70,8 @@ export function crearLecturas(deps: DependenciasLectura) {
   };
 
   /** Lo que se entrega al llegar la respuesta, si todo sigue en pie: crisis, cuenta y resultado. */
-  const alEntregar = (r: { ok: true; texto: string }, dueno: string, resultId: string): RespuestaLectura => {
-    if (deps.crisisAbierta()) return cuidado;
+  const alEntregar = async (r: { ok: true; texto: string }, dueno: string, resultId: string): Promise<RespuestaLectura> => {
+    if (await deps.crisisAbierta()) return cuidado;
     if (deps.dueno() !== dueno || !deps.resultadoExiste(resultId)) return cambiada;
     return r;
   };
@@ -81,8 +79,6 @@ export function crearLecturas(deps: DependenciasLectura) {
   const lecturas = {
     /** Si hay una crisis abierta ahora: entonces no se muestra ni se lee ninguna lectura. */
     crisisAbierta: () => deps.crisisAbierta(),
-    /** Si ya se sabe lo de las demás pestañas; mientras no, no se muestra ninguna lectura. */
-    listo: () => deps.listo(),
     /** Lo que se muestra en su lugar. */
     cuidado,
 
@@ -105,9 +101,7 @@ export function crearLecturas(deps: DependenciasLectura) {
       if (enCurso) return enCurso.then(r => (r.ok ? alEntregar(r, deps.dueno(), result.id) : r));
       const dueno = deps.dueno();
       const peticion = (async (): Promise<RespuestaLectura> => {
-        // Una pestaña recién abierta aún no sabe si otra tiene una crisis: se espera a saberlo.
-        await deps.esperarListo();
-        if (deps.crisisAbierta()) return cuidado;
+        if (await deps.crisisAbierta()) return cuidado;
         // Solo se envían las elecciones de un resultado de la cuenta abierta.
         if (!deps.resultadoExiste(result.id)) return ajeno;
         const prompt = promptLectura(result, gender);
@@ -115,12 +109,12 @@ export function crearLecturas(deps: DependenciasLectura) {
         const maxDaily = deps.maxDaily();
         const respuesta = await deps.enviar(prompt, result, gender);
         // Al llegar, antes de nada (también si falló la conexión): crisis, cuenta y resultado.
-        if (deps.crisisAbierta()) return cuidado;
+        if (await deps.crisisAbierta()) return cuidado;
         if (deps.dueno() !== dueno || !deps.resultadoExiste(result.id)) return cambiada;
         // Si respondió el mapa simbólico en vez de una IA, no hay lectura: presentarla como
         // «de IA» sería engañoso.
         if (respuesta.provider === 'local') return { ok: false, motivo: motivoSinLectura(respuesta, maxDaily) };
-        const entregable = alEntregar({ ok: true, texto: pulirLectura(respuesta.text) }, dueno, result.id);
+        const entregable = await alEntregar({ ok: true, texto: pulirLectura(respuesta.text) }, dueno, result.id);
         if (entregable.ok) {
           const texto = entregable.texto;
           try {
