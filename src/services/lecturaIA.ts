@@ -3,7 +3,7 @@
  * y el almacenamiento del navegador. La lógica vive en lecturaCore.ts.
  */
 import { AIProviderService } from './aiProviderService';
-import { CRISIS_FOLLOWUP, crisisAbiertaDesde, crisisInConversation } from './crisisSupport';
+import { CRISIS_FOLLOWUP, crisisInConversation, senalesDeCrisis } from './crisisSupport';
 import { cerrarCrisisRegistradas, crisisAbiertaEnRegistro, suscribirCrisis } from './crisisVigente';
 import { StorageService } from './storageService';
 import { crearLecturas } from './lecturaCore';
@@ -66,15 +66,15 @@ export const lecturas = crearLecturas({
  */
 export async function declararASalvo(): Promise<void> {
   const dueno = StorageService.getUserProfile().id;
-  let abierta: string | null = null;
+  let senales: string[] = [];
   try {
     const chat = StorageService.getChatMessages();
-    abierta = crisisAbiertaDesde(chat);
+    senales = senalesDeCrisis(chat);
     if (crisisInConversation(chat)) StorageService.closeCrisis(chat);
   } catch {
     // El registro se cierra igual.
   }
-  await cerrarCrisisRegistradas(dueno, abierta ? [abierta] : []);
+  await cerrarCrisisRegistradas(dueno, senales);
 }
 
 /** Si se puede pedir ahora, y la línea que lo acompaña (qué se envía y lo que cuesta). */

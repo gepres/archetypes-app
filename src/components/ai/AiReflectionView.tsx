@@ -17,7 +17,7 @@ import {
 import { ARCHETYPE_VISUALS } from '../../data/archetypeImages';
 import { getArchetypeList, getArchetypeName, getArchetypeNarrative, withDe } from '../../data/archetypesData';
 import { getMapLead } from '../../services/scoringEngine';
-import { crisisAbiertaDesde, crisisInConversation } from '../../services/crisisSupport';
+import { crisisInConversation, senalesDeCrisis } from '../../services/crisisSupport';
 import { apuntarCrisis, cerrarCrisisRegistradas } from '../../services/crisisVigente';
 import { GeminiService } from '../../services/geminiService';
 import { AIProviderService, describirEstadoIA } from '../../services/aiProviderService';
@@ -332,12 +332,14 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
   // tener que borrar la conversación.
   const crisisAbierta = crisisInConversation(messages);
   // La lectura personal con IA también tiene que saberlo, aunque esta conversación no se haya
-  // podido guardar (almacenamiento lleno): se avisa de la crisis abierta (por el mensaje que la
-  // abrió) y de un cierre explícito, que vale en todas las pestañas.
-  const crisisDesde = crisisAbiertaDesde(messages);
+  // podido guardar (almacenamiento lleno): se apunta cada señal de crisis (por su mensaje), y un
+  // cierre explícito vale en todas las pestañas. Una señal nueva cuenta aunque otra pestaña
+  // hubiera cerrado las anteriores; las que el registro ya conoce no se tocan.
+  const senales = senalesDeCrisis(messages);
+  const senalesClave = JSON.stringify(senales);
   useEffect(() => {
-    if (crisisDesde) void apuntarCrisis(userProfile.id, crisisDesde);
-  }, [userProfile.id, crisisDesde]);
+    for (const id of JSON.parse(senalesClave) as string[]) void apuntarCrisis(userProfile.id, id);
+  }, [userProfile.id, senalesClave]);
 
   // Cómo se nombra la cabeza del mapa en la cabecera: sin inventar un dominante si no lo hay.
   const lead = currentResult ? getMapLead(currentResult, currentGender) : null;
@@ -596,7 +598,7 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
             type="button"
             onClick={() => {
               // En el registro común también, aunque el cierre no llegue a guardarse en el chat.
-              void cerrarCrisisRegistradas(userProfile.id, crisisDesde ? [crisisDesde] : []);
+              void cerrarCrisisRegistradas(userProfile.id, senales);
               const { messages: cerrada, guardada } = StorageService.closeCrisis(conversacionVigente());
               if (guardada) reinicioSinGuardarRef.current = false;
               ponerMensajes(cerrada);

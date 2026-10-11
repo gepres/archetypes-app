@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { AlmacenCrisis, ILEGIBLE, RegistroCrisis, crearRegistroCrisis, crisisDelChatGuardado } from './crisisVigente';
-import { crisisAbiertaDesde } from './crisisSupport';
+import { AlmacenCrisis, ILEGIBLE, RegistroCrisis, crearRegistroCrisis, senalesDelChatGuardado } from './crisisVigente';
+import { CRISIS_CLOSED_NOTE, senalesDeCrisis } from './crisisSupport';
 
 /**
  * Un almacén en memoria, como el IndexedDB que comparten las pestañas: cada `cambiar` es una
@@ -155,6 +155,49 @@ describe('registro de crisis', () => {
     assert.equal(await a.abierta('cuenta', null), false);
   });
 
+  it('regresión (Codex): una señal nueva cuenta aunque otra pestaña cerrara las anteriores', async () => {
+    const { almacen } = almacenEnMemoria();
+    const a = crearRegistroCrisis(almacen);
+    const b = crearRegistroCrisis(almacen);
+    await a.abrir('cuenta', 'm1');
+    await b.cerrarTodas('cuenta'); // B pulsa «Ya estoy a salvo»; el chat de A sigue con m1 a la vista
+    await a.abrir('cuenta', 'm1'); // A vuelve a apuntar lo que ve: m1 sigue cerrada
+    assert.equal(await a.abierta('cuenta', null), false);
+    await a.abrir('cuenta', 'm2'); // y escribe otra señal
+    assert.equal(await b.abierta('cuenta', null), true);
+  });
+
+  it('una señal del chat guardado que el registro no tiene cerrada cuenta, aunque haya otra cerrada antes', async () => {
+    const { almacen } = almacenEnMemoria();
+    const r = crearRegistroCrisis(almacen);
+    await r.cerrarTodas('cuenta', ['m1']);
+    const chat = chatCon({ id: 'm1', role: 'user', content: CRISIS }, { id: 'm2', role: 'user', content: CRISIS });
+    assert.equal(await r.abierta('cuenta', chat), true);
+    await r.cerrarTodas('cuenta', ['m1', 'm2']);
+    assert.equal(await r.abierta('cuenta', chat), false);
+  });
+
+  it('regresión (Codex): al apuntar tarde lo que no pudo, avisa a las demás pestañas', async () => {
+    const { almacen, fallo } = almacenEnMemoria();
+    const nombre = `prueba-tarde-${Date.now()}`;
+    const a = crearRegistroCrisis(almacen, () => new BroadcastChannel(nombre));
+    const b = crearRegistroCrisis(almacen, () => new BroadcastChannel(nombre));
+    fallo.escribir = true;
+    await a.abrir('cuenta', 'm1'); // A no puede apuntarla
+    assert.equal(await b.abierta('cuenta', null), false); // B no lo sabe: puede enseñar una lectura
+    let avisosEnB = 0;
+    const dejar = b.suscribir(() => avisosEnB++);
+    fallo.escribir = false;
+    assert.equal(await a.abierta('cuenta', null), true); // A la apunta ahora…
+    const fin = Date.now() + 2000;
+    while (avisosEnB === 0 && Date.now() < fin) await new Promise(r => setTimeout(r, 10));
+    assert.ok(avisosEnB > 0, 'B recibe el aviso para volver a comprobar'); // …y avisa
+    assert.equal(await b.abierta('cuenta', null), true);
+    dejar();
+    a.cerrar();
+    b.cerrar();
+  });
+
   it('regresión (Codex): reiniciar los datos olvida el registro y lo que esta pestaña recordaba', async () => {
     const { almacen, fallo } = almacenEnMemoria();
     const r = crearRegistroCrisis(almacen);
@@ -200,16 +243,22 @@ describe('registro de crisis', () => {
 });
 
 describe('la crisis de una conversación', () => {
-  it('se identifica por el mensaje que la abrió, hasta que el botón la cierra', () => {
-    assert.equal(crisisAbiertaDesde([{ id: 'u1', role: 'user', content: 'Hola' }]), null);
-    assert.equal(crisisAbiertaDesde([{ id: 'c1', role: 'user', content: CRISIS }, { id: 'c2', role: 'user', content: CRISIS }]), 'c1');
+  it('cada señal se identifica por su mensaje, desde el último cierre con el botón', () => {
+    assert.deepEqual(senalesDeCrisis([{ id: 'u1', role: 'user', content: 'Hola' }]), []);
+    assert.deepEqual(
+      senalesDeCrisis([{ id: 'c1', role: 'user', content: CRISIS }, { id: 'c2', role: 'user', content: CRISIS }]),
+      ['c1', 'c2']
+    );
+    const cierre = { id: 'msg-safe-1', role: 'assistant', content: CRISIS_CLOSED_NOTE, crisisClosed: true };
+    assert.deepEqual(senalesDeCrisis([{ id: 'c1', role: 'user', content: CRISIS }, cierre]), []);
+    assert.deepEqual(senalesDeCrisis([{ id: 'c1', role: 'user', content: CRISIS }, cierre, { id: 'c3', role: 'user', content: CRISIS }]), ['c3']);
   });
 
-  it('en el chat guardado: el mensaje, null, o ilegible', () => {
-    assert.equal(crisisDelChatGuardado(null), null);
-    assert.equal(crisisDelChatGuardado(chatCon({ id: 'm1', role: 'user', content: 'Hola' })), null);
-    assert.equal(crisisDelChatGuardado(chatCon({ id: 'm1', role: 'user', content: CRISIS })), 'm1');
-    assert.equal(crisisDelChatGuardado('{roto'), ILEGIBLE);
-    assert.equal(crisisDelChatGuardado('{"no":"lista"}'), ILEGIBLE);
+  it('en el chat guardado: sus señales, ninguna, o ilegible', () => {
+    assert.deepEqual(senalesDelChatGuardado(null), []);
+    assert.deepEqual(senalesDelChatGuardado(chatCon({ id: 'm1', role: 'user', content: 'Hola' })), []);
+    assert.deepEqual(senalesDelChatGuardado(chatCon({ id: 'm1', role: 'user', content: CRISIS })), ['m1']);
+    assert.equal(senalesDelChatGuardado('{roto'), ILEGIBLE);
+    assert.equal(senalesDelChatGuardado('{"no":"lista"}'), ILEGIBLE);
   });
 });

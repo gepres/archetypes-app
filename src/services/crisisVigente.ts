@@ -4,9 +4,10 @@
  *
  * La conversación guardada no basta: si el almacenamiento está lleno, el mensaje de crisis no
  * llega a guardarse; y una crisis cerrada con el botón puede no llegar a guardar su cierre. Por
- * eso cada crisis se apunta, por el mensaje que la abrió, en un registro común a todas las
- * pestañas (IndexedDB, con mucho más espacio que el almacenamiento del chat):
- * - El chat la apunta al abrirse. Un chat que no tiene ese mensaje no la cierra: no hace nada.
+ * eso cada señal de crisis se apunta, por su mensaje, en un registro común a todas las pestañas
+ * (IndexedDB, con mucho más espacio que el almacenamiento del chat):
+ * - El chat apunta cada señal al enviarla. Un chat que no tiene ese mensaje no la cierra: no hace
+ *   nada. Una señal nueva cuenta aunque otra pestaña hubiera cerrado las anteriores.
  * - El botón «Ya estoy a salvo» cierra todas las de la cuenta (la persona dice que está a salvo).
  * - Una crisis cerrada no se vuelve a abrir aunque reaparezca una copia antigua del chat.
  * - Si el registro no se puede usar, se mira lo que se sepa (lo de esta pestaña y el chat
@@ -16,12 +17,12 @@
  * Los avisos entre pestañas solo sirven para que una lectura a la vista se vuelva a comprobar:
  * no deciden nada.
  */
-import { crisisAbiertaDesde } from './crisisSupport';
+import { senalesDeCrisis } from './crisisSupport';
 
 export interface RegistroCrisis {
   clave: string;
   dueno: string;
-  /** El mensaje que abrió la crisis. */
+  /** El mensaje con la señal de crisis. */
   mensajeId: string;
   abierta: boolean;
   fecha: string;
@@ -41,13 +42,13 @@ export interface AlmacenCrisis {
 /** El chat guardado no se pudo leer. */
 export const ILEGIBLE = '__ilegible__';
 
-/** La crisis abierta en el chat guardado: el mensaje que la abrió, null, o ILEGIBLE. */
-export function crisisDelChatGuardado(guardado: string | null): string | null {
-  if (guardado === null) return null;
+/** Las señales de crisis abiertas en el chat guardado (sus mensajes), o ILEGIBLE. */
+export function senalesDelChatGuardado(guardado: string | null): string[] | typeof ILEGIBLE {
+  if (guardado === null) return [];
   try {
     const mensajes = JSON.parse(guardado);
     if (!Array.isArray(mensajes)) return ILEGIBLE;
-    return crisisAbiertaDesde(mensajes);
+    return senalesDeCrisis(mensajes);
   } catch {
     return ILEGIBLE;
   }
@@ -143,10 +144,10 @@ export function crearRegistroCrisis(almacen: AlmacenCrisis | null, abrirCanal: (
     /** Si hay una crisis abierta en esa cuenta. `guardado`: el chat guardado, tal cual. */
     async abierta(dueno: string, guardado: string | null): Promise<boolean> {
       iniciar();
-      const enChat = crisisDelChatGuardado(guardado);
+      const enChat = senalesDelChatGuardado(guardado);
       if (enChat === ILEGIBLE) return true;
       const pendientes = [...(sinApuntar.get(dueno) ?? [])];
-      if (!almacen) return pendientes.length > 0 || enChat !== null;
+      if (!almacen) return pendientes.length > 0 || enChat.length > 0;
       if (pendientes.length) {
         // Lo que esta pestaña no pudo apuntar se apunta ahora, sin pisar un cierre que ya conste
         // (de otra pestaña, por ejemplo): desde ahí manda el registro. Si sigue sin poder, cuenta
@@ -159,6 +160,8 @@ export function crearRegistroCrisis(almacen: AlmacenCrisis | null, abrirCanal: (
         }
         const s = sinApuntar.get(dueno);
         for (const id of pendientes) s?.delete(id);
+        // Las demás pestañas tienen que saberlo: alguna pudo enseñar una lectura mientras tanto.
+        avisar();
       }
       let rs: RegistroCrisis[];
       try {
@@ -167,8 +170,8 @@ export function crearRegistroCrisis(almacen: AlmacenCrisis | null, abrirCanal: (
         return true;
       }
       if (rs.some(r => r.abierta)) return true;
-      // La del chat guardado, salvo que conste cerrada (su cierre pudo no llegar a guardarse).
-      return enChat !== null && !rs.some(r => r.mensajeId === enChat && !r.abierta);
+      // Las del chat guardado, salvo las que consten cerradas (su cierre pudo no llegar a guardarse).
+      return enChat.some(id => !rs.some(r => r.mensajeId === id && !r.abierta));
     },
 
     /** Reiniciar todos los datos: se olvida todo, también lo que esta pestaña recordaba. */
