@@ -27,8 +27,10 @@ export const LecturaPersonal: React.FC<LecturaPersonalProps> = ({ result, gender
     if (!r.ok) {
       setMotivo(r.motivo);
       setCuidado(!!r.cuidado);
-      // Si ya había una lectura, se queda a la vista: solo falló pedir otra.
-      setEstado(anterior && !r.cuidado ? 'lista' : 'sin-ia');
+      // Si la cuenta o sus datos cambiaron, la lectura anterior tampoco vale: se quita.
+      if (r.invalidada || r.cuidado) setTexto(null);
+      // Si solo falló la conexión, la anterior se queda a la vista.
+      setEstado(anterior && !r.cuidado && !r.invalidada ? 'lista' : 'sin-ia');
       return;
     }
     setTexto(r.texto);
@@ -39,6 +41,13 @@ export const LecturaPersonal: React.FC<LecturaPersonalProps> = ({ result, gender
 
   useEffect(() => {
     const mia = ++peticion.current;
+    // Con una crisis abierta, ni siquiera la lectura guardada: el protocolo de cuidado.
+    if (lecturas.crisisAbierta()) {
+      aplicar(lecturas.cuidado, null);
+      return () => {
+        peticion.current++;
+      };
+    }
     const guardada = lecturas.leer(clave);
     setTexto(guardada);
     setMotivo('');

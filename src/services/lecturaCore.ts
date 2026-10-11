@@ -17,7 +17,16 @@
 import { motivoSinLectura, promptLectura, pulirLectura } from './lecturaPersonal';
 import { AssessmentResult, GenderMode } from '../types';
 
-export type RespuestaLectura = { ok: true; texto: string } | { ok: false; motivo: string; cuidado?: boolean };
+export type RespuestaLectura =
+  | { ok: true; texto: string }
+  | {
+      ok: false;
+      motivo: string;
+      /** Hay una crisis abierta: se muestra el protocolo de cuidado, nunca una interpretación. */
+      cuidado?: boolean;
+      /** La cuenta o sus datos cambiaron (o el resultado no es suyo): la lectura anterior tampoco vale. */
+      invalidada?: boolean;
+    };
 
 export interface DependenciasLectura {
   enviar(prompt: string, result: AssessmentResult, gender: GenderMode): Promise<{ text: string; modelUsed: string; provider: string }>;
@@ -47,18 +56,27 @@ export function crearLecturas(deps: DependenciasLectura) {
   };
 
   const cuidado: RespuestaLectura = { ok: false, motivo: deps.textoDeCuidado, cuidado: true };
-  const ajeno: RespuestaLectura = { ok: false, motivo: 'Este resultado no está guardado en la cuenta abierta, así que no se puede pedir su lectura.' };
+  const ajeno: RespuestaLectura = {
+    ok: false,
+    motivo: 'Este resultado no está guardado en la cuenta abierta, así que no se puede pedir su lectura.',
+    invalidada: true,
+  };
 
   /** Lo que se entrega al llegar la respuesta, si todo sigue en pie: crisis, cuenta y resultado. */
   const alEntregar = (r: { ok: true; texto: string }, dueno: string, resultId: string): RespuestaLectura => {
     if (deps.crisisAbierta()) return cuidado;
     if (deps.dueno() !== dueno || !deps.resultadoExiste(resultId)) {
-      return { ok: false, motivo: 'La cuenta o sus datos cambiaron mientras llegaba la lectura, así que no se muestra.' };
+      return { ok: false, motivo: 'La cuenta o sus datos cambiaron mientras llegaba la lectura, así que no se muestra.', invalidada: true };
     }
     return r;
   };
 
   const lecturas = {
+    /** Si hay una crisis abierta ahora: entonces no se muestra ni se lee ninguna lectura. */
+    crisisAbierta: () => deps.crisisAbierta(),
+    /** Lo que se muestra en su lugar. */
+    cuidado,
+
     /** Por cuenta, resultado y perspectiva: otra cuenta del mismo dispositivo no la ve. */
     clave: (result: AssessmentResult, gender: GenderMode) => `${deps.dueno()}:${result.id}:${gender}`,
 

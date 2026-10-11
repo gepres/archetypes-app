@@ -55,7 +55,13 @@ export const LecturaVoz: React.FC<LecturaVozProps> = ({ resultado, silencio }) =
     if (!r.ok) {
       setMotivo(r.motivo);
       setCuidado(!!r.cuidado);
-      setEstado(anterior && !r.cuidado ? 'lista' : 'sin-ia');
+      // Si la cuenta o sus datos cambiaron (o hay una crisis), la lectura anterior tampoco
+      // vale: se quita y se calla la voz.
+      if (r.invalidada || r.cuidado) {
+        setTexto(null);
+        callar();
+      }
+      setEstado(anterior && !r.cuidado && !r.invalidada ? 'lista' : 'sin-ia');
       if (r.cuidado && !silencioRef.current) decir(textoParaVoz(r.motivo), { rate: 0.94 });
       return;
     }
@@ -68,6 +74,13 @@ export const LecturaVoz: React.FC<LecturaVozProps> = ({ resultado, silencio }) =
 
   useEffect(() => {
     const mia = ++peticion.current;
+    // Con una crisis abierta, ni siquiera la lectura guardada: el protocolo de cuidado.
+    if (lecturas.crisisAbierta()) {
+      aplicar(lecturas.cuidado, null, false);
+      return () => {
+        peticion.current++;
+      };
+    }
     const guardada = lecturas.leer(clave);
     setTexto(guardada);
     const enCurso = lecturas.pendiente(clave);
@@ -117,7 +130,15 @@ export const LecturaVoz: React.FC<LecturaVozProps> = ({ resultado, silencio }) =
           {cajaMotivo}
           <div className="flex items-center gap-4 text-[11px] text-[#7B8880]">
             {!silencio && (
-              <button type="button" onClick={() => decir(textoParaVoz(texto), { rate: 0.96 })} className="inline-flex items-center gap-1.5 hover:text-[#C5CFC7]">
+              <button
+                type="button"
+                onClick={() => {
+                  // Antes de leerla otra vez: si se abrió una crisis, el cuidado y no la lectura.
+                  if (lecturas.crisisAbierta()) aplicar(lecturas.cuidado, null, true);
+                  else decir(textoParaVoz(texto), { rate: 0.96 });
+                }}
+                className="inline-flex items-center gap-1.5 hover:text-[#C5CFC7]"
+              >
                 <Volume2 className="w-3.5 h-3.5" /> Escucharla de nuevo
               </button>
             )}

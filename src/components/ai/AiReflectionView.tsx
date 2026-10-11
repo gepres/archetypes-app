@@ -18,6 +18,7 @@ import { ARCHETYPE_VISUALS } from '../../data/archetypeImages';
 import { getArchetypeList, getArchetypeName, getArchetypeNarrative, withDe } from '../../data/archetypesData';
 import { getMapLead } from '../../services/scoringEngine';
 import { crisisInConversation } from '../../services/crisisSupport';
+import { marcarCrisis } from '../../services/crisisVigente';
 import { GeminiService } from '../../services/geminiService';
 import { AIProviderService, describirEstadoIA } from '../../services/aiProviderService';
 import { StorageService, insertarRespuesta, unirConversaciones } from '../../services/storageService';
@@ -330,6 +331,11 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
   // Mientras una crisis sigue abierta, la persona puede cerrarla diciendo que está a salvo, sin
   // tener que borrar la conversación.
   const crisisAbierta = crisisInConversation(messages);
+  // La lectura personal con IA también tiene que saberlo, aunque esta conversación no se haya
+  // podido guardar (almacenamiento lleno): se avisa del estado de ahora, por cuenta.
+  useEffect(() => {
+    marcarCrisis(userProfile.id, crisisAbierta);
+  }, [userProfile.id, crisisAbierta]);
 
   // Cómo se nombra la cabeza del mapa en la cabecera: sin inventar un dominante si no lo hay.
   const lead = currentResult ? getMapLead(currentResult, currentGender) : null;

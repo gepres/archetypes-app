@@ -124,6 +124,34 @@ describe('lectura con IA: cuidados', () => {
     assert.equal(l.pendiente(l.clave(r, 'male')), undefined);
   });
 
+  it('regresión (Codex): borrar o cambiar de cuenta invalida (para que la pantalla quite también la lectura anterior)', async () => {
+    const f = falsas();
+    const r = resultado('invalida');
+    f.estado.existentes.add(r.id);
+    const l = crearLecturas(f.deps);
+    const p = l.pedir(r, 'male');
+    await tick();
+    f.estado.existentes.clear();
+    f.pendientes[0]('Texto.');
+    const res = await p;
+    assert.equal(res.ok, false);
+    assert.equal(!res.ok && res.invalidada, true);
+    // Un fallo de conexión no invalida: la anterior puede quedarse.
+    const g = falsas({ enviar: async () => ({ text: ['x', '---', '*No pude conectar.*'].join('\n'), modelUsed: 'Fallback Local', provider: 'local' }) });
+    g.estado.existentes.add(r.id);
+    const res2 = await crearLecturas(g.deps).pedir(r, 'male');
+    assert.equal(!res2.ok && res2.invalidada, undefined);
+  });
+
+  it('expone si hay una crisis abierta y lo que se muestra en su lugar', () => {
+    const f = falsas();
+    const l = crearLecturas(f.deps);
+    assert.equal(l.crisisAbierta(), false);
+    f.estado.crisis = true;
+    assert.equal(l.crisisAbierta(), true);
+    assert.deepEqual(l.cuidado, { ok: false, motivo: 'Sigo aquí contigo.', cuidado: true });
+  });
+
   it('la caché es por cuenta: otra cuenta del mismo dispositivo no ve la lectura', async () => {
     const f = falsas();
     const r = resultado('cuentas');

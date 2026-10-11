@@ -4,6 +4,7 @@
  */
 import { AIProviderService } from './aiProviderService';
 import { CRISIS_FOLLOWUP, crisisInConversation } from './crisisSupport';
+import { crisisMarcada } from './crisisVigente';
 import { StorageService } from './storageService';
 import { crearLecturas } from './lecturaCore';
 
@@ -15,11 +16,14 @@ export const lecturas = crearLecturas({
   maxDaily: () => AIProviderService.getUsageStatus().maxDaily,
   dueno: () => StorageService.getUserProfile().id,
   resultadoExiste: id => StorageService.getCurrentResult()?.id === id || StorageService.getAssessmentHistory().some(r => r.id === id),
+  // Lo que el chat dice ahora (aunque no se haya podido guardar) o lo guardado. Si no se puede
+  // saber, se trata como abierta: mejor no entregar una interpretación que entregarla mal.
   crisisAbierta: () => {
     try {
-      return crisisInConversation(StorageService.getChatMessages());
+      const dueno = StorageService.getUserProfile().id;
+      return crisisMarcada(dueno) || crisisInConversation(StorageService.getChatMessages());
     } catch {
-      return false;
+      return true;
     }
   },
   textoDeCuidado: CRISIS_FOLLOWUP,
