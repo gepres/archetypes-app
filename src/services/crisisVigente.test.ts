@@ -283,48 +283,55 @@ describe('registro de crisis', () => {
     }
   });
 
-  it('regresión (Codex): un registro que no se entiende (de otra versión) cuenta como abierta, y «Ya estoy a salvo» lo limpia', async () => {
+  it('regresión (Codex): un registro de otra forma cuenta como una señal sin fecha: abierta hasta un cierre', async () => {
     const { almacen, datos } = almacenEnMemoria();
     const r = crearRegistroCrisis(almacen);
     // Como los de la versión anterior: sin tipo ni momento.
     datos.set('cuenta:m0', { clave: 'cuenta:m0', dueno: 'cuenta', abierta: false, fecha: 'x' } as unknown as RegistroCrisis);
     assert.equal(await r.abierta('cuenta', null), true);
-    await r.abrir('cuenta', senal('m1', 100));
-    assert.equal(await r.abierta('cuenta', chatCon(deCrisis('m1', 100))), true);
     await r.cerrarTodas('cuenta', 200);
-    assert.equal(datos.has('cuenta:m0'), false);
     assert.equal(await r.abierta('cuenta', null), false);
+    assert.equal(datos.has('cuenta:m0'), true, 'no se borra: se cuenta');
     await r.abrir('cuenta', senal('m2', 300));
     assert.equal(await r.abierta('cuenta', null), true);
   });
 
-  it('regresión (Codex): un cierre aprendido del chat no limpia nada, y uno pulsado no limpia lo posterior a él', async () => {
+  it('regresión (Codex): una señal dañada con momento cuenta por él; sin momento, la cierra cualquier cierre', async () => {
     const { almacen, datos } = almacenEnMemoria();
     const r = crearRegistroCrisis(almacen);
-    // Una señal dañada (sin su mensaje) de momento 300, y otra sin momento.
     datos.set('cuenta:x', { clave: 'cuenta:x', dueno: 'cuenta', tipo: 'senal', momento: 300 } as RegistroCrisis);
     datos.set('cuenta:y', { clave: 'cuenta:y', dueno: 'cuenta', tipo: 'senal', mensajeId: 'y' } as unknown as RegistroCrisis);
-    // Un cierre antiguo del chat (200), aprendido al comprobar y al cargar el chat: no limpia.
+    // Un cierre antiguo del chat (200), y uno pulsado (250): ninguno cierra la de 300.
     assert.equal(await r.abierta('cuenta', chatCon(deCrisis('m1', 100), cierreEnChat(200))), true);
-    await r.aprenderCierre('cuenta', 200);
-    assert.equal(datos.has('cuenta:x') && datos.has('cuenta:y'), true);
-    // «Ya estoy a salvo» pulsado en 250: quita la que no tiene momento, no la de 300.
     await r.cerrarTodas('cuenta', 250);
-    assert.equal(datos.has('cuenta:y'), false);
-    assert.equal(datos.has('cuenta:x'), true);
     assert.equal(await r.abierta('cuenta', null), true);
-    // Pulsado después de ella, sí.
+    assert.equal(datos.has('cuenta:x') && datos.has('cuenta:y'), true);
     await r.cerrarTodas('cuenta', 400);
     assert.equal(await r.abierta('cuenta', null), false);
   });
 
-  it('regresión (Codex): un registro dañado con la clave del cierre no se lleva el cierre nuevo', async () => {
+  it('regresión (Codex): un registro dañado en la clave del cierre no se pisa: el cierre va a otra clave', async () => {
     const { almacen, datos } = almacenEnMemoria();
     const r = crearRegistroCrisis(almacen);
     await r.abrir('cuenta', senal('m1', 100));
-    datos.set('cuenta:__cierre', { clave: 'cuenta:__cierre', dueno: 'cuenta', abierta: true } as unknown as RegistroCrisis);
+    datos.set('cuenta:__cierre', { clave: 'cuenta:__cierre', dueno: 'cuenta', momento: 300 } as unknown as RegistroCrisis);
+    await r.cerrarTodas('cuenta', 250); // no la cierra (300 es posterior), ni se la lleva
+    assert.equal(datos.get('cuenta:__cierre')?.momento, 300);
+    assert.equal(await r.abierta('cuenta', null), true);
+    await r.cerrarTodas('cuenta', 400);
+    assert.equal(datos.get('cuenta:__cierre:400')?.tipo, 'cierre');
+    assert.equal(await r.abierta('cuenta', null), false);
+  });
+
+  it('regresión (Codex): un cierre o un reinicio ilegible no cierra nada, ni bloquea por sí solo', async () => {
+    const { almacen, datos } = almacenEnMemoria();
+    const r = crearRegistroCrisis(almacen);
+    datos.set('__reinicio', { clave: '__reinicio', dueno: '*', tipo: 'reinicio' } as unknown as RegistroCrisis);
+    datos.set('cuenta:__cierre', { clave: 'cuenta:__cierre', dueno: 'cuenta', tipo: 'cierre', momento: 'x' } as unknown as RegistroCrisis);
+    assert.equal(await r.abierta('cuenta', null), false);
+    await r.abrir('cuenta', senal('m1', 100));
+    assert.equal(await r.abierta('cuenta', null), true);
     await r.cerrarTodas('cuenta', 200);
-    assert.equal(datos.get('cuenta:__cierre')?.momento, 200);
     assert.equal(await r.abierta('cuenta', null), false);
   });
 

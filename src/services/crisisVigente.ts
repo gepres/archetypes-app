@@ -21,9 +21,10 @@
  *   deja apuntado el reinicio, que lo cierra; lo posterior se conserva, aunque se apuntara
  *   mientras el reinicio esperaba. Se lo cuenta a las demás pestañas con su momento: olvidan lo
  *   anterior a él, no lo posterior.
- * - Si no se puede leer el registro o el chat guardado, o el registro tiene algo que no se
- *   entiende, cuenta como abierta. Solo lo limpia un «Ya estoy a salvo» pulsado (no un cierre
- *   antiguo que se aprende del chat), y no lo que sea posterior a él.
+ * - Si no se puede leer el registro o el chat guardado, cuenta como abierta. Un registro que no
+ *   se entiende del todo (dañado, o de otra forma) no se borra ni se salta: un cierre o un
+ *   reinicio ilegible no cierra nada, y cualquier otra cosa cuenta como una señal, con su momento
+ *   si se lee y, si no, el 0 (como un mensaje del chat sin fecha: abierta hasta el primer cierre).
  * Hay una crisis abierta si alguna señal es posterior al último cierre que se conozca. (Se cuenta
  * con que el reloj del dispositivo no retrocede.)
  */
@@ -83,17 +84,34 @@ export function crisisDelChatGuardado(
   }
 }
 
-const TIPOS = new Set(['senal', 'cierre', 'reinicio']);
-/** Un registro que se entiende (los de otra forma, de una versión anterior o dañados, no). */
-const valido = (r: RegistroCrisis): boolean =>
-  !!r && TIPOS.has(r.tipo) && Number.isFinite(r.momento) && (r.tipo !== 'senal' || typeof r.mensajeId === 'string');
+/**
+ * Cómo cuenta un registro tal como está guardado. Un cierre o un reinicio sin un momento legible
+ * no cierra nada (null: no cuenta). Cualquier otra cosa (una señal, o algo que no se entiende)
+ * cuenta como una señal: con su momento si se lee y, si no, el 0.
+ */
+export function comoCuenta(r: unknown): RegistroCrisis | null {
+  if (!r || typeof r !== 'object') return null;
+  const x = r as Partial<RegistroCrisis>;
+  const momento = typeof x.momento === 'number' && Number.isFinite(x.momento) ? x.momento : null;
+  const clave = String(x.clave);
+  const dueno = String(x.dueno);
+  if (x.tipo === 'cierre' || x.tipo === 'reinicio') return momento === null ? null : { clave, dueno, tipo: x.tipo, momento };
+  return { clave, dueno, tipo: 'senal', mensajeId: typeof x.mensajeId === 'string' ? x.mensajeId : clave, momento: momento ?? 0 };
+}
+const cuentan = (rs: RegistroCrisis[]) => rs.map(comoCuenta).filter((r): r is RegistroCrisis => r !== null);
 
-/** Lo que cambia un reinicio en el registro entero (todas las cuentas). */
+/** Lo que cambia un reinicio en el registro entero (todas las cuentas): se va lo anterior a él. */
 export const cambiosDeReinicio = (todos: RegistroCrisis[], reinicio: RegistroCrisis): CambiosCrisis => {
-  const actual = todos.find(r => valido(r) && r.tipo === 'reinicio');
+  const actual = comoCuenta(todos.find(r => r?.clave === reinicio.clave));
   return {
-    quitar: todos.filter(r => r.tipo !== 'reinicio' && (!valido(r) || r.momento <= reinicio.momento)).map(r => r.clave),
-    poner: actual && actual.momento >= reinicio.momento ? [] : [reinicio],
+    quitar: todos
+      .filter(r => r?.clave !== reinicio.clave)
+      .filter(r => {
+        const c = comoCuenta(r);
+        return c === null || c.momento <= reinicio.momento;
+      })
+      .map(r => r.clave),
+    poner: actual?.tipo === 'reinicio' && actual.momento >= reinicio.momento ? [] : [reinicio],
   };
 };
 
@@ -104,28 +122,26 @@ const deSenal = (dueno: string, s: SenalCrisis): RegistroCrisis => ({
   mensajeId: s.id,
   momento: s.momento,
 });
-const deCierre = (dueno: string, hasta: number): RegistroCrisis => ({ clave: `${dueno}:__cierre`, dueno, tipo: 'cierre', momento: hasta });
+const deCierre = (dueno: string, hasta: number, clave = `${dueno}:__cierre`): RegistroCrisis => ({ clave, dueno, tipo: 'cierre', momento: hasta });
 const deReinicio = (momento: number): RegistroCrisis => ({ clave: '__reinicio', dueno: '*', tipo: 'reinicio', momento });
 
 /**
  * Lo que falta en el registro: las señales que no consten, y el cierre si va más allá del que
- * hay. Con `limpiarHasta` (un «Ya estoy a salvo» pulsado ahora), quita también lo que no se
- * entiende (si no, bloquearía para siempre), salvo lo que sea posterior a ese momento.
+ * hay. Nada se escribe encima de un registro que cuenta como señal (aunque esté dañado): el
+ * cierre va entonces a otra clave.
  */
 const loQueFalta =
-  (dueno: string, senales: SenalCrisis[], cierre: number | null, limpiarHasta: number | null = null) =>
+  (dueno: string, senales: SenalCrisis[], cierre: number | null) =>
   (rs: RegistroCrisis[]): CambiosCrisis => {
-    const buenos = rs.filter(valido);
-    const nuevas = senales.filter(s => !buenos.some(r => r.tipo === 'senal' && r.mensajeId === s.id)).map(s => deSenal(dueno, s));
-    const actual = buenos.find(r => r.tipo === 'cierre');
-    const avanza = cierre !== null && (!actual || actual.momento < cierre);
-    const poner = avanza ? [...nuevas, deCierre(dueno, cierre)] : nuevas;
-    // Lo que se quita no incluye lo que se va a poner en su lugar (y se quita antes de poner).
-    const claves = new Set(poner.map(r => r.clave));
-    const posterior = (r: RegistroCrisis) => Number.isFinite(r?.momento) && r.momento > (limpiarHasta ?? Infinity);
-    const quitar =
-      limpiarHasta === null ? [] : rs.filter(r => !valido(r) && !claves.has(r.clave) && !posterior(r)).map(r => r.clave);
-    return { poner, quitar };
+    const cs = cuentan(rs);
+    const ocupada = (clave: string) => cs.some(r => r.clave === clave && r.tipo === 'senal');
+    const nuevas = senales
+      .filter(s => !cs.some(r => r.tipo === 'senal' && r.mensajeId === s.id) && !ocupada(`${dueno}:${s.id}`))
+      .map(s => deSenal(dueno, s));
+    const actual = Math.max(-Infinity, ...cs.filter(r => r.tipo === 'cierre').map(r => r.momento));
+    if (cierre === null || actual >= cierre) return { poner: nuevas, quitar: [] };
+    const clave = ocupada(`${dueno}:__cierre`) ? `${dueno}:__cierre:${cierre}` : `${dueno}:__cierre`;
+    return { poner: [...nuevas, deCierre(dueno, cierre, clave)], quitar: [] };
   };
 
 /** Lo que una pestaña sabe de una cuenta y aún no consta en el registro. */
@@ -262,15 +278,12 @@ export function crearRegistroCrisis(
     alAbrir = new Promise(r => setTimeout(r, esperaAlAbrir));
   };
 
-  /**
-   * Apunta una señal o un cierre; si no se puede, se recuerda y se cuenta a las demás. `pulsado`:
-   * un «Ya estoy a salvo» de ahora (limpia lo que no se entiende, hasta su momento).
-   */
-  const apuntar = async (dueno: string, senales: SenalCrisis[], cierre: number | null, pulsado = false) => {
+  /** Apunta una señal o un cierre; si no se puede, se recuerda y se cuenta a las demás. */
+  const apuntar = async (dueno: string, senales: SenalCrisis[], cierre: number | null) => {
     iniciar();
     try {
       if (!almacen) throw new Error('sin registro');
-      await almacen.cambiar(dueno, loQueFalta(dueno, senales, cierre, pulsado ? cierre : null));
+      await almacen.cambiar(dueno, loQueFalta(dueno, senales, cierre));
     } catch {
       recordar(dueno, senales, cierre);
       contar(dueno);
@@ -284,13 +297,11 @@ export function crearRegistroCrisis(
       return apuntar(dueno, [senal], null);
     },
 
-    /** «Ya estoy a salvo»: cierra toda señal de la cuenta anterior a `hasta`, y ninguna posterior. */
+    /**
+     * «Ya estoy a salvo» (de ahora, o uno ya pulsado que dice el chat): cierra toda señal de la
+     * cuenta anterior a `hasta`, y ninguna posterior.
+     */
     cerrarTodas(dueno: string, hasta: number = Date.now()): Promise<void> {
-      return apuntar(dueno, [], hasta, true);
-    },
-
-    /** Un «Ya estoy a salvo» que ya se pulsó (lo que dice el chat): se apunta, sin limpiar nada. */
-    aprenderCierre(dueno: string, hasta: number): Promise<void> {
       return apuntar(dueno, [], hasta);
     },
 
@@ -306,12 +317,11 @@ export function crearRegistroCrisis(
       let rs: RegistroCrisis[] = [];
       if (almacen) {
         try {
-          rs = await almacen.deDueno(dueno);
+          rs = cuentan(await almacen.deDueno(dueno));
         } catch {
           return true;
         }
       }
-      if (rs.some(r => !valido(r))) return true;
       const sabido = sinApuntar.get(dueno);
       const cierres = [chat.cierre, sabido?.cierre ?? null, reinicio, ...rs.filter(r => r.tipo !== 'senal').map(r => r.momento)];
       const hasta = Math.max(-Infinity, ...cierres.filter((x): x is number => x !== null));
@@ -453,7 +463,6 @@ const deLaApp = crearRegistroCrisis(almacenEnNavegador(), () =>
 );
 export const apuntarCrisis = deLaApp.abrir;
 export const cerrarCrisisRegistradas = deLaApp.cerrarTodas;
-export const apuntarCierreDelChat = deLaApp.aprenderCierre;
 export const crisisAbiertaEnRegistro = deLaApp.abierta;
 export const suscribirCrisis = deLaApp.suscribir;
 /** «Ya estoy a salvo» en el chat: el cierre del registro y la marca del chat, con el mismo momento. */
