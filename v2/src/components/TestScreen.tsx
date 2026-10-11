@@ -50,6 +50,9 @@ export const TestScreen: React.FC<TestScreenProps> = ({ tipo, silencio, onToggle
   // La pantalla que está de verdad delante. Durante la animación de salida, la anterior sigue
   // visible unos milisegundos con sus botones: un toque en ella no debe contar.
   const vigenteRef = useRef<string | null>(null);
+  // Tras elegir, medio segundo sin aceptar otra elección, dure lo que dure la animación (con
+  // movimiento reducido la pantalla cambia a los 80 ms y el segundo toque caería en la siguiente).
+  const bloqueoHasta = useRef(0);
 
   const pantalla: Pantalla | null = useMemo(() => {
     if (desempate) return desempate;
@@ -128,6 +131,8 @@ export const TestScreen: React.FC<TestScreenProps> = ({ tipo, silencio, onToggle
       if (bloqueadoRef.current || !pantalla) return;
       // Solo cuenta un toque en la pantalla vigente, y una sola respuesta por situación.
       if (vigenteRef.current !== pantalla.id || respuestasRef.current.some(r => r.dilemaId === pantalla.id)) return;
+      if (Date.now() < bloqueoHasta.current) return;
+      bloqueoHasta.current = Date.now() + 500;
       bloqueadoRef.current = true;
       // Elegir corta la voz al instante: no hay que esperar a que termine.
       callar();

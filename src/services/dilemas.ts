@@ -110,9 +110,12 @@ interface Capa {
 /**
  * El orden por capas (desempates incluidos): cada capa son las figuras cuyas derrotas fueron
  * todas contra figuras ya colocadas. Dentro de una capa, por la puntuación de las situaciones.
- * Si las respuestas se contradicen (A gana a B, B a C y C a A), ninguna queda libre: entonces se
- * colocan las de mejor tasa contando los desempates, y las que quedan a menos de un punto van
- * juntas (así se ofrece desempatarlas, y lo que se elija ahí decide).
+ * Si las respuestas se contradicen (A gana a B, B a C y C a A), las de ese ciclo no quedan nunca
+ * libres. Entonces se mira solo dentro de los ciclos a los que nadie de fuera ha ganado (los que
+ * podrían ir delante sin contradecir ninguna comparación), y entre sus figuras se coloca la de
+ * mejor tasa contando los desempates; las que quedan a menos de un punto van juntas (así se
+ * ofrece desempatarlas, y lo que se elija ahí decide). Una precedencia que no forma parte de un
+ * ciclo se respeta siempre.
  */
 function capas(c: Comparaciones, puntuacion: Record<ArchetypeId, number>): Capa[] {
   const conTodo = tasa(c);
@@ -121,7 +124,29 @@ function capas(c: Comparaciones, puntuacion: Record<ArchetypeId, number>): Capa[
   const lista: Capa[] = [];
   while (restantes.length) {
     const libres = restantes.filter(id => [...c.leGanaron[id]].every(g => colocadas.has(g)));
-    const capa = (libres.length ? libres : mejores(restantes, conTodo, 1)).sort((a, b) => puntuacion[b] - puntuacion[a]);
+    let capa = libres;
+    if (!capa.length) {
+      // A quién puede llegar cada figura encadenando victorias, sin pasar por las ya colocadas.
+      const quedan = new Set(restantes);
+      const alcanza = (desde: ArchetypeId, hasta: ArchetypeId) => {
+        const vistos = new Set([desde]);
+        const pila = [desde];
+        while (pila.length) {
+          const x = pila.pop()!;
+          for (const y of quedan) {
+            if (vistos.has(y) || !c.leGanaron[y].has(x)) continue;
+            if (y === hasta) return true;
+            vistos.add(y);
+            pila.push(y);
+          }
+        }
+        return false;
+      };
+      // Las de un ciclo al que nadie de fuera ha ganado: cada una alcanza a todas las que le ganaron.
+      const enCabeza = restantes.filter(id => [...c.leGanaron[id]].filter(g => quedan.has(g)).every(g => alcanza(id, g)));
+      capa = mejores(enCabeza.length ? enCabeza : restantes, conTodo, 1);
+    }
+    capa = [...capa].sort((a, b) => puntuacion[b] - puntuacion[a]);
     lista.push({ ids: capa });
     for (const id of capa) colocadas.add(id);
     restantes = restantes.filter(id => !colocadas.has(id));

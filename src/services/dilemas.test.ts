@@ -113,6 +113,29 @@ describe('puntuación: la parte de sus comparaciones que ganó cada figura', () 
   });
 });
 
+/** Ninguna figura queda por delante de otra que le ganó, salvo si las dos están en un ciclo. */
+function respetaPrecedencias(respuestas: RespuestaDilema[], tipo: TipoTest) {
+  const delTest = new Map(dilemasDelTest(tipo).map(d => [d.id, d]));
+  const gano = new Map<ArchetypeId, Set<ArchetypeId>>(IDS.map(id => [id, new Set()]));
+  for (const r of respuestas) {
+    const otras = r.entre ?? delTest.get(r.dilemaId)!.opciones.map(o => o.arquetipo);
+    for (const o of otras) if (o !== r.arquetipo) gano.get(r.arquetipo)!.add(o);
+  }
+  const alcanza = (a: ArchetypeId, b: ArchetypeId) => {
+    const vistos = new Set([a]);
+    const pila = [a];
+    while (pila.length) for (const y of gano.get(pila.pop()!)!) {
+      if (y === b) return true;
+      if (!vistos.has(y)) { vistos.add(y); pila.push(y); }
+    }
+    return false;
+  };
+  const pos = new Map(calcularResultadoDilemas(respuestas, tipo, 'male').ranking.map((x, i) => [x.archetypeId, i]));
+  for (const [a, vencidas] of gano)
+    for (const b of vencidas)
+      if (!alcanza(b, a)) assert.ok(pos.get(a)! < pos.get(b)!, `${a} ganó a ${b} y quedó detrás`);
+}
+
 describe('desempate', () => {
   it('no se ofrece hasta haber respondido todas las situaciones', () => {
     const todas = responder('quick', IDS);
@@ -221,6 +244,22 @@ describe('desempate', () => {
         assert.equal(getMapLead(r, 'male').ids[0], r.ranking[0].archetypeId, `caso ${s}`);
       }
       if (resueltos >= 2 && r.compositeProfile.pair) assert.deepEqual(r.compositeProfile.pair, [r.ranking[0].archetypeId, r.ranking[1].archetypeId], `caso ${s}`);
+    }
+  });
+
+  it('regresión (Codex): un ciclo ajeno no borra una precedencia que sí se puede respetar', () => {
+    // Integrador ganó a Sanador y Sanador no tiene ningún camino de victorias hasta Integrador:
+    // Sanador no puede quedar por delante.
+    const respuestas = dilemasDelTest('quick').map(d => ({ dilemaId: d.id, arquetipo: barajar(d.opciones, `noise-2704-${d.id}`)[0].arquetipo }));
+    respetaPrecedencias(desempatar(respuestas, 'quick', IDS), 'quick');
+  });
+
+  it('con respuestas al azar (con ciclos), nadie va delante de quien le ganó salvo dentro de un ciclo', () => {
+    for (let s = 0; s < 300; s++) {
+      for (const tipo of ['quick', 'full'] as TipoTest[]) {
+        const respuestas = dilemasDelTest(tipo).map(d => ({ dilemaId: d.id, arquetipo: barajar(d.opciones, `ciclo-${s}-${d.id}`)[0].arquetipo }));
+        respetaPrecedencias(desempatar(respuestas, tipo, barajar(IDS, `pref-${s}`)), tipo);
+      }
     }
   });
 
