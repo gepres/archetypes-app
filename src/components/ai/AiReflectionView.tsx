@@ -17,7 +17,7 @@ import {
 import { ARCHETYPE_VISUALS } from '../../data/archetypeImages';
 import { getArchetypeList, getArchetypeName, getArchetypeNarrative, withDe } from '../../data/archetypesData';
 import { getMapLead } from '../../services/scoringEngine';
-import { crisisInConversation } from '../../services/crisisSupport';
+import { crisisAbiertaDesde, crisisInConversation } from '../../services/crisisSupport';
 import { marcarCrisis } from '../../services/crisisVigente';
 import { GeminiService } from '../../services/geminiService';
 import { AIProviderService, describirEstadoIA } from '../../services/aiProviderService';
@@ -332,10 +332,18 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
   // tener que borrar la conversación.
   const crisisAbierta = crisisInConversation(messages);
   // La lectura personal con IA también tiene que saberlo, aunque esta conversación no se haya
-  // podido guardar (almacenamiento lleno): se avisa del estado de ahora, por cuenta.
+  // podido guardar (almacenamiento lleno): se avisa de la crisis abierta (por el mensaje que la
+  // abrió) y de un cierre explícito, que vale en todas las pestañas.
+  const crisisDesde = crisisAbiertaDesde(messages);
+  const crisisAvisadaRef = useRef<string | null>(null);
   useEffect(() => {
-    marcarCrisis(userProfile.id, crisisAbierta);
-  }, [userProfile.id, crisisAbierta]);
+    const previa = crisisAvisadaRef.current;
+    // Se cerró con el botón si la que estaba abierta sigue en la conversación pero ya no es la
+    // abierta. Si desapareció (conversación borrada o distinta), no se anuncia ningún cierre.
+    const cerrada = previa && previa !== crisisDesde && messages.some(m => m.id === previa) ? previa : undefined;
+    marcarCrisis(userProfile.id, crisisDesde, cerrada);
+    crisisAvisadaRef.current = crisisDesde;
+  }, [userProfile.id, crisisDesde, messages]);
 
   // Cómo se nombra la cabeza del mapa en la cabecera: sin inventar un dominante si no lo hay.
   const lead = currentResult ? getMapLead(currentResult, currentGender) : null;

@@ -6,57 +6,99 @@
  * personal con IA, que no debe entregar una interpretación durante una crisis) pregunta aquí,
  * además de mirar la conversación guardada.
  *
- * Entre pestañas:
- * - Cada pestaña declara solo lo suyo: una conversación incompleta en otra pestaña no puede
- *   cerrar la crisis que esta tiene abierta. La crisis está abierta si lo está en alguna.
- * - Una pestaña nueva pregunta al abrirse y las demás le cuentan las crisis que tienen abiertas.
- * - Quien necesite reaccionar (una lectura a la vista) se suscribe a los cambios.
+ * Cada crisis se identifica por el mensaje que la abrió (crisisAbiertaDesde). Entre pestañas:
+ * - Cada pestaña informa de la crisis que tiene abierta su chat; la crisis está abierta si
+ *   alguna pestaña la tiene. Un chat sin ese mensaje (incompleto) no la cierra: solo informa de
+ *   lo suyo.
+ * - Un cierre explícito (el botón «estoy a salvo») se anuncia con el mensaje de esa crisis y
+ *   vale para todas, también para lo que contó una pestaña que ya se cerró.
+ * - Una pestaña nueva pregunta al abrirse; las demás le cuentan lo que saben (también lo que
+ *   oyeron de otras) y los cierres. Hasta recibirlo (un momento), el estado está «pendiente»: quien
+ *   lo consulte debe esperar, no darlo por cerrado.
  */
 import { crisisInConversation } from './crisisSupport';
 
 interface Mensaje {
   tipo?: unknown;
-  pestana?: unknown;
+  de?: unknown;
+  quien?: unknown;
   dueno?: unknown;
   abierta?: unknown;
+  ids?: unknown;
 }
 
+export type EstadoCrisis = 'abierta' | 'cerrada' | 'pendiente';
+
 export function crearCrisisVigente(
-  abrirCanal: () => BroadcastChannel | null = () => (typeof BroadcastChannel === 'undefined' ? null : new BroadcastChannel('archetypes-crisis'))
+  abrirCanal: () => BroadcastChannel | null = () => (typeof BroadcastChannel === 'undefined' ? null : new BroadcastChannel('archetypes-crisis')),
+  /** Cuánto se espera a que respondan las demás pestañas al abrirse. */
+  espera = 300
 ) {
   const pestana = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
-  /** Por cuenta, las pestañas que la tienen abierta. */
-  const abiertas = new Map<string, Set<string>>();
-  /** Lo que esta pestaña tiene abierto. */
-  const propias = new Map<string, boolean>();
+  /** Por cuenta, lo que cada pestaña dice tener abierto (el mensaje que abrió su crisis). */
+  const informes = new Map<string, Map<string, string>>();
+  /** Por cuenta, las crisis que alguien cerró explícitamente. */
+  const cerradas = new Map<string, Set<string>>();
   const oyentes = new Set<() => void>();
   let canal: BroadcastChannel | null = null;
   let iniciado = false;
+  let listo = false;
+  let alEstarListo: () => void = () => {};
+  const sincronia = new Promise<void>(r => {
+    alEstarListo = r;
+  });
+
+  const abiertaEn = (dueno: string) => {
+    const cerr = cerradas.get(dueno);
+    for (const id of informes.get(dueno)?.values() ?? []) if (!cerr?.has(id)) return true;
+    return false;
+  };
+  const conAviso = (dueno: string, cambio: () => void) => {
+    const antes = abiertaEn(dueno);
+    cambio();
+    if (antes !== abiertaEn(dueno)) for (const f of oyentes) f();
+  };
+  const informe = (dueno: string, quien: string, id: string | null) =>
+    conAviso(dueno, () => {
+      const m = informes.get(dueno) ?? new Map<string, string>();
+      if (id) m.set(quien, id);
+      else m.delete(quien);
+      informes.set(dueno, m);
+    });
+  const cierre = (dueno: string, ids: string[]) =>
+    conAviso(dueno, () => {
+      const s = cerradas.get(dueno) ?? new Set<string>();
+      for (const id of ids) s.add(id);
+      cerradas.set(dueno, s);
+    });
 
   const enviar = (m: object) => {
     try {
-      canal?.postMessage(m);
+      canal?.postMessage({ ...m, de: pestana });
     } catch {
       // Sin canal, al menos esta pestaña lo sabe.
     }
   };
 
-  const aplicar = (dueno: string, quien: string, abierta: boolean) => {
-    const s = abiertas.get(dueno) ?? new Set<string>();
-    const antes = s.size > 0;
-    if (abierta) s.add(quien);
-    else s.delete(quien);
-    abiertas.set(dueno, s);
-    if (antes !== s.size > 0) for (const f of oyentes) f();
+  const recibir = (m: Mensaje) => {
+    if (!m || m.de === pestana) return;
+    if (m.tipo === 'hola') {
+      // Se cuenta todo lo que se sabe: lo propio, lo oído de otras y los cierres.
+      for (const [dueno, porPestana] of informes)
+        for (const [quien, id] of porPestana) enviar({ tipo: 'informe', quien, dueno, abierta: id });
+      for (const [dueno, ids] of cerradas) enviar({ tipo: 'cierre', dueno, ids: [...ids] });
+    } else if (m.tipo === 'informe' && typeof m.dueno === 'string' && typeof m.quien === 'string' && m.quien !== pestana) {
+      informe(m.dueno, m.quien, typeof m.abierta === 'string' ? m.abierta : null);
+    } else if (m.tipo === 'cierre' && typeof m.dueno === 'string' && Array.isArray(m.ids)) {
+      cierre(m.dueno, m.ids.filter((x): x is string => typeof x === 'string'));
+    }
   };
 
-  const recibir = (m: Mensaje) => {
-    if (!m || typeof m.pestana !== 'string' || m.pestana === pestana) return;
-    if (m.tipo === 'hola') {
-      for (const [dueno, abierta] of propias) if (abierta) enviar({ tipo: 'estado', pestana, dueno, abierta: true });
-    } else if (m.tipo === 'estado' && typeof m.dueno === 'string') {
-      aplicar(m.dueno, m.pestana, m.abierta === true);
-    }
+  const terminarSincronia = () => {
+    if (listo) return;
+    listo = true;
+    alEstarListo();
+    for (const f of oyentes) f();
   };
 
   const iniciar = () => {
@@ -67,27 +109,44 @@ export function crearCrisisVigente(
     } catch {
       canal = null;
     }
-    if (!canal) return;
+    if (!canal) {
+      terminarSincronia();
+      return;
+    }
     canal.onmessage = e => recibir(e.data as Mensaje);
     // Que el canal no mantenga vivo un proceso (las pruebas, en Node).
     (canal as unknown as { unref?: () => void }).unref?.();
-    enviar({ tipo: 'hola', pestana });
+    enviar({ tipo: 'hola' });
+    const t = setTimeout(terminarSincronia, espera);
+    (t as unknown as { unref?: () => void }).unref?.();
   };
 
   return {
-    /** El chat de esta pestaña tiene (o ya no tiene) una crisis abierta en esa cuenta. */
-    marcar(dueno: string, abierta: boolean): void {
+    /**
+     * Lo que tiene ahora el chat de esta pestaña en esa cuenta: el mensaje que abrió su crisis
+     * (o null), y si acaba de cerrar una explícitamente, cuál.
+     */
+    marcar(dueno: string, abierta: string | null, cerradaAhora?: string): void {
       iniciar();
-      propias.set(dueno, abierta);
-      aplicar(dueno, pestana, abierta);
-      enviar({ tipo: 'estado', pestana, dueno, abierta });
+      if (cerradaAhora) {
+        cierre(dueno, [cerradaAhora]);
+        enviar({ tipo: 'cierre', dueno, ids: [cerradaAhora] });
+      }
+      informe(dueno, pestana, abierta);
+      enviar({ tipo: 'informe', quien: pestana, dueno, abierta });
     },
-    /** Si alguna pestaña tiene abierta una crisis en esa cuenta. */
-    abierta(dueno: string): boolean {
+    /** Abierta, cerrada, o pendiente mientras esta pestaña aún no sabe lo de las demás. */
+    estado(dueno: string): EstadoCrisis {
       iniciar();
-      return (abiertas.get(dueno)?.size ?? 0) > 0;
+      if (abiertaEn(dueno)) return 'abierta';
+      return listo ? 'cerrada' : 'pendiente';
     },
-    /** Avisa cuando cambia si hay o no una crisis abierta (en cualquier cuenta). */
+    /** Se resuelve cuando esta pestaña ya sabe lo de las demás. */
+    sincronizada(): Promise<void> {
+      iniciar();
+      return sincronia;
+    },
+    /** Avisa cuando cambia si hay o no una crisis abierta, y cuando termina la sincronía. */
     suscribir(f: () => void): () => void {
       iniciar();
       oyentes.add(f);
@@ -103,7 +162,8 @@ export function crearCrisisVigente(
 
 const deEstaPestana = crearCrisisVigente();
 export const marcarCrisis = deEstaPestana.marcar;
-export const crisisMarcada = deEstaPestana.abierta;
+export const estadoCrisis = deEstaPestana.estado;
+export const crisisSincronizada = deEstaPestana.sincronizada;
 export const suscribirCrisis = deEstaPestana.suscribir;
 
 /**
@@ -120,3 +180,4 @@ export function crisisEnChatGuardado(guardado: string | null): boolean {
     return true;
   }
 }
+

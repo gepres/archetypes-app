@@ -36,6 +36,9 @@ export interface DependenciasLectura {
   /** Si ese resultado sigue en los datos de la cuenta abierta. */
   resultadoExiste(resultId: string): boolean;
   crisisAbierta(): boolean;
+  /** Si ya se sabe el estado de crisis de las demás pestañas (y si no, esperar a saberlo). */
+  listo(): boolean;
+  esperarListo(): Promise<void>;
   /** El texto con el que se responde ante una crisis abierta. */
   textoDeCuidado: string;
   almacen: { getItem(k: string): string | null; setItem(k: string, v: string): void };
@@ -78,6 +81,8 @@ export function crearLecturas(deps: DependenciasLectura) {
   const lecturas = {
     /** Si hay una crisis abierta ahora: entonces no se muestra ni se lee ninguna lectura. */
     crisisAbierta: () => deps.crisisAbierta(),
+    /** Si ya se sabe lo de las demás pestañas; mientras no, no se muestra ninguna lectura. */
+    listo: () => deps.listo(),
     /** Lo que se muestra en su lugar. */
     cuidado,
 
@@ -100,6 +105,8 @@ export function crearLecturas(deps: DependenciasLectura) {
       if (enCurso) return enCurso.then(r => (r.ok ? alEntregar(r, deps.dueno(), result.id) : r));
       const dueno = deps.dueno();
       const peticion = (async (): Promise<RespuestaLectura> => {
+        // Una pestaña recién abierta aún no sabe si otra tiene una crisis: se espera a saberlo.
+        await deps.esperarListo();
         if (deps.crisisAbierta()) return cuidado;
         // Solo se envían las elecciones de un resultado de la cuenta abierta.
         if (!deps.resultadoExiste(result.id)) return ajeno;

@@ -85,6 +85,14 @@ export const LecturaVoz: React.FC<LecturaVozProps> = ({ resultado, silencio }) =
 
   useEffect(() => {
     const mia = ++peticion.current;
+    // Recién abierta la pestaña, aún no se sabe si otra tiene una crisis: se espera (la
+    // suscripción avisa al saberlo) sin mostrar nada.
+    if (!lecturas.listo()) {
+      setEstado('cargando');
+      return () => {
+        peticion.current++;
+      };
+    }
     // Con una crisis abierta, ni siquiera la lectura guardada: el protocolo de cuidado.
     if (lecturas.crisisAbierta()) {
       aplicar(lecturas.cuidado, null, false);
@@ -94,6 +102,9 @@ export const LecturaVoz: React.FC<LecturaVozProps> = ({ resultado, silencio }) =
     }
     const guardada = lecturas.leer(clave);
     setTexto(guardada);
+    // Sin crisis: fuera el cuidado de antes, si lo había (vuelve el botón para pedirla).
+    setMotivo('');
+    setCuidado(false);
     const enCurso = lecturas.pendiente(clave);
     if (enCurso) {
       setEstado('cargando');

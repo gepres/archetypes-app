@@ -166,6 +166,22 @@ export const CRISIS_CLOSED_NOTE =
  * salvo (la marca CRISIS_CLOSED_NOTE), sin tener que borrar el historial. Una señal posterior
  * la vuelve a abrir.
  */
+/**
+ * El mensaje que abrió la crisis que sigue abierta (el primero que la disparó tras el último
+ * cierre con el botón), o null si no hay ninguna. Sirve para identificar una crisis entre
+ * pestañas: un cierre explícito de esa crisis vale en todas.
+ */
+export function crisisAbiertaDesde(
+  mensajes: { id?: string; role: string; content: string; crisisClosed?: boolean }[]
+): string | null {
+  let desde: string | null = null;
+  mensajes.forEach((m, i) => {
+    if (m.role === 'user' && detectCrisis(m.content)) desde = desde ?? (m.id || `mensaje-${i}`);
+    else if (m.role !== 'user' && esCierreDelBoton(m)) desde = null;
+  });
+  return desde;
+}
+
 export function crisisInConversation(
   mensajes: { id?: string; role: string; content: string; crisisClosed?: boolean }[]
 ): boolean {

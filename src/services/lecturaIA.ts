@@ -4,7 +4,7 @@
  */
 import { AIProviderService } from './aiProviderService';
 import { CRISIS_FOLLOWUP } from './crisisSupport';
-import { crisisEnChatGuardado, crisisMarcada } from './crisisVigente';
+import { crisisEnChatGuardado, crisisSincronizada, estadoCrisis } from './crisisVigente';
 import { StorageService } from './storageService';
 import { crearLecturas } from './lecturaCore';
 
@@ -21,14 +21,23 @@ export const lecturas = crearLecturas({
   // Lo que dicen los chats abiertos ahora (aunque no se haya podido guardar) o lo guardado. Se
   // lee el chat guardado tal cual (no con getChatMessages, que ante un error devuelve una
   // conversación vacía): si no se puede leer, se trata como abierta.
+  // Mientras esta pestaña no sabe lo de las demás («pendiente»), también cuenta como abierta.
   crisisAbierta: () => {
     try {
       const dueno = StorageService.getUserProfile().id;
-      return crisisMarcada(dueno) || crisisEnChatGuardado(localStorage.getItem('archetypes_chat_messages'));
+      return estadoCrisis(dueno) !== 'cerrada' || crisisEnChatGuardado(localStorage.getItem('archetypes_chat_messages'));
     } catch {
       return true;
     }
   },
+  listo: () => {
+    try {
+      return estadoCrisis(StorageService.getUserProfile().id) !== 'pendiente';
+    } catch {
+      return true;
+    }
+  },
+  esperarListo: () => crisisSincronizada(),
   textoDeCuidado: CRISIS_FOLLOWUP,
   almacen: {
     getItem: k => {

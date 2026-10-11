@@ -1,8 +1,9 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { crearCrisisVigente, crisisEnChatGuardado } from './crisisVigente';
+import { crisisAbiertaDesde } from './crisisSupport';
 
-const esperar = (ms = 30) => new Promise(r => setTimeout(r, ms));
+const esperar = (ms = 20) => new Promise(r => setTimeout(r, ms));
 /** Espera a que se cumpla (los mensajes entre pestañas tardan más con la máquina cargada). */
 async function hastaQue(cond: () => boolean, tope = 2000) {
   const fin = Date.now() + tope;
@@ -11,61 +12,109 @@ async function hastaQue(cond: () => boolean, tope = 2000) {
 }
 let n = 0;
 /** Pestañas de mentira que se hablan por un BroadcastChannel de verdad (Node lo tiene). */
-const pestana = (nombre: string) => crearCrisisVigente(() => new BroadcastChannel(`prueba-crisis-${nombre}`));
+const pestana = (canal: string) => crearCrisisVigente(() => new BroadcastChannel(`prueba-crisis-${canal}`), 60);
+const nuevoCanal = () => `c-${++n}`;
 
 describe('crisis vigente entre pestañas', () => {
-  it('se marca y se desmarca por cuenta, sin mezclar cuentas', () => {
-    const a = pestana(`sola-${++n}`);
-    assert.equal(a.abierta('cuenta-a'), false);
-    a.marcar('cuenta-a', true);
-    assert.equal(a.abierta('cuenta-a'), true);
-    assert.equal(a.abierta('cuenta-b'), false);
-    a.marcar('cuenta-a', false);
-    assert.equal(a.abierta('cuenta-a'), false);
+  it('por cuenta y por crisis, sin mezclar cuentas', async () => {
+    const a = pestana(nuevoCanal());
+    await a.sincronizada();
+    assert.equal(a.estado('cuenta-a'), 'cerrada');
+    a.marcar('cuenta-a', 'm1');
+    assert.equal(a.estado('cuenta-a'), 'abierta');
+    assert.equal(a.estado('cuenta-b'), 'cerrada');
+    a.marcar('cuenta-a', null, 'm1');
+    assert.equal(a.estado('cuenta-a'), 'cerrada');
     a.cerrar();
   });
 
-  it('regresión (Codex): una pestaña que se abre después se entera de la crisis de otra', async () => {
-    const canal = `union-${++n}`;
+  it('regresión (Codex): una pestaña recién abierta está «pendiente» hasta saber lo de las demás, y luego se entera', async () => {
+    const canal = nuevoCanal();
     const a = pestana(canal);
-    a.marcar('cuenta', true);
+    a.marcar('cuenta', 'm1');
     const b = pestana(canal);
-    b.abierta('cuenta'); // se incorpora: pregunta
-    assert.equal(await hastaQue(() => b.abierta('cuenta')), true);
+    assert.equal(b.estado('cuenta'), 'pendiente', 'no puede darla por cerrada aún');
+    await b.sincronizada();
+    assert.equal(await hastaQue(() => b.estado('cuenta') === 'abierta'), true);
     a.cerrar();
     b.cerrar();
   });
 
-  it('regresión (Codex): un chat sin esa crisis en otra pestaña no la cierra', async () => {
-    const canal = `incompleta-${++n}`;
+  it('una pestaña nueva se entera también de lo que contó otra que ya se cerró', async () => {
+    const canal = nuevoCanal();
     const a = pestana(canal);
     const b = pestana(canal);
-    a.marcar('cuenta', true);
-    assert.equal(await hastaQue(() => b.abierta('cuenta')), true);
-    b.marcar('cuenta', false); // su conversación no tiene el mensaje (no se pudo guardar)
-    await esperar();
-    assert.equal(a.abierta('cuenta'), true);
-    assert.equal(b.abierta('cuenta'), true);
-    a.marcar('cuenta', false); // quien la tenía, la cierra
-    assert.equal(a.abierta('cuenta'), false);
-    assert.equal(await hastaQue(() => !b.abierta('cuenta')), true);
+    b.marcar('cuenta', 'm1');
+    assert.equal(await hastaQue(() => a.estado('cuenta') === 'abierta'), true);
+    b.cerrar(); // la pestaña con la crisis (sin guardar) se cierra
+    const c = pestana(canal);
+    await c.sincronizada();
+    assert.equal(await hastaQue(() => c.estado('cuenta') === 'abierta'), true);
+    a.cerrar();
+    c.cerrar();
+  });
+
+  it('regresión (Codex): un cierre explícito vale en todas, también para lo que contó una pestaña ya cerrada', async () => {
+    const canal = nuevoCanal();
+    const a = pestana(canal);
+    const b = pestana(canal);
+    b.marcar('cuenta', 'm1');
+    assert.equal(await hastaQue(() => a.estado('cuenta') === 'abierta'), true);
+    b.cerrar();
+    const c = pestana(canal);
+    c.marcar('cuenta', 'm1'); // recupera la conversación con esa crisis
+    c.marcar('cuenta', null, 'm1'); // y la cierra con el botón
+    assert.equal(await hastaQue(() => a.estado('cuenta') === 'cerrada'), true);
+    await c.sincronizada();
+    // Aunque A le cuente lo que dijo B (m1 abierta), m1 ya está cerrada.
+    await esperar(50);
+    assert.equal(c.estado('cuenta'), 'cerrada');
+    a.cerrar();
+    c.cerrar();
+  });
+
+  it('un chat sin esa crisis (incompleto) no la cierra, y cerrar una no cierra otra distinta', async () => {
+    const canal = nuevoCanal();
+    const a = pestana(canal);
+    const b = pestana(canal);
+    a.marcar('cuenta', 'm1');
+    assert.equal(await hastaQue(() => b.estado('cuenta') === 'abierta'), true);
+    b.marcar('cuenta', null); // su conversación no tiene el mensaje
+    await esperar(50);
+    assert.equal(a.estado('cuenta'), 'abierta');
+    assert.equal(b.estado('cuenta'), 'abierta');
+    b.marcar('cuenta', 'm2'); // otra crisis, en la otra pestaña
+    b.marcar('cuenta', null, 'm2');
+    await esperar(50);
+    assert.equal(a.estado('cuenta'), 'abierta', 'm1 sigue abierta');
     a.cerrar();
     b.cerrar();
   });
 
-  it('avisa a quien se suscribe cuando se abre o se cierra (también desde otra pestaña)', async () => {
-    const canal = `aviso-${++n}`;
+  it('avisa a quien se suscribe al abrirse o cerrarse (también desde otra pestaña) y al terminar la sincronía', async () => {
+    const canal = nuevoCanal();
     const a = pestana(canal);
     const b = pestana(canal);
     let avisos = 0;
     const dejar = b.suscribir(() => avisos++);
-    a.marcar('cuenta', true);
-    assert.equal(await hastaQue(() => avisos === 1), true);
-    a.marcar('cuenta', false);
-    assert.equal(await hastaQue(() => avisos === 2), true);
+    await b.sincronizada();
+    const trasSincronia = avisos;
+    assert.ok(trasSincronia >= 1, 'avisa al terminar la sincronía');
+    a.marcar('cuenta', 'm1');
+    assert.equal(await hastaQue(() => avisos === trasSincronia + 1), true);
+    a.marcar('cuenta', null, 'm1');
+    assert.equal(await hastaQue(() => avisos === trasSincronia + 2), true);
     dejar();
     a.cerrar();
     b.cerrar();
+  });
+});
+
+describe('la crisis de una conversación', () => {
+  const crisis = { id: 'c1', role: 'user', content: 'Ya no quiero seguir viviendo' };
+  it('se identifica por el mensaje que la abrió, hasta que el botón la cierra', () => {
+    assert.equal(crisisAbiertaDesde([{ id: 'u1', role: 'user', content: 'Hola' }]), null);
+    assert.equal(crisisAbiertaDesde([crisis, { id: 'c2', role: 'user', content: 'Ya no quiero seguir viviendo' }]), 'c1');
   });
 });
 

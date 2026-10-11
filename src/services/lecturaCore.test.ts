@@ -24,6 +24,8 @@ function falsas(extra: Partial<DependenciasLectura> = {}) {
     dueno: () => estado.dueno,
     resultadoExiste: id => estado.existentes.has(id),
     crisisAbierta: () => estado.crisis,
+    listo: () => true,
+    esperarListo: async () => {},
     textoDeCuidado: 'Sigo aquí contigo.',
     almacen: { getItem: k => almacen.get(k) ?? null, setItem: (k, v) => void almacen.set(k, v) },
     ...extra,

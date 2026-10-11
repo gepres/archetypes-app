@@ -45,6 +45,14 @@ export const LecturaPersonal: React.FC<LecturaPersonalProps> = ({ result, gender
 
   useEffect(() => {
     const mia = ++peticion.current;
+    // Recién abierta la pestaña, aún no se sabe si otra tiene una crisis: se espera (la
+    // suscripción avisa al saberlo) sin mostrar nada.
+    if (!lecturas.listo()) {
+      setEstado('cargando');
+      return () => {
+        peticion.current++;
+      };
+    }
     // Con una crisis abierta, ni siquiera la lectura guardada: el protocolo de cuidado.
     if (lecturas.crisisAbierta()) {
       aplicar(lecturas.cuidado, null);
