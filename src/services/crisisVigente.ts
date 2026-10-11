@@ -115,8 +115,8 @@ export const cambiosDeReinicio = (todos: RegistroCrisis[], reinicio: RegistroCri
   };
 };
 
-const deSenal = (dueno: string, s: SenalCrisis): RegistroCrisis => ({
-  clave: `${dueno}:${s.id}`,
+const deSenal = (dueno: string, s: SenalCrisis, clave = `${dueno}:${s.id}`): RegistroCrisis => ({
+  clave,
   dueno,
   tipo: 'senal',
   mensajeId: s.id,
@@ -126,22 +126,28 @@ const deCierre = (dueno: string, hasta: number, clave = `${dueno}:__cierre`): Re
 const deReinicio = (momento: number): RegistroCrisis => ({ clave: '__reinicio', dueno: '*', tipo: 'reinicio', momento });
 
 /**
- * Lo que falta en el registro: las señales que no consten, y el cierre si va más allá del que
- * hay. Nada se escribe encima de un registro que cuenta como señal (aunque esté dañado): el
- * cierre va entonces a otra clave.
+ * Lo que falta en el registro: las señales que no consten (ese mensaje con ese momento), y el
+ * cierre si va más allá del que hay. Nada se escribe encima de un registro que cuenta como señal
+ * (aunque esté dañado): se usa la primera clave libre (`base`, `base:1`, `base:2`…).
  */
 const loQueFalta =
   (dueno: string, senales: SenalCrisis[], cierre: number | null) =>
   (rs: RegistroCrisis[]): CambiosCrisis => {
     const cs = cuentan(rs);
-    const ocupada = (clave: string) => cs.some(r => r.clave === clave && r.tipo === 'senal');
-    const nuevas = senales
-      .filter(s => !cs.some(r => r.tipo === 'senal' && r.mensajeId === s.id) && !ocupada(`${dueno}:${s.id}`))
-      .map(s => deSenal(dueno, s));
+    const poner: RegistroCrisis[] = [];
+    const ocupada = (clave: string) => cs.some(r => r.clave === clave && r.tipo === 'senal') || poner.some(r => r.clave === clave);
+    const libre = (base: string) => {
+      let clave = base;
+      for (let i = 1; ocupada(clave); i++) clave = `${base}:${i}`;
+      return clave;
+    };
+    for (const s of senales) {
+      const consta = cs.some(r => r.tipo === 'senal' && r.mensajeId === s.id && r.momento === s.momento);
+      if (!consta) poner.push(deSenal(dueno, s, libre(`${dueno}:${s.id}`)));
+    }
     const actual = Math.max(-Infinity, ...cs.filter(r => r.tipo === 'cierre').map(r => r.momento));
-    if (cierre === null || actual >= cierre) return { poner: nuevas, quitar: [] };
-    const clave = ocupada(`${dueno}:__cierre`) ? `${dueno}:__cierre:${cierre}` : `${dueno}:__cierre`;
-    return { poner: [...nuevas, deCierre(dueno, cierre, clave)], quitar: [] };
+    if (cierre !== null && actual < cierre) poner.push(deCierre(dueno, cierre, libre(`${dueno}:__cierre`)));
+    return { poner, quitar: [] };
   };
 
 /** Lo que una pestaña sabe de una cuenta y aún no consta en el registro. */

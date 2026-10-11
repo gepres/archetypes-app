@@ -319,7 +319,26 @@ describe('registro de crisis', () => {
     assert.equal(datos.get('cuenta:__cierre')?.momento, 300);
     assert.equal(await r.abierta('cuenta', null), true);
     await r.cerrarTodas('cuenta', 400);
-    assert.equal(datos.get('cuenta:__cierre:400')?.tipo, 'cierre');
+    assert.equal(datos.get('cuenta:__cierre:1')?.tipo, 'cierre');
+    assert.equal(await r.abierta('cuenta', null), false);
+  });
+
+  it('regresión (Codex): ni la clave alternativa del cierre ni la de una señal se pisan si están ocupadas', async () => {
+    const { almacen, datos } = almacenEnMemoria();
+    const r = crearRegistroCrisis(almacen);
+    const danado = (clave: string, momento: number) => ({ clave, dueno: 'cuenta', momento }) as unknown as RegistroCrisis;
+    datos.set('cuenta:__cierre', danado('cuenta:__cierre', 100));
+    datos.set('cuenta:__cierre:1', danado('cuenta:__cierre:1', 300));
+    await r.cerrarTodas('cuenta', 200);
+    assert.equal(datos.get('cuenta:__cierre:1')?.momento, 300, 'la de 300 se conserva');
+    assert.equal(datos.get('cuenta:__cierre:2')?.tipo, 'cierre');
+    assert.equal(await r.abierta('cuenta', null), true);
+    // Una señal dañada con el mismo mensaje y otro momento no tapa la de verdad.
+    datos.set('cuenta:m5', { clave: 'cuenta:m5', dueno: 'cuenta', tipo: 'senal', mensajeId: 'm5' } as unknown as RegistroCrisis);
+    await r.abrir('cuenta', senal('m5', 500));
+    await r.cerrarTodas('cuenta', 400);
+    assert.equal(await r.abierta('cuenta', null), true, 'm5 (500) sigue abierta');
+    await r.cerrarTodas('cuenta', 600);
     assert.equal(await r.abierta('cuenta', null), false);
   });
 
