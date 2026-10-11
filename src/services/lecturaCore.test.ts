@@ -43,7 +43,7 @@ describe('lectura con IA: cuidados', () => {
     assert.deepEqual(r, { ok: false, motivo: 'Sigo aquí contigo.', cuidado: true });
   });
 
-  it('regresión (Codex): si se borran los datos mientras llega la respuesta, no se vuelve a guardar nada', async () => {
+  it('regresión (Codex): si se borran los datos mientras llega la respuesta, ni se guarda ni se muestra', async () => {
     const f = falsas();
     const r = resultado('borrado');
     f.estado.existentes.add(r.id);
@@ -54,11 +54,11 @@ describe('lectura con IA: cuidados', () => {
     f.almacen.clear();
     f.pendientes[0]('Una lectura personal.');
     const res = await p;
-    assert.equal(res.ok, true);
+    assert.equal(res.ok, false);
     assert.equal(f.almacen.size, 0, 'no debe recrear la caché borrada');
   });
 
-  it('si se cambia de cuenta mientras llega, tampoco se guarda', async () => {
+  it('regresión (Codex): si se cambia de cuenta mientras llega, ni se guarda ni se muestra', async () => {
     const f = falsas();
     const r = resultado('cuenta');
     f.estado.existentes.add(r.id);
@@ -67,7 +67,29 @@ describe('lectura con IA: cuidados', () => {
     await tick();
     f.estado.dueno = 'cuenta-2';
     f.pendientes[0]('Texto de la cuenta 1.');
-    await p;
+    assert.equal((await p).ok, false);
+    assert.equal(f.almacen.size, 0);
+  });
+
+  it('regresión (Codex): un resultado que no es de la cuenta abierta no se envía a la IA', async () => {
+    const f = falsas();
+    const r = resultado('ajeno'); // no está en los datos de la cuenta
+    const res = await crearLecturas(f.deps).pedir(r, 'male');
+    assert.equal(res.ok, false);
+    assert.equal(f.enviadas.length, 0);
+  });
+
+  it('regresión (Codex): si se abre una crisis mientras llega, no se entrega ni se guarda la interpretación', async () => {
+    const f = falsas();
+    const r = resultado('crisis-espera');
+    f.estado.existentes.add(r.id);
+    const l = crearLecturas(f.deps);
+    const primera = l.pedir(r, 'male');
+    await tick();
+    const compartida = l.pedir(r, 'male');
+    f.estado.crisis = true;
+    f.pendientes[0]('Una interpretación.');
+    for (const res of [await primera, await compartida]) assert.deepEqual(res, { ok: false, motivo: 'Sigo aquí contigo.', cuidado: true });
     assert.equal(f.almacen.size, 0);
   });
 
@@ -81,8 +103,9 @@ describe('lectura con IA: cuidados', () => {
     const a2 = l.pedir(r, 'male');
     await tick();
     assert.equal(f.enviadas.length, 2, 'una por perspectiva, no tres');
-    assert.equal(a1, a2);
     assert.ok(l.pendiente(l.clave(r, 'male')));
+    f.pendientes[0]('Lectura en masculino.');
+    assert.deepEqual(await a2, await a1);
   });
 
   it('regresión (Codex): con respuestas fuera de orden, cada una se guarda bajo su propia perspectiva', async () => {

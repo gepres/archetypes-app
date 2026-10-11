@@ -4,10 +4,12 @@
  * red ni navegador; lecturaIA.ts le conecta las de verdad.
  *
  * Tres cuidados:
- * - Con una crisis abierta en el chat no se pide nada a la IA: se responde con el protocolo de
- *   cuidado, igual que haría el chat.
- * - Una respuesta solo se guarda si su cuenta y su resultado siguen existiendo: si mientras tanto
- *   se borraron los datos o se cambió de cuenta, no vuelve a escribir nada.
+ * - Con una crisis abierta en el chat no se entrega ninguna interpretación: ni se pide a la IA,
+ *   ni se entrega (ni se guarda) si la crisis se abrió mientras llegaba. Se responde con el
+ *   protocolo de cuidado, igual que haría el chat.
+ * - Solo se pide para un resultado de la cuenta abierta, y solo se entrega y se guarda si la
+ *   cuenta y el resultado siguen ahí al llegar: si mientras tanto se borraron los datos o se
+ *   cambió de cuenta (en otra pestaña), no se muestra ni se escribe nada.
  * - Una petición en curso para el mismo resultado y perspectiva se comparte: volver a pedirla
  *   (A→B→A) no gasta otra consulta, y la respuesta se guarda bajo su clave aunque la pantalla
  *   ya muestre otra perspectiva.
@@ -44,6 +46,18 @@ export function crearLecturas(deps: DependenciasLectura) {
     }
   };
 
+  const cuidado: RespuestaLectura = { ok: false, motivo: deps.textoDeCuidado, cuidado: true };
+  const ajeno: RespuestaLectura = { ok: false, motivo: 'Este resultado no está guardado en la cuenta abierta, así que no se puede pedir su lectura.' };
+
+  /** Lo que se entrega al llegar la respuesta, si todo sigue en pie: crisis, cuenta y resultado. */
+  const alEntregar = (r: { ok: true; texto: string }, dueno: string, resultId: string): RespuestaLectura => {
+    if (deps.crisisAbierta()) return cuidado;
+    if (deps.dueno() !== dueno || !deps.resultadoExiste(resultId)) {
+      return { ok: false, motivo: 'La cuenta o sus datos cambiaron mientras llegaba la lectura, así que no se muestra.' };
+    }
+    return r;
+  };
+
   const lecturas = {
     /** Por cuenta, resultado y perspectiva: otra cuenta del mismo dispositivo no la ve. */
     clave: (result: AssessmentResult, gender: GenderMode) => `${deps.dueno()}:${result.id}:${gender}`,
@@ -58,11 +72,15 @@ export function crearLecturas(deps: DependenciasLectura) {
 
     pedir(result: AssessmentResult, gender: GenderMode): Promise<RespuestaLectura> {
       const clave = lecturas.clave(result, gender);
+      // Una petición compartida también pasa por los cuidados al entregarse: la crisis pudo
+      // abrirse, o la cuenta cambiar, después de que la pidiera otra pantalla.
       const enCurso = pendientes.get(clave);
-      if (enCurso) return enCurso;
+      if (enCurso) return enCurso.then(r => (r.ok ? alEntregar(r, deps.dueno(), result.id) : r));
       const dueno = deps.dueno();
       const peticion = (async (): Promise<RespuestaLectura> => {
-        if (deps.crisisAbierta()) return { ok: false, motivo: deps.textoDeCuidado, cuidado: true };
+        if (deps.crisisAbierta()) return cuidado;
+        // Solo se envían las elecciones de un resultado de la cuenta abierta.
+        if (!deps.resultadoExiste(result.id)) return ajeno;
         const prompt = promptLectura(result, gender);
         if (!prompt) return { ok: false, motivo: 'La lectura personal está disponible para el test por situaciones.' };
         const maxDaily = deps.maxDaily();
@@ -70,8 +88,9 @@ export function crearLecturas(deps: DependenciasLectura) {
         // Si respondió el mapa simbólico en vez de una IA, no hay lectura: presentarla como
         // «de IA» sería engañoso.
         if (respuesta.provider === 'local') return { ok: false, motivo: motivoSinLectura(respuesta, maxDaily) };
-        const texto = pulirLectura(respuesta.text);
-        if (deps.dueno() === dueno && deps.resultadoExiste(result.id)) {
+        const entregable = alEntregar({ ok: true, texto: pulirLectura(respuesta.text) }, dueno, result.id);
+        if (entregable.ok) {
+          const texto = entregable.texto;
           try {
             const todas = leerTodas();
             todas[clave] = { texto, fecha: new Date().toISOString() };
@@ -83,7 +102,7 @@ export function crearLecturas(deps: DependenciasLectura) {
             // Sin almacenamiento, la lectura se ve igual; solo no se recuerda.
           }
         }
-        return { ok: true, texto };
+        return entregable;
       })().finally(() => pendientes.delete(clave));
       pendientes.set(clave, peticion);
       return peticion;

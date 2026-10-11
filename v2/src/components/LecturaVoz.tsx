@@ -47,20 +47,23 @@ export const LecturaVoz: React.FC<LecturaVozProps> = ({ resultado, silencio }) =
   const [cuidado, setCuidado] = useState(false);
   // Solo la petición vigente toca la pantalla (ver la V1).
   const peticion = useRef(0);
+  // El silencio de ahora, no el de cuando se pidió: activarlo durante la espera tiene que valer.
+  const silencioRef = useRef(silencio);
+  silencioRef.current = silencio;
 
   const aplicar = (r: RespuestaLectura, anterior: string | null, leer: boolean) => {
     if (!r.ok) {
       setMotivo(r.motivo);
       setCuidado(!!r.cuidado);
       setEstado(anterior && !r.cuidado ? 'lista' : 'sin-ia');
-      if (r.cuidado && !silencio) decir(textoParaVoz(r.motivo), { rate: 0.94 });
+      if (r.cuidado && !silencioRef.current) decir(textoParaVoz(r.motivo), { rate: 0.94 });
       return;
     }
     setTexto(r.texto);
     setMotivo('');
     setCuidado(false);
     setEstado('lista');
-    if (leer && !silencio) decir(textoParaVoz(r.texto), { rate: 0.96 });
+    if (leer && !silencioRef.current) decir(textoParaVoz(r.texto), { rate: 0.96 });
   };
 
   useEffect(() => {
