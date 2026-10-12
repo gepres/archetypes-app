@@ -20,6 +20,7 @@ import {
 } from './crisisSupport';
 import { motivoAmable, notaConsultasAgotadas } from './estadoAsistente';
 import { fechaLocal } from './fechaLocal';
+import { cuerpoOpenAI } from './peticionOpenAI';
 export { describirEstadoIA } from './estadoAsistente';
 
 // Cómo se llama cada perspectiva en el prompt. Es una preferencia de lenguaje para nombrar los
@@ -40,6 +41,7 @@ export const APP_KEYS = {
 };
 
 export const DEFAULT_COURTESY_DAILY_LIMIT = 10;
+
 
 const STORAGE_KEY_AI_SETTINGS = 'archetypes_ai_settings_v1';
 
@@ -547,12 +549,7 @@ ${resultContext}
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${key}`,
           },
-          body: JSON.stringify({
-            model: model,
-            messages: formattedMessages,
-            temperature: 0.7,
-            max_tokens: 950,
-          }),
+          body: JSON.stringify(cuerpoOpenAI(model, formattedMessages, 950, 0.7)),
         });
 
         if (!res.ok) {
@@ -746,11 +743,8 @@ ${resultContext}
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${key}`,
           },
-          body: JSON.stringify({
-            model: model,
-            messages: [{ role: 'user', content: 'Di OK' }],
-            max_tokens: 10,
-          }),
+          // Igual que el chat (con temperature), para que la prueba falle si fallaría el chat.
+          body: JSON.stringify(cuerpoOpenAI(model, [{ role: 'user', content: 'Di OK' }], 16, 0.7)),
         });
 
         if (!res.ok) {

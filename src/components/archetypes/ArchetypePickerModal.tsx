@@ -1,10 +1,11 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Search, Check, Filter, Layers, Ban } from 'lucide-react';
 import { ARCHETYPES_LIST, getArchetypeList, getDimensionShortName } from '../../data/archetypesData';
 import { ARCHETYPE_VISUALS } from '../../data/archetypeImages';
 import { ArchetypeId, DimensionId, GenderMode, DEFAULT_GENDER } from '../../types';
 import { ArchetypeIllustratedArtwork } from './ArchetypeIllustratedArtwork';
+import { useFocoModal } from '../common/useFocoModal';
 
 interface ArchetypePickerModalProps {
   isOpen: boolean;
@@ -59,6 +60,9 @@ export const ArchetypePickerModal: React.FC<ArchetypePickerModalProps> = ({
   const [selectedDimension, setSelectedDimension] = useState<string>('todos');
   // En modo múltiple, lo marcado se confirma con «Listo»; «Cancelar» no cambia nada.
   const [marcados, setMarcados] = useState<ArchetypeId[]>(selectedIds);
+  // El foco entra en el selector y no sale con Tab mientras está abierto (ver useFocoModal).
+  const ventana = useRef<HTMLDivElement>(null);
+  useFocoModal(isOpen, ventana);
   useEffect(() => {
     // Solo al abrir: mientras está abierto, manda lo que se va marcando.
     if (isOpen) setMarcados(selectedIds);
@@ -131,7 +135,7 @@ export const ArchetypePickerModal: React.FC<ArchetypePickerModalProps> = ({
 
       {/* En el celular, pantalla completa (100dvh: el alto visible de verdad, sin la barra del
           navegador); desde sm, un modal centrado. */}
-      <div className="relative w-full sm:max-w-4xl bg-[#0E1513] sm:border sm:border-[#315C45] sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[100dvh] sm:h-auto sm:max-h-[90vh] z-10">
+      <div ref={ventana} tabIndex={-1} className="relative w-full outline-none sm:max-w-4xl bg-[#0E1513] sm:border sm:border-[#315C45] sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[100dvh] sm:h-auto sm:max-h-[90vh] z-10">
         {/* Top ambient glow */}
         <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-[#D6A84F]/10 via-[#315C45]/10 to-transparent pointer-events-none" />
 

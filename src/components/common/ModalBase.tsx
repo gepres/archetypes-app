@@ -1,6 +1,7 @@
-import React, { useEffect, useId } from 'react';
+import React, { useEffect, useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
+import { useFocoModal } from './useFocoModal';
 
 interface ModalBaseProps {
   abierto: boolean;
@@ -43,6 +44,8 @@ export const ModalBase: React.FC<ModalBaseProps> = ({
   children,
 }) => {
   const idTitulo = useId();
+  const ventana = useRef<HTMLDivElement>(null);
+  useFocoModal(abierto, ventana);
 
   // Escape cierra, y el fondo no se desplaza mientras está abierto.
   useEffect(() => {
@@ -73,7 +76,9 @@ export const ModalBase: React.FC<ModalBaseProps> = ({
       <div className="absolute inset-0" onClick={onCerrar} aria-hidden="true" />
 
       <div
-        className={`relative w-full ${ANCHOS[ancho]} bg-[#0E1513] sm:border sm:border-[#23332D] sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[100dvh] sm:h-auto sm:max-h-[90dvh]`}
+        ref={ventana}
+        tabIndex={-1}
+        className={`relative w-full outline-none ${ANCHOS[ancho]} bg-[#0E1513] sm:border sm:border-[#23332D] sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col h-[100dvh] sm:h-auto sm:max-h-[90dvh]`}
       >
         <header
           className="shrink-0 flex items-start gap-3 px-4 pb-3 sm:px-6 sm:pt-5 sm:pb-4 border-b border-[#1E2A25] bg-gradient-to-r from-[#121A17] to-[#0E1513]"
