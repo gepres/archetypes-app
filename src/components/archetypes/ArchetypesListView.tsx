@@ -1,35 +1,35 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Search,
-  BookOpen,
-  ArrowRight,
-  Sparkles,
-  ShieldAlert,
-  HelpCircle,
-  CheckCircle2,
-  GitMerge,
-  Bot,
-  Brain,
-  Zap,
-  Heart,
-  Hammer,
   ChevronLeft,
+  ChevronDown,
+  BookOpen,
   Sun,
   Shield,
-  Layers,
+  ShieldAlert,
+  Sparkles,
+  CheckCircle2,
   Compass,
-  Briefcase,
   Users,
-  Flame,
   Activity,
+  Flame,
   Award,
+  Bot,
+  Library,
+  PenLine,
+  GitMerge,
+  ExternalLink,
+  Dumbbell,
+  Layers,
 } from 'lucide-react';
-import { ARCHETYPES, ARCHETYPES_LIST, DIMENSIONS, getArchetype, getArchetypeList, withDe } from '../../data/archetypesData';
+import { DIMENSIONS, getArchetype, getArchetypeList, getDimensionShortName, withDe } from '../../data/archetypesData';
 import { ARCHETYPE_VISUALS } from '../../data/archetypeImages';
+import { LECTURAS, REFERENCIAS } from '../../data/referencias';
 import { Archetype, ArchetypeId, DimensionId, GenderMode, LifeDomainKey, DEFAULT_GENDER } from '../../types';
 import { NavTab } from '../layout/Sidebar';
-import { ArchetypePortraitCard } from './ArchetypePortraitCard';
+import { ArchetypeIllustratedArtwork } from './ArchetypeIllustratedArtwork';
 import { ArchetypeGlyph } from '../common/ArchetypeGlyph';
+import { PerspectiveSwitcher } from '../common/PerspectiveSwitcher';
 
 interface ArchetypesListViewProps {
   selectedArchetypeId: ArchetypeId | null;
@@ -40,13 +40,57 @@ interface ArchetypesListViewProps {
   onGenderChange?: (gender: GenderMode) => void;
 }
 
-const DOMAIN_LABELS: Record<LifeDomainKey, { label: string; icon: any }> = {
-  liderazgo: { label: 'Liderazgo & Dirección', icon: Award },
-  relaciones: { label: 'Relaciones & Vínculos', icon: Users },
-  crisis: { label: 'Crisis & Resiliencia', icon: Activity },
-  creatividad: { label: 'Creatividad & Obra', icon: Flame },
-  paternidad: { label: 'Paternidad & Mentoría', icon: Compass },
+const DOMAIN_LABELS: Record<LifeDomainKey, { label: string; icon: React.ElementType }> = {
+  liderazgo: { label: 'Liderazgo y decisiones', icon: Award },
+  relaciones: { label: 'Relaciones y vínculos', icon: Users },
+  crisis: { label: 'Momentos difíciles', icon: Activity },
+  creatividad: { label: 'Creatividad y trabajo', icon: Flame },
+  paternidad: { label: 'Crianza y mentoría', icon: Compass },
 };
+
+const ORDEN_DIMENSIONES: DimensionId[] = ['construccion', 'accion', 'mente', 'corazon'];
+
+/** Para buscar sin que importen tildes ni mayúsculas («heroe» encuentra «Héroe»). */
+const normalizar = (s: string) =>
+  s
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase();
+
+type IdSeccion = 'comprender' | 'luz' | 'vida' | 'practicar' | 'preguntas' | 'figuras' | 'profundizar';
+
+/** Una sección plegable del detalle: en el celular se lee una cosa a la vez. */
+const Seccion: React.FC<{
+  id: IdSeccion;
+  titulo: string;
+  icono: React.ElementType;
+  abierta: boolean;
+  onAlternar: (id: IdSeccion) => void;
+  children: React.ReactNode;
+}> = ({ id, titulo, icono: Icono, abierta, onAlternar, children }) => (
+  <section className="rounded-2xl bg-[#121A17] border border-[#23332D] overflow-hidden">
+    <h2>
+      <button
+        type="button"
+        onClick={() => onAlternar(id)}
+        aria-expanded={abierta}
+        aria-controls={`seccion-${id}`}
+        className="w-full min-h-[52px] flex items-center gap-3 px-4 sm:px-5 py-3 text-left hover:bg-[#16221E] transition-colors"
+      >
+        <span className="w-8 h-8 shrink-0 rounded-lg bg-[#1A2521] border border-[#315C45] flex items-center justify-center text-[#D6A84F]">
+          <Icono className="w-4 h-4" />
+        </span>
+        <span className="flex-1 font-serif text-base font-bold text-[#F2EFE6]">{titulo}</span>
+        <ChevronDown className={`w-4 h-4 text-[#9DA79F] transition-transform ${abierta ? 'rotate-180' : ''}`} />
+      </button>
+    </h2>
+    {abierta && (
+      <div id={`seccion-${id}`} className="px-4 sm:px-5 pb-5 pt-1 space-y-4 animate-fadeIn">
+        {children}
+      </div>
+    )}
+  </section>
+);
 
 export const ArchetypesListView: React.FC<ArchetypesListViewProps> = ({
   selectedArchetypeId,
@@ -57,23 +101,30 @@ export const ArchetypesListView: React.FC<ArchetypesListViewProps> = ({
   onGenderChange,
 }) => {
   const [selectedDimension, setSelectedDimension] = useState<DimensionId | 'todos'>('todos');
-  const [selectedDomainFilter, setSelectedDomainFilter] = useState<LifeDomainKey | 'todos'>('todos');
   const [searchQuery, setSearchQuery] = useState('');
-  const [detailActiveTab, setDetailActiveTab] = useState<'esencia' | 'luz_sombra' | 'ambitos' | 'ejercicios' | 'sinergias'>('esencia');
+  // En el detalle, qué secciones están abiertas. Al cambiar de arquetipo, solo «Comprender».
+  const [abiertas, setAbiertas] = useState<Set<IdSeccion>>(() => new Set(['comprender']));
+  useEffect(() => {
+    setAbiertas(new Set(['comprender']));
+    if (selectedArchetypeId) window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [selectedArchetypeId]);
+  const alternar = (id: IdSeccion) =>
+    setAbiertas(prev => {
+      const s = new Set(prev);
+      if (s.has(id)) s.delete(id);
+      else s.add(id);
+      return s;
+    });
 
   const currentGender = gender || DEFAULT_GENDER;
   const archetypesList = getArchetypeList(currentGender);
 
+  const busca = normalizar(searchQuery.trim());
   const filteredArchetypes = archetypesList.filter(arch => {
     const matchesDim = selectedDimension === 'todos' || arch.dimension === selectedDimension;
-    const query = searchQuery.toLowerCase().trim();
     const matchesQuery =
-      !query ||
-      arch.name.toLowerCase().includes(query) ||
-      arch.shortDescription.toLowerCase().includes(query) ||
-      arch.concepts.some(c => c.toLowerCase().includes(query)) ||
-      arch.mantra.toLowerCase().includes(query) ||
-      arch.shadow.toLowerCase().includes(query);
+      !busca ||
+      [arch.name, arch.shortDescription, arch.mantra, arch.shadow, ...arch.concepts].some(t => normalizar(t).includes(busca));
     return matchesDim && matchesQuery;
   });
 
@@ -81,589 +132,356 @@ export const ArchetypesListView: React.FC<ArchetypesListViewProps> = ({
     ? getArchetype(selectedArchetypeId, currentGender)
     : null;
 
-  // Render detail view if an archetype is selected
+  // ── Detalle de un arquetipo ──────────────────────────────────────────────
   if (selectedArchetype) {
-    const dimensionInfo = DIMENSIONS[selectedArchetype.dimension];
+    const a = selectedArchetype;
+    const dimensionInfo = DIMENSIONS[a.dimension];
+    const visual = ARCHETYPE_VISUALS[a.id];
+    const lecturas = LECTURAS[a.id] ?? [];
     return (
-      <div id="archetype-detail-view" className="max-w-4xl mx-auto space-y-8 pb-24 pt-2 animate-fadeIn">
-        {/* Back navigation */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
+      <div id="archetype-detail-view" className="max-w-3xl mx-auto space-y-4 pb-24 pt-1 animate-fadeIn">
+        {/* Volver y perspectiva */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <button
             onClick={() => onSelectArchetype(null)}
-            className="inline-flex items-center gap-2 text-xs text-[#9DA79F] hover:text-[#D6A84F] transition-colors py-1.5 px-3.5 bg-[#121A17] rounded-xl border border-[#23332D]"
+            className="self-start inline-flex items-center gap-1.5 min-h-[40px] text-xs text-[#9DA79F] hover:text-[#D6A84F] transition-colors px-3 bg-[#121A17] rounded-xl border border-[#23332D]"
           >
             <ChevronLeft className="w-4 h-4" />
-            <span>Volver a la galería de 18 arquetipos</span>
+            <span>Los 18 arquetipos</span>
           </button>
-
-          {/* Gender Perspective switcher in detail view */}
-          {onGenderChange && (
-            <div className="flex items-center gap-1.5 bg-[#121A17] p-1 rounded-xl border border-[#23332D]">
-              <span className="text-[10px] font-bold text-[#8A968D] uppercase px-2">
-                Perspectiva:
-              </span>
-              <button
-                onClick={() => onGenderChange('male')}
-                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
-                  currentGender === 'male'
-                    ? 'bg-[#315C45] text-[#F2EFE6] border border-[#437A5C]'
-                    : 'text-[#9DA79F] hover:text-[#F2EFE6]'
-                }`}
-                title="Perspectiva Masculina"
-              >
-                ♂ Masculina
-              </button>
-              <button
-                onClick={() => onGenderChange('female')}
-                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
-                  currentGender === 'female'
-                    ? 'bg-[#7C3AED]/50 text-[#F2EFE6] border border-[#7C3AED]'
-                    : 'text-[#9DA79F] hover:text-[#F2EFE6]'
-                }`}
-                title="Perspectiva Femenina"
-              >
-                ♀ Femenina
-              </button>
-              <button
-                onClick={() => onGenderChange('universal')}
-                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
-                  currentGender === 'universal'
-                    ? 'bg-[#D6A84F]/25 text-[#D6A84F] border border-[#D6A84F]'
-                    : 'text-[#9DA79F] hover:text-[#F2EFE6]'
-                }`}
-                title="Perspectiva Universal / Dual"
-              >
-                ☯ Universal
-              </button>
-            </div>
-          )}
+          {onGenderChange && <PerspectiveSwitcher gender={currentGender} onGenderChange={onGenderChange} size="sm" showLabel={false} />}
         </div>
 
-        {/* Archetype Hero Header with Ornate Styling */}
-        <div className="p-7 sm:p-9 rounded-3xl bg-gradient-to-b from-[#16221E] via-[#121A17] to-[#0E1513] border-2 border-[#315C45] shadow-2xl space-y-6 relative overflow-hidden">
-          {/* Subtle glowing orb */}
+        {/* Cabecera breve: retrato, nombre, dimensión y de qué va */}
+        <header className="p-4 sm:p-6 rounded-3xl bg-gradient-to-b from-[#16221E] to-[#0E1513] border border-[#315C45] space-y-4 relative overflow-hidden">
           <div
-            className="absolute top-0 right-0 w-80 h-80 rounded-full blur-3xl opacity-15 pointer-events-none"
-            style={{ backgroundColor: selectedArchetype.colorHex || '#D6A84F' }}
+            className="absolute -top-16 -right-16 w-56 h-56 rounded-full blur-3xl opacity-15 pointer-events-none"
+            style={{ backgroundColor: a.colorHex || '#D6A84F' }}
           />
-
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
-              {/* Character Portrait Card Hero */}
-              <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl overflow-hidden shrink-0 shadow-2xl border-2 border-[#D6A84F]/60 relative group">
-                <ArchetypePortraitCard
-                  archetype={selectedArchetype}
-                  size="md"
-                  showBadge={false}
-                  className="w-full h-full rounded-2xl"
-                />
-                <div className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded-lg bg-black/80 text-[10px] text-[#D6A84F] font-bold">
-                  <ArchetypeGlyph id={selectedArchetype.id} className="w-4 h-4 text-[#D6A84F]" />
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-xs uppercase tracking-widest font-bold text-[#D6A84F]">
-                    Arquetipo #{ARCHETYPES_LIST.findIndex(a => a.id === selectedArchetype.id) + 1}
-                  </span>
-                  <span className="text-[#6B7A72]">·</span>
-                  <span
-                    className="text-xs px-2.5 py-0.5 rounded-full capitalize font-semibold border"
-                    style={{
-                      backgroundColor: `${dimensionInfo.color}18`,
-                      color: dimensionInfo.color,
-                      borderColor: `${dimensionInfo.color}40`,
-                    }}
-                  >
-                    Dimensión {dimensionInfo.name}
-                  </span>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-[#1A2822] text-[#86EFAC] border border-[#315C45] font-semibold">
-                    {ARCHETYPE_VISUALS[selectedArchetype.id]?.characterClass || 'Arquetipo'}
-                  </span>
-                </div>
-                <h1 className="font-serif text-3xl sm:text-4xl font-bold text-[#F2EFE6] tracking-tight">
-                  {selectedArchetype.name}
-                </h1>
-                <p className="text-xs sm:text-sm text-[#D6A84F] font-medium tracking-wide">
-                  {ARCHETYPE_VISUALS[selectedArchetype.id]?.characterTitle || `Símbolo: ${selectedArchetype.symbol}`}
-                </p>
-                <p className="text-xs text-[#9DA79F] font-semibold tracking-wide">
-                  Símbolo Sagrado: {selectedArchetype.symbol}
-                </p>
-              </div>
+          <div className="flex items-start gap-4 relative">
+            <div className="w-24 h-28 sm:w-32 sm:h-36 shrink-0 rounded-2xl overflow-hidden border border-[#D6A84F]/50 bg-[#0B1110] shadow-xl">
+              <ArchetypeIllustratedArtwork archetypeId={a.id} className="w-full h-full object-cover" />
             </div>
-
-            <button
-              onClick={() => {
-                if (onDiscussWithAi) {
-                  onDiscussWithAi(
-                    `Hablemos desde la energía ${withDe(selectedArchetype.name)}. ¿Cómo puedo manifestar tu fuerza en mi día a día?`,
-                    selectedArchetype.id
-                  );
-                } else {
-                  onSelectTab('ai');
-                }
-              }}
-              className="w-full md:w-auto px-5 py-3.5 bg-gradient-to-r from-[#315C45] to-[#254635] hover:from-[#3D7055] hover:to-[#315C45] text-[#F2EFE6] rounded-2xl text-xs font-semibold flex items-center justify-center gap-2.5 transition-all shadow-lg active:scale-95 shrink-0 border border-[#4E8B69]/40"
-            >
-              <Bot className="w-4 h-4 text-[#86EFAC]" />
-              <span>Hablar con la voz {withDe(selectedArchetype.name)}</span>
-            </button>
-          </div>
-
-          {/* Archetypal Mantra Banner */}
-          <div className="p-4 rounded-2xl bg-[#0B1110]/80 border border-[#D6A84F]/30 text-center relative">
-            <span className="text-[10px] uppercase font-bold text-[#D6A84F] tracking-widest block mb-1">
-              Mantra & Voto Arquetípico
-            </span>
-            <p className="font-serif italic text-base sm:text-lg text-[#F2EFE6] leading-relaxed">
-              "{selectedArchetype.mantra}"
-            </p>
-          </div>
-
-          {/* Concept tags */}
-          <div className="flex flex-wrap gap-1.5 pt-1">
-            {selectedArchetype.concepts.map(concept => (
+            <div className="min-w-0 space-y-1.5">
               <span
-                key={concept}
-                className="text-[11px] px-2.5 py-1 rounded-lg bg-[#0E1513] text-[#9DA79F] border border-[#1E2A25] capitalize font-medium"
+                className="inline-block text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full border"
+                style={{ color: dimensionInfo.color, borderColor: `${dimensionInfo.color}55`, backgroundColor: `${dimensionInfo.color}14` }}
               >
-                #{concept}
+                {getDimensionShortName(a.dimension)}
               </span>
-            ))}
-          </div>
-        </div>
-
-        {/* Detailed Tabs Header */}
-        <div className="flex flex-wrap gap-2 border-b border-[#1E2A25] pb-3">
-          {[
-            { id: 'esencia', label: '1. Visión & Esencia' },
-            { id: 'luz_sombra', label: '2. Luz, Sombra & Antídoto' },
-            { id: 'ambitos', label: '3. En 5 Ámbitos de Vida' },
-            { id: 'ejercicios', label: '4. Prácticas & Retos' },
-            { id: 'sinergias', label: '5. Alianzas & Sinergias' },
-          ].map(t => (
-            <button
-              key={t.id}
-              onClick={() => setDetailActiveTab(t.id as any)}
-              className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
-                detailActiveTab === t.id
-                  ? 'bg-[#315C45] text-[#F2EFE6] border border-[#437A5C] shadow-sm'
-                  : 'bg-[#121A17] text-[#9DA79F] hover:text-[#F2EFE6] border border-[#23332D]'
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Tab 1: Esencia */}
-        {detailActiveTab === 'esencia' && (
-          <div className="space-y-6">
-            <div className="p-6 bg-[#121A17] border border-[#23332D] rounded-2xl space-y-4 shadow-lg">
-              <h2 className="font-serif text-lg font-bold text-[#F2EFE6] flex items-center gap-2">
-                <BookOpen className="w-5 h-5 text-[#D6A84F]" />
-                <span>Naturaleza Arquetípica Integral</span>
-              </h2>
-              <p className="text-sm text-[#C5CFC7] leading-relaxed">
-                {selectedArchetype.fullDescription}
-              </p>
-            </div>
-
-            <div className="p-5 bg-[#0E1513] border border-[#23332D] rounded-2xl flex items-start gap-4">
-              <div className="p-2.5 rounded-xl bg-[#1A2521] border border-[#315C45] text-[#D6A84F] shrink-0">
-                <HelpCircle className="w-5 h-5" />
-              </div>
-              <div className="space-y-1">
-                <span className="text-xs uppercase tracking-wider font-bold text-[#D6A84F]">
-                  Pregunta Central de Autoindagación
-                </span>
-                <p className="font-serif text-base text-[#F2EFE6] font-semibold">
-                  {selectedArchetype.centralQuestion}
-                </p>
-              </div>
-            </div>
-
-            <div className="p-6 bg-[#121A17] border border-[#23332D] rounded-2xl space-y-4">
-              <h3 className="text-xs font-bold text-[#9DA79F] uppercase tracking-wider">
-                Preguntas para el Diario de Reflexión
-              </h3>
-              <div className="space-y-3">
-                {selectedArchetype.reflectionQuestions.map((q, idx) => (
-                  <div
-                    key={idx}
-                    className="p-3.5 bg-[#0E1513] rounded-xl border border-[#1E2A25] flex items-start gap-3"
-                  >
-                    <span className="text-[#D6A84F] font-serif font-bold text-xs shrink-0 mt-0.5">
-                      0{idx + 1}.
-                    </span>
-                    <p className="text-xs text-[#C5CFC7] leading-relaxed">{q}</p>
-                  </div>
-                ))}
-              </div>
+              <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#F2EFE6] leading-tight flex items-center gap-2">
+                <ArchetypeGlyph id={a.id} className="w-7 h-7 text-[#D6A84F]" />
+                <span>{a.name}</span>
+              </h1>
+              {visual?.characterTitle && <p className="text-xs text-[#D6A84F] font-medium">{visual.characterTitle}</p>}
             </div>
           </div>
-        )}
-
-        {/* Tab 2: Luz & Sombra */}
-        {detailActiveTab === 'luz_sombra' && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {/* Luz */}
-              <div className="p-6 rounded-2xl bg-[#121A17] border border-[#23332D] space-y-4 shadow-lg">
-                <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm uppercase tracking-wider">
-                  <Sun className="w-4 h-4" />
-                  <span>Virtud Luminosa & Fortaleza</span>
-                </div>
-                <p className="text-xs text-[#C5CFC7] leading-relaxed">
-                  {selectedArchetype.strength}
-                </p>
-                <div className="space-y-2 pt-2">
-                  <span className="text-[11px] font-bold text-[#9DA79F] uppercase tracking-wider block">
-                    Conductas Equilibradas:
-                  </span>
-                  {selectedArchetype.balancedBehavior.map((b, i) => (
-                    <div key={i} className="flex items-start gap-2 text-xs text-[#C5CFC7]">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                      <span>{b}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Sombra */}
-              <div className="p-6 rounded-2xl bg-[#1A1514] border border-[#452723] space-y-4 shadow-lg">
-                <div className="flex items-center gap-2 text-red-400 font-bold text-sm uppercase tracking-wider">
-                  <Shield className="w-4 h-4" />
-                  <span>Sombra: {selectedArchetype.shadow}</span>
-                </div>
-                <p className="text-xs text-[#C5CFC7] leading-relaxed">
-                  {selectedArchetype.shadowDescription}
-                </p>
-                <div className="space-y-2 pt-2">
-                  <span className="text-[11px] font-bold text-red-300/80 uppercase tracking-wider block">
-                    Señales de Desequilibrio:
-                  </span>
-                  {selectedArchetype.unbalancedBehavior.map((u, i) => (
-                    <div key={i} className="flex items-start gap-2 text-xs text-[#C5CFC7]">
-                      <ShieldAlert className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" />
-                      <span>{u}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Antídoto de Sombra */}
-            <div className="p-5 bg-gradient-to-r from-[#121A17] to-[#1A2521] border border-[#315C45] rounded-2xl space-y-2 shadow-md">
-              <div className="flex items-center gap-2 text-xs font-bold text-[#D6A84F] uppercase tracking-wider">
-                <Sparkles className="w-4 h-4 text-[#D6A84F]" />
-                <span>Antídoto Psicológico para Integrar la Sombra</span>
-              </div>
-              <p className="text-xs sm:text-sm text-[#C5CFC7] leading-relaxed">
-                {selectedArchetype.shadowAntidote}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Tab 3: En Ámbitos de Vida */}
-        {detailActiveTab === 'ambitos' && (
-          <div className="space-y-4">
-            <p className="text-xs text-[#9DA79F]">
-              Manifestación concreta {withDe(selectedArchetype.name)} en los 5 territorios fundamentales de la existencia cotidiana:
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {(Object.keys(DOMAIN_LABELS) as LifeDomainKey[]).map(domainKey => {
-                const config = DOMAIN_LABELS[domainKey];
-                const Icon = config.icon;
-                return (
-                  <div
-                    key={domainKey}
-                    className="p-5 bg-[#121A17] border border-[#23332D] rounded-2xl space-y-2 hover:border-[#315C45] transition-all shadow-md"
-                  >
-                    <div className="flex items-center gap-2 text-xs font-bold text-[#D6A84F] uppercase tracking-wider">
-                      <Icon className="w-4 h-4 text-[#86EFAC]" />
-                      <span>{config.label}</span>
-                    </div>
-                    <p className="text-xs text-[#C5CFC7] leading-relaxed">
-                      {selectedArchetype.domains[domainKey]}
-                    </p>
-                  </div>
+          <p className="text-sm text-[#C5CFC7] leading-relaxed relative">{a.shortDescription}</p>
+          <p className="font-serif italic text-base text-[#E5D7B7] leading-snug border-l-2 border-[#D6A84F]/60 pl-3 relative">
+            «{a.mantra}»
+          </p>
+          <button
+            onClick={() => {
+              if (onDiscussWithAi) {
+                onDiscussWithAi(
+                  `Hablemos desde la energía ${withDe(a.name)}. ¿Cómo puedo manifestar tu fuerza en mi día a día?`,
+                  a.id
                 );
-              })}
-            </div>
-          </div>
-        )}
+              } else {
+                onSelectTab('ai');
+              }
+            }}
+            className="relative w-full sm:w-auto inline-flex items-center justify-center gap-2 min-h-[44px] px-4 rounded-xl bg-[#1A2521] hover:bg-[#23332D] border border-[#315C45] text-xs font-semibold text-[#F2EFE6] transition-colors"
+          >
+            <Bot className="w-4 h-4 text-[#86EFAC]" />
+            Conversar con la voz {withDe(a.name)}
+          </button>
+        </header>
 
-        {/* Tab 4: Ejercicios & Prácticas */}
-        {detailActiveTab === 'ejercicios' && (
-          <div className="space-y-4">
-            <p className="text-xs text-[#9DA79F]">
-              Protocolos de desarrollo deliberado para encarnar y madurar este arquetipo:
-            </p>
-            <div className="space-y-4">
-              {selectedArchetype.developmentExercises.map((ex, idx) => (
-                <div
-                  key={idx}
-                  className="p-6 bg-[#121A17] border border-[#23332D] rounded-2xl space-y-3 shadow-lg"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-[#D6A84F] uppercase tracking-wider">
-                      Ejercicio #{idx + 1}
-                    </span>
-                    <span className="text-[11px] text-[#9DA79F] bg-[#0E1513] px-2.5 py-0.5 rounded-full border border-[#1E2A25]">
-                      Práctica Activa
-                    </span>
-                  </div>
-                  <h3 className="font-serif text-base font-bold text-[#F2EFE6]">
-                    {ex.title}
-                  </h3>
-                  <p className="text-xs text-[#9DA79F] leading-relaxed">
-                    {ex.description}
-                  </p>
-                  <div className="p-3.5 bg-[#0E1513] rounded-xl border border-[#315C45]/40 space-y-1">
-                    <span className="text-[10px] font-bold text-[#86EFAC] uppercase tracking-wider">
-                      Paso de Acción Inmediato:
-                    </span>
-                    <p className="text-xs text-[#C5CFC7] font-medium">
-                      {ex.actionStep}
-                    </p>
-                  </div>
-                </div>
+        {/* Comprender */}
+        <Seccion id="comprender" titulo="Comprender" icono={BookOpen} abierta={abiertas.has('comprender')} onAlternar={alternar}>
+          <p className="text-sm text-[#C5CFC7] leading-relaxed">{a.fullDescription}</p>
+          <div className="p-4 rounded-xl bg-[#0E1513] border border-[#315C45]/50 space-y-1">
+            <span className="text-[10px] uppercase tracking-wider font-bold text-[#D6A84F]">La pregunta que te hace</span>
+            <p className="font-serif text-base text-[#F2EFE6] font-semibold leading-snug">{a.centralQuestion}</p>
+          </div>
+          {a.concepts.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {a.concepts.map(c => (
+                <span key={c} className="text-[11px] px-2.5 py-1 rounded-lg bg-[#0E1513] text-[#9DA79F] border border-[#1E2A25] capitalize">
+                  {c}
+                </span>
               ))}
             </div>
-          </div>
-        )}
+          )}
+        </Seccion>
 
-        {/* Tab 5: Sinergias */}
-        {detailActiveTab === 'sinergias' && (
-          <div className="space-y-4">
-            <p className="text-xs text-[#9DA79F]">
-              Alianzas clave: Cómo se complementa el {selectedArchetype.name} con otras energías:
+        {/* Luz y sombra */}
+        <Seccion id="luz" titulo="Cuando ayuda y cuando se excede" icono={Sun} abierta={abiertas.has('luz')} onAlternar={alternar}>
+          <div className="space-y-2">
+            <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-emerald-400">
+              <Sun className="w-4 h-4" /> Cuando ayuda
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {selectedArchetype.synergies.map((syn, idx) => {
-                const partner = getArchetype(syn.partnerId, currentGender);
+            <p className="text-sm text-[#C5CFC7] leading-relaxed">{a.strength}</p>
+            <ul className="space-y-1.5">
+              {a.balancedBehavior.map((b, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm text-[#C5CFC7]">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                  <span>{b}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="space-y-2 p-4 rounded-xl bg-[#1A1514] border border-[#452723]">
+            <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-red-300">
+              <Shield className="w-4 h-4" /> Cuando se excede
+            </p>
+            <p className="text-sm font-semibold text-[#F2EFE6]">{a.shadow}</p>
+            <p className="text-sm text-[#C5CFC7] leading-relaxed">{a.shadowDescription}</p>
+            <ul className="space-y-1.5">
+              {a.unbalancedBehavior.map((u, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm text-[#C5CFC7]">
+                  <ShieldAlert className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                  <span>{u}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="p-4 rounded-xl bg-[#121F1A] border border-[#315C45] space-y-1">
+            <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#D6A84F]">
+              <Sparkles className="w-4 h-4" /> Cómo recuperar el equilibrio
+            </p>
+            <p className="text-sm text-[#C5CFC7] leading-relaxed">{a.shadowAntidote}</p>
+          </div>
+        </Seccion>
+
+        {/* En tu vida */}
+        <Seccion id="vida" titulo="En tu vida" icono={Layers} abierta={abiertas.has('vida')} onAlternar={alternar}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {(Object.keys(DOMAIN_LABELS) as LifeDomainKey[]).map(clave => {
+              const { label, icon: Icono } = DOMAIN_LABELS[clave];
+              return (
+                <div key={clave} className="p-4 rounded-xl bg-[#0E1513] border border-[#1E2A25] space-y-1.5">
+                  <p className="flex items-center gap-2 text-xs font-bold text-[#D6A84F]">
+                    <Icono className="w-4 h-4 text-[#86EFAC]" /> {label}
+                  </p>
+                  <p className="text-sm text-[#C5CFC7] leading-relaxed">{a.domains[clave]}</p>
+                </div>
+              );
+            })}
+          </div>
+        </Seccion>
+
+        {/* Practicar */}
+        <Seccion id="practicar" titulo="Practicar" icono={Dumbbell} abierta={abiertas.has('practicar')} onAlternar={alternar}>
+          {a.developmentExercises.map((ex, i) => (
+            <div key={i} className="p-4 rounded-xl bg-[#0E1513] border border-[#1E2A25] space-y-2">
+              <h3 className="font-serif text-base font-bold text-[#F2EFE6]">{ex.title}</h3>
+              <p className="text-sm text-[#9DA79F] leading-relaxed">{ex.description}</p>
+              <div className="p-3 rounded-lg bg-[#121F1A] border border-[#315C45]/50">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#86EFAC]">Primer paso</span>
+                <p className="text-sm text-[#C5CFC7]">{ex.actionStep}</p>
+              </div>
+            </div>
+          ))}
+        </Seccion>
+
+        {/* Preguntas para el diario */}
+        <Seccion id="preguntas" titulo="Preguntas para tu diario" icono={PenLine} abierta={abiertas.has('preguntas')} onAlternar={alternar}>
+          <ol className="space-y-2">
+            {a.reflectionQuestions.map((q, i) => (
+              <li key={i} className="flex items-start gap-3 p-3 rounded-xl bg-[#0E1513] border border-[#1E2A25]">
+                <span className="font-serif font-bold text-sm text-[#D6A84F] shrink-0">{i + 1}.</span>
+                <span className="text-sm text-[#C5CFC7] leading-relaxed">{q}</span>
+              </li>
+            ))}
+          </ol>
+          <button
+            type="button"
+            onClick={() => onSelectTab('journal')}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#D6A84F] hover:underline"
+          >
+            <PenLine className="w-3.5 h-3.5" /> Ir a mi diario
+          </button>
+        </Seccion>
+
+        {/* Con otras figuras */}
+        <Seccion id="figuras" titulo="Con otras figuras" icono={GitMerge} abierta={abiertas.has('figuras')} onAlternar={alternar}>
+          <div className="space-y-3">
+            {a.synergies.map((syn, i) => {
+              const partner = getArchetype(syn.partnerId, currentGender);
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => onSelectArchetype(partner.id)}
+                  className="w-full text-left p-4 rounded-xl bg-[#0E1513] border border-[#1E2A25] hover:border-[#315C45] space-y-1.5 transition-colors"
+                >
+                  <span className="flex items-center justify-between gap-2">
+                    <span className="flex items-center gap-2 font-serif text-sm font-bold text-[#F2EFE6]">
+                      <ArchetypeGlyph id={partner.id} className="w-6 h-6 text-[#D6A84F]" />
+                      Con {partner.name}
+                    </span>
+                    <span className="text-[10px] bg-[#1A2521] text-[#D6A84F] px-2 py-0.5 rounded-md border border-[#315C45] font-bold shrink-0">
+                      {syn.synergyKeyword}
+                    </span>
+                  </span>
+                  <span className="block text-xs font-semibold text-[#86EFAC]">{syn.title}</span>
+                  <span className="block text-sm text-[#9DA79F] leading-relaxed">{syn.description}</span>
+                </button>
+              );
+            })}
+          </div>
+        </Seccion>
+
+        {/* Para profundizar */}
+        {lecturas.length > 0 && (
+          <Seccion id="profundizar" titulo="Para profundizar" icono={Library} abierta={abiertas.has('profundizar')} onAlternar={alternar}>
+            <ul className="space-y-3">
+              {lecturas.map(l => {
+                const r = REFERENCIAS[l.ref];
                 return (
-                  <div
-                    key={idx}
-                    className="p-5 bg-[#121A17] border border-[#23332D] rounded-2xl space-y-3 shadow-md"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        {partner && <ArchetypeGlyph id={partner.id} className="w-7 h-7 text-[#D6A84F]" />}
-                        <span className="font-serif text-sm font-bold text-[#F2EFE6]">
-                          Con {partner?.name}
-                        </span>
-                      </div>
-                      <span className="text-[10px] bg-[#1A2521] text-[#D6A84F] px-2 py-0.5 rounded-md border border-[#315C45] font-bold">
-                        {syn.synergyKeyword}
-                      </span>
-                    </div>
-                    <h4 className="text-xs font-semibold text-[#86EFAC]">{syn.title}</h4>
-                    <p className="text-xs text-[#9DA79F] leading-relaxed">
-                      {syn.description}
+                  <li key={l.ref} className="p-4 rounded-xl bg-[#0E1513] border border-[#1E2A25] space-y-1.5">
+                    <a
+                      href={r.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-start gap-1.5 font-serif text-base font-bold text-[#F2EFE6] hover:text-[#D6A84F] leading-snug"
+                    >
+                      <span>{r.titulo}</span>
+                      <ExternalLink className="w-3.5 h-3.5 shrink-0 mt-1 text-[#D6A84F]" />
+                    </a>
+                    <p className="text-xs text-[#9DA79F]">
+                      {r.autores}
+                      {r.anio > 0 && ` · ${r.anio}`}
+                      {r.tipo === 'articulo' ? ' · artículo' : ''}
                     </p>
-                  </div>
+                    {'enEspanol' in r && r.enEspanol && <p className="text-xs text-[#C5CFC7]">En español: {r.enEspanol}</p>}
+                    <p className="text-sm text-[#C5CFC7] leading-relaxed">{l.porQue}</p>
+                  </li>
                 );
               })}
-            </div>
-          </div>
+            </ul>
+            <p className="text-[11px] text-[#7B8880] leading-relaxed">
+              Lecturas elegidas por afinidad: los 18 arquetipos de esta app son una síntesis propia de varias tradiciones,
+              y los autores no siempre usan estos mismos nombres. Los enlaces llevan a la ficha del libro o al artículo.
+            </p>
+          </Seccion>
         )}
       </div>
     );
   }
 
-  // Gallery View of the 18 Archetypes
-  return (
-    <div id="archetypes-gallery-view" className="space-y-8 animate-fadeIn max-w-6xl mx-auto">
-      {/* Header Banner */}
-      <div className="bg-gradient-to-r from-[#121A17] via-[#16221E] to-[#0F1714] border border-[#23332D] rounded-3xl p-6 sm:p-8 relative overflow-hidden shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="relative z-10 max-w-2xl space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#1A2521] border border-[#315C45] text-[#D6A84F] text-xs font-semibold uppercase tracking-widest">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Enciclopedia Simbólica Dinámica</span>
-          </div>
-          <h1 className="font-serif text-2xl sm:text-4xl font-bold text-[#F2EFE6] tracking-tight">
-            {currentGender === 'male'
-              ? 'Los 18 Arquetipos Masculinos'
-              : currentGender === 'female'
-              ? 'Los 18 Arquetipos Femeninos'
-              : 'Los 18 Arquetipos Universales'}
-          </h1>
-          <p className="text-sm text-[#9DA79F] leading-relaxed">
-            {currentGender === 'male'
-              ? 'Explora las 18 energías simbólicas en su manifestación masculina (El Rey, El Guerrero, El Mago, El Padre...). Conoce sus luces, sombras y prácticas evolutivas.'
-              : currentGender === 'female'
-              ? 'Explora las 18 energías simbólicas en su manifestación femenina (La Reina, La Guerrera, La Maga, La Madre...). Conoce sus luces, sombras y prácticas evolutivas.'
-              : 'Explora las 18 energías arquetípicas en su forma integrada y universal, organizada en cuatro dimensiones cardinales.'}
-          </p>
-        </div>
-
-        {/* Quick Gender Switcher in Banner */}
-        {onGenderChange && (
-          <div className="relative z-10 bg-[#0B1110] p-3 rounded-2xl border border-[#23332D] space-y-2 shrink-0">
-            <span className="text-[11px] font-bold text-[#D6A84F] uppercase tracking-wider block">
-              Perspectiva Activa
-            </span>
-            <div className="flex flex-col gap-1.5">
-              <button
-                onClick={() => onGenderChange('male')}
-                className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all flex items-center justify-between gap-3 ${
-                  currentGender === 'male'
-                    ? 'bg-[#315C45] text-[#F2EFE6] border border-[#437A5C] shadow'
-                    : 'bg-[#121A17] text-[#9DA79F] hover:text-[#F2EFE6] border border-[#1E2A25]'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <span>♂</span>
-                  <span>Masculina</span>
-                </div>
-                {currentGender === 'male' && <CheckCircle2 className="w-3.5 h-3.5 text-[#86EFAC]" />}
-              </button>
-
-              <button
-                onClick={() => onGenderChange('female')}
-                className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all flex items-center justify-between gap-3 ${
-                  currentGender === 'female'
-                    ? 'bg-[#7C3AED]/50 text-[#F2EFE6] border border-[#7C3AED] shadow'
-                    : 'bg-[#121A17] text-[#9DA79F] hover:text-[#F2EFE6] border border-[#1E2A25]'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <span>♀</span>
-                  <span>Femenina</span>
-                </div>
-                {currentGender === 'female' && <CheckCircle2 className="w-3.5 h-3.5 text-[#C084FC]" />}
-              </button>
-
-              <button
-                onClick={() => onGenderChange('universal')}
-                className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all flex items-center justify-between gap-3 ${
-                  currentGender === 'universal'
-                    ? 'bg-[#D6A84F]/25 text-[#D6A84F] border border-[#D6A84F] shadow'
-                    : 'bg-[#121A17] text-[#9DA79F] hover:text-[#F2EFE6] border border-[#1E2A25]'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <span>☯</span>
-                  <span>Universal</span>
-                </div>
-                {currentGender === 'universal' && <CheckCircle2 className="w-3.5 h-3.5 text-[#D6A84F]" />}
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Filter and Search Bar */}
-      <div className="bg-[#121A17] border border-[#23332D] rounded-2xl p-4 sm:p-5 space-y-4">
-        <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
-          {/* Search */}
-          <div className="relative w-full sm:w-80">
-            <Search className="w-4 h-4 text-[#6B7A72] absolute left-3.5 top-3" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Buscar por nombre, mantra, sombra..."
-              className="w-full pl-9 pr-3.5 py-2 bg-[#0E1513] border border-[#23332D] rounded-xl text-xs text-[#F2EFE6] placeholder-[#6B7A72] focus:outline-none focus:border-[#D6A84F]"
+  // ── Galería de los 18 ─────────────────────────────────────────────────────
+  const tarjeta = (arch: Archetype) => {
+    const dim = DIMENSIONS[arch.dimension];
+    return (
+      <li key={arch.id}>
+        <button
+          type="button"
+          onClick={() => onSelectArchetype(arch.id)}
+          className="group w-full h-full text-left flex gap-3 sm:gap-4 p-2.5 sm:p-3 rounded-2xl bg-[#121A17] border border-[#23332D] hover:border-[#D6A84F] overflow-hidden transition-colors"
+        >
+          <span className="block w-20 h-24 sm:w-24 sm:h-28 shrink-0 rounded-xl overflow-hidden bg-[#0B1110]">
+            <ArchetypeIllustratedArtwork
+              archetypeId={arch.id}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
-          </div>
+          </span>
+          <span className="min-w-0 flex-1 flex flex-col gap-1 justify-center">
+            <span className="flex items-center gap-1.5 font-serif text-base font-bold text-[#F2EFE6] leading-tight">
+              <ArchetypeGlyph id={arch.id} />
+              <span className="truncate">{arch.name}</span>
+            </span>
+            <span className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: dim.color }}>
+              {getDimensionShortName(arch.dimension)}
+            </span>
+            <span className="text-xs text-[#9DA79F] leading-snug line-clamp-2 sm:line-clamp-3">{arch.shortDescription}</span>
+          </span>
+        </button>
+      </li>
+    );
+  };
+  const agrupada = selectedDimension === 'todos' && !busca;
 
-          {/* Dimension Filter Tabs */}
-          <div className="flex flex-wrap gap-1.5 w-full sm:w-auto">
-            <button
-              onClick={() => setSelectedDimension('todos')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
-                selectedDimension === 'todos'
-                  ? 'bg-[#315C45] text-[#F2EFE6] font-semibold border border-[#437A5C]'
-                  : 'bg-[#0E1513] text-[#9DA79F] hover:text-[#F2EFE6] border border-[#23332D]'
-              }`}
-            >
-              Todos (18)
-            </button>
-            {(Object.keys(DIMENSIONS) as DimensionId[]).map(dimId => {
-              const dim = DIMENSIONS[dimId];
-              const isSelected = selectedDimension === dimId;
-              return (
-                <button
-                  key={dimId}
-                  onClick={() => setSelectedDimension(dimId)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
-                    isSelected
-                      ? 'bg-[#315C45] text-[#F2EFE6] font-semibold border border-[#437A5C]'
-                      : 'bg-[#0E1513] text-[#9DA79F] hover:text-[#F2EFE6] border border-[#23332D]'
-                  }`}
-                >
-                  {dim.name}
-                </button>
-              );
-            })}
-          </div>
+  return (
+    <div id="archetypes-gallery-view" className="space-y-5 animate-fadeIn max-w-6xl mx-auto pb-24">
+      {/* Cabecera */}
+      <header className="space-y-3">
+        <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#F2EFE6] tracking-tight">Los 18 arquetipos</h1>
+        <p className="text-sm text-[#9DA79F] leading-relaxed max-w-2xl">
+          Dieciocho maneras de estar en el mundo, en cuatro dimensiones. Toca uno para conocer cuándo ayuda, cuándo se excede
+          y cómo practicarlo.
+        </p>
+        {onGenderChange && <PerspectiveSwitcher gender={currentGender} onGenderChange={onGenderChange} size="sm" />}
+      </header>
+
+      {/* Buscar y filtrar */}
+      <div className="space-y-3">
+        <div className="relative">
+          <Search className="w-4 h-4 text-[#6B7A72] absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <input
+            type="search"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Buscar por nombre, idea o sombra…"
+            className="w-full min-h-[44px] pl-10 pr-4 bg-[#121A17] border border-[#23332D] rounded-xl text-sm text-[#F2EFE6] placeholder-[#6B7A72] focus:outline-none focus:border-[#D6A84F]"
+          />
+        </div>
+        <div className="flex gap-2 overflow-x-auto pb-1 touch-scroll-x scrollbar-persona -mx-1 px-1" role="group" aria-label="Filtrar por dimensión">
+          {(['todos', ...ORDEN_DIMENSIONES] as const).map(d => {
+            const activo = selectedDimension === d;
+            return (
+              <button
+                key={d}
+                type="button"
+                onClick={() => setSelectedDimension(d)}
+                aria-pressed={activo}
+                className={`shrink-0 min-h-[36px] px-3.5 rounded-xl text-xs font-medium whitespace-nowrap border transition-colors ${
+                  activo
+                    ? 'bg-[#315C45] text-[#F2EFE6] font-semibold border-[#437A5C]'
+                    : 'bg-[#121A17] text-[#9DA79F] hover:text-[#F2EFE6] border-[#23332D]'
+                }`}
+              >
+                {d === 'todos' ? 'Todos (18)' : DIMENSIONS[d].name}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Grid of Archetype Cards with Illustrated Character Design */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredArchetypes.map(archetype => {
-          const dim = DIMENSIONS[archetype.dimension];
-          const visual = ARCHETYPE_VISUALS[archetype.id];
-          return (
-            <div
-              key={archetype.id}
-              onClick={() => onSelectArchetype(archetype.id)}
-              className="group bg-[#121A17] border border-[#23332D] hover:border-[#D6A84F] rounded-3xl overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1.5 cursor-pointer flex flex-col justify-between relative"
-            >
-              {/* Card Character Portrait Banner */}
-              <div className="relative h-48 w-full overflow-hidden bg-[#0E1513]">
-                <ArchetypePortraitCard
-                  archetype={archetype}
-                  size="md"
-                  showBadge={true}
-                  className="w-full h-full rounded-none border-0"
-                />
-              </div>
-
-              {/* Card Body */}
-              <div className="p-5 space-y-3.5 flex-1 flex flex-col justify-between">
-                <div className="space-y-2.5">
-                  {/* Mantra */}
-                  <p className="text-xs italic text-[#E5D7B7] font-serif line-clamp-2 leading-relaxed bg-[#0B1110]/80 p-2.5 rounded-xl border border-[#1E2A25]">
-                    "{archetype.mantra}"
-                  </p>
-
-                  {/* Question */}
-                  <div className="space-y-0.5">
-                    <span className="text-[10px] uppercase font-bold text-[#8A968D] block tracking-wider">
-                      Pregunta de Indagación:
-                    </span>
-                    <p className="text-xs text-[#F2EFE6] font-medium leading-snug line-clamp-2">
-                      {archetype.centralQuestion}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Card Footer */}
-                <div className="pt-3 border-t border-[#1E2A25] flex items-center justify-between text-xs text-[#9DA79F] group-hover:text-[#D6A84F] transition-colors">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#EF4444]/80" />
-                    <span className="font-medium text-[11px] truncate max-w-[130px]">
-                      Sombra: {archetype.shadow.split(' ')[0]}
-                    </span>
-                  </div>
-                  <span className="flex items-center gap-1 font-bold text-[#D6A84F] text-xs">
-                    <span>Ver Ficha</span>
-                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                  </span>
-                </div>
-              </div>
+      {/* Los arquetipos: por dimensión, o la lista filtrada */}
+      {filteredArchetypes.length === 0 ? (
+        <div className="text-center py-12 px-6 space-y-3 rounded-2xl border border-dashed border-[#23332D] bg-[#101917]/50">
+          <p className="text-sm text-[#C5CFC7] font-medium">No encontramos arquetipos con «{searchQuery.trim()}».</p>
+          <button
+            type="button"
+            onClick={() => {
+              setSearchQuery('');
+              setSelectedDimension('todos');
+            }}
+            className="text-xs font-semibold text-[#D6A84F] hover:underline"
+          >
+            Ver los 18
+          </button>
+        </div>
+      ) : agrupada ? (
+        ORDEN_DIMENSIONES.map(d => (
+          <section key={d} className="space-y-2.5" aria-labelledby={`dimension-${d}`}>
+            <div className="flex items-baseline gap-2">
+              <span className="w-2 h-2 rounded-full shrink-0 self-center" style={{ backgroundColor: DIMENSIONS[d].color }} />
+              <h2 id={`dimension-${d}`} className="font-serif text-lg font-bold text-[#F2EFE6]">
+                {DIMENSIONS[d].name}
+              </h2>
             </div>
-          );
-        })}
-      </div>
+            <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-4">
+              {filteredArchetypes.filter(x => x.dimension === d).map(tarjeta)}
+            </ul>
+          </section>
+        ))
+      ) : (
+        <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-4">{filteredArchetypes.map(tarjeta)}</ul>
+      )}
     </div>
   );
 };
