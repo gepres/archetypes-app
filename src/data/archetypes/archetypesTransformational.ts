@@ -9,146 +9,75 @@ export const TRANSFORMATIONAL_ARCHETYPES: Record<'rebelde' | 'sanador' | 'constr
     feminineName: 'La Rebelde',
     emoji: '🔥',
     dimension: 'accion',
-    concepts: ['romper estructuras', 'revolución', 'autenticidad radical', 'disrupción', 'desobediencia lúcida', 'cambio'],
-    centralQuestion: '¿Qué estructura obsoleta o expectativa impuesta estoy llamado a romper para liberar la vida?',
-    shortDescription: 'La fuerza disruptiva que desafía dogmas caducos, destruye la hipocresía y abre paso a la renovación.',
-    fullDescription: 'El arquetipo del Rebelde es el agente de demolición consciente. No destruye por caos nihilista, sino porque reconoce que ciertas leyes y costumbres se han vuelto prisiones para el alma humana.',
-    mantra: 'Cuestiono lo establecido y abro paso a la verdad con coraje revolucionario.',
+    concepts: ['crítica', 'cambio', 'justicia', 'alternativas', 'consecuencias', 'coherencia'],
+    centralQuestion: '¿Qué regla ya no ayuda y qué alternativa puedo proponer?',
+    shortDescription: 'La parte de ti que cuestiona lo que no funciona y propone cambios haciéndose cargo de sus consecuencias.',
+    fullDescription: 'Aparece cuando cuestionas una regla de trabajo que complica una tarea o un acuerdo familiar que reparte las cargas de manera injusta. Su fuerza consiste en señalar qué falla, escuchar a quienes afecta y proponer una alternativa concreta. Cambiar incluye revisar las consecuencias, reconocer lo que sí sirve y asumir tu parte en el nuevo acuerdo. Se diferencia de la figura constructora: esa hace que un sistema pueda sostenerse y durar; la figura rebelde pregunta qué debe cambiar y por qué.',
+    mantra: 'Cuestiono lo que no ayuda y propongo un cambio del que respondo.',
     symbol: 'Antorcha Encendida & Cadenas Rotas',
     colorHex: '#EF4444',
     characterTitle: 'Disrupción & Autenticidad',
-    strength: 'Inconformismo lúcido, valentía para decir la verdad prohibida, disrupción innovadora y libertad sin concesiones.',
-    shadow: 'Rebelde sin causa / Destructor nihilista / Rebelión infantil por llamar la atención',
-    shadowDescription: 'Oponerse a todo por principio sin construir nada mejor o caer en el resentimiento destructivo.',
-    shadowAntidote: 'Someter la rebelión al servicio de la justicia y construir alternativas viables.',
+    strength: 'Hace visibles reglas y hábitos que se aceptan sin revisarlos. Convierte el desacuerdo en una propuesta y se hace cargo de sus efectos.',
+    shadow: 'Oponerse a todo o callar para encajar',
+    shadowDescription: 'En un extremo, rechazas cualquier acuerdo, rompes compromisos y dejas a otros resolver las consecuencias. En el otro, ocultas objeciones importantes para evitar quedar fuera del grupo. Ambos pueden nacer del miedo a perder tu voz al pertenecer o a perder la pertenencia al usarla.',
+    shadowAntidote: 'Describe un problema concreto, identifica a quienes afecta y propone una sustitución. Escucha objeciones, conserva lo que funciona y acuerda cómo revisar las consecuencias del cambio.',
     domains: {
-      liderazgo: 'Desafía monopolios e inercias organizativas y propone modelos radicalmente nuevos.',
-      relaciones: 'Tolerancia cero a la hipocresía, los pactos de silencio y la manipulación.',
-      crisis: 'Rompe protocolos inútiles y actúa con audacia revolucionaria para salvar la situación.',
-      creatividad: 'Vanguardismo puro: dinamita géneros y crea lenguajes artísticos rompedores.',
-      paternidad: 'Enseña a los hijos a pensar por sí mismos y a no obedecer ciegamente la autoridad injusta.',
+      liderazgo: 'Cuestiona reglas que dificultan el trabajo o reparten cargas injustamente. Propone cambios con participación de quienes tendrán que aplicarlos.',
+      relaciones: 'Revisa acuerdos heredados y expresa desacuerdos sin humillar. Propone otra manera de convivir y asume su parte para sostenerla.',
+      crisis: 'Pregunta si seguir haciendo lo mismo empeora el problema. Busca una alternativa posible y revisa qué consecuencias tendría para otras personas.',
+      creatividad: 'Cuestiona una convención para descubrir otra forma de hacer algo. Acompaña la crítica con una propuesta que se pueda probar.',
+      paternidad: 'En la crianza o la mentoría, permite preguntar por qué existe una regla. Enseña a proponer cambios y a hacerse cargo de los acuerdos que se revisan.',
     },
     balancedBehavior: [
-      'Cuestiona las normas injustas con argumentos sólidos.',
-      'Sabe cuándo negociar y cuándo romper definitivamente.',
-      'Canaliza su rabia en reformas constructivas.',
-      'Defiende a los marginados frente al abuso del poder.'
+      'Explica qué problema concreto encuentra en una regla.',
+      'Propone una alternativa y escucha a quienes afecta.',
+      'Reconoce lo que conviene conservar del acuerdo anterior.',
+      'Asume las tareas que implica el cambio que propone.',
+      'Revisa los resultados y ajusta su propuesta si hace falta.',
     ],
     unbalancedBehavior: [
-      'Llevar la contraria por capricho egoísta.',
-      'Destruir relaciones valiosas en arranques de ira.',
-      'Incapacidad de convivir en cualquier comunidad o respetar acuerdos.',
-      'Cinismo que ridiculiza todo intento de orden o estabilidad.'
+      'Rechaza una idea solo porque viene de una autoridad.',
+      'Rompe un acuerdo sin hablar de sus consecuencias.',
+      'Critica todo sin ofrecer una opción posible.',
+      'Oculta un desacuerdo importante para no incomodar al grupo.',
+      'Exige que otras personas hagan todo el trabajo del cambio.',
     ],
     reflectionQuestions: [
-      '¿Qué regla o expectativa ajena estoy acatando que ya no tiene sentido para mí?',
-      '¿Mi rebeldía está construyendo algo mejor o solo destruyendo lo existente?',
-      '¿Dónde necesito alzar la voz con honestidad frente a una situación injusta?'
+      '¿Qué regla cuestiono y a quién le está causando un problema?',
+      '¿Qué alternativa concreta puedo ofrecer?',
+      '¿Qué parte del acuerdo actual sí merece conservarse?',
+      '¿Qué consecuencia de mi propuesta me corresponde asumir?',
     ],
     developmentExercises: [
       {
-        title: 'La Ruptura de una Inercia',
-        description: 'Rompe deliberadamente una regla social o rutina absurda que te autoimpongas.',
-        actionStep: 'Elige tu propia manera de hacer las cosas sin pedir disculpas.'
-      }
+        title: 'Una regla y su alternativa · 15 minutos',
+        description: 'Elige una norma cotidiana que ya no ayuda y describe el problema que produce. Propón una sustitución concreta e identifica quién tendría que participar en el acuerdo.',
+        actionStep: 'Escribe una regla inútil y completa: «En su lugar, propongo…».',
+      },
+      {
+        title: 'Revisar las consecuencias · 10 minutos',
+        description: 'Antes de cambiar un acuerdo, anota quién gana tiempo, quién asume una carga y qué podría salir distinto de lo previsto. Ajusta la propuesta para no trasladar todo el costo a otros.',
+        actionStep: 'Escribe los nombres o roles de las personas afectadas por un cambio pequeño que deseas.',
+      },
+      {
+        title: 'Reescribir un mandato · 10 minutos',
+        description: 'Escribe una frase de obligación que repites sin revisar y redacta una elección más concreta. Puedes tachar o rasgar el papel anterior para marcar la revisión, sin necesitar un ritual especial.',
+        actionStep: 'Escribe «Tengo que…» y debajo una alternativa que explique qué eliges y por qué.',
+      },
     ],
     synergies: [
       {
         partnerId: 'constructor',
-        title: 'Demolición + Reedificación',
-        description: 'El Rebelde derriba lo caduco; el Constructor levanta la nueva estructura sólida sobre los cimientos limpios.',
-        synergyKeyword: 'Renovación Estructural'
-      }
+        title: 'Crítica + Continuidad',
+        description: 'Uno señala qué necesita cambiar y propone una alternativa; el otro organiza cómo sostenerla y mantenerla. Juntos evitan tanto conservar un problema por costumbre como cambiar sin hacerse cargo de lo que sigue.',
+        synergyKeyword: 'Cambios que se sostienen',
+      },
     ],
     variants: {
-      masculine: {
-        name: 'El Rebelde',
-        characterTitle: 'El Iconoclasta de la Transformación y Ruptura',
-        centralQuestion: '¿Qué estructura caduca estás dispuesto a desafiar para abrir un nuevo horizonte?',
-        shortDescription: 'Inconformismo constructivo, romper dogmas y coraje transformador.',
-        fullDescription: 'El Rebelde masculino desafía el statu quo, la corrupción y las leyes injustas, arriesgando su propia comodidad por un ideal más libre.',
-        mantra: 'Rompo las cadenas de la complacencia y abro caminos de libertad.',
-        strength: 'Coraje iconoclasta, franqueza tajante y disrupción audaz.',
-        shadow: 'Vándalo nihilista / Forajido resentido',
-        shadowDescription: 'Destruye por rabia ciega sin ofrecer ninguna solución constructiva.',
-        shadowAntidote: 'Alinear la rebeldía con el amor a la verdad y la justicia.',
-        domains: {
-          liderazgo: 'Innovación disruptiva y liderazgo contra la corriente.',
-          relaciones: 'Honestidad frontal y rechazo a las apariencias.',
-          crisis: 'Audacia para saltarse procedimientos estériles.',
-          creatividad: 'Ruptura de moldes artísticos.',
-          paternidad: 'Inculcación de pensamiento crítico e independencia.',
-        },
-        balancedBehavior: ['Desafía lo injusto', 'Construye alternativas mejores'],
-        unbalancedBehavior: ['Rivalidad crónica con la autoridad', 'Autodestrucción'],
-        reflectionQuestions: ['¿Qué dogma estoy dispuesto a cuestionar hoy?'],
-        developmentExercises: [
-          {
-            title: 'Cuestionamiento Radical',
-            description: 'Escribe un ensayo o reflexión desarmando una creencia limitante que te inculcaron.',
-            actionStep: 'Define tu propia postura libre.'
-          }
-        ]
-      },
-      feminine: {
-        name: 'La Rebelde',
-        characterTitle: 'La Soberana de la Desobediencia Lúcida y la Liberación',
-        centralQuestion: '¿Qué expectativa de género, rol o mandato familiar ya no estás dispuesta a aceptar?',
-        shortDescription: 'Desobediencia lúcida, liberación de roles impuestos y autenticidad radical.',
-        fullDescription: 'La Rebelde femenina se niega a ser sumisa, dócil o complaciente. Rompe con los mandatos de sacrificio y reclama su derecho a vivir bajo sus propios términos.',
-        mantra: 'No nací para complacer; nací para ser libre y auténtica.',
-        strength: 'Desobediencia lúcida, liberación de culpas ancestrales y fuego purificador.',
-        shadow: 'Furia amarga / Rechazo a toda forma de vulnerabilidad',
-        shadowDescription: 'Guerra constante contra todos los vínculos por miedo a ser dominada.',
-        shadowAntidote: 'Saber que la verdadera libertad no teme a la ternura ni a la cooperación.',
-        domains: {
-          liderazgo: 'Transformación de culturas patriarcales o tóxicas.',
-          relaciones: 'Pactos de igualdad y libertad genuina.',
-          crisis: 'Decisiones radicales que salvan vidas.',
-          creatividad: 'Arte visceral, provocador y emancipador.',
-          paternidad: 'Crianza libre de estereotipos limitantes.',
-        },
-        balancedBehavior: ['Dice su verdad sin rodeos', 'Desmantela la culpa impuesta'],
-        unbalancedBehavior: ['Reactividad agresiva', 'Miedo a bajar la guardia'],
-        reflectionQuestions: ['¿Qué mandato de sumisión o complacencia sigo obedeciendo por costumbre?'],
-        developmentExercises: [
-          {
-            title: 'Fuego de Liberación',
-            description: 'Escribe en un papel una vieja culpa o mandato impuesto y quémalo o rómpelo.',
-            actionStep: 'Siente el alivio de la liberación personal.'
-          }
-        ]
-      },
-      universal: {
-        name: 'Rebelde',
-        characterTitle: 'La Fuerza de Renovación y Disrupción',
-        centralQuestion: '¿Cómo renuevo lo que se ha vuelto rígido?',
-        shortDescription: 'Disrupción consciente, autenticidad y cambio necesario.',
-        fullDescription: 'El principio evolutivo que rompe la inercia para que la vida continúe.',
-        mantra: 'La evolución exige valentía para cambiar.',
-        strength: 'Valentía y autenticidad.',
-        shadow: 'Caos sin rumbo.',
-        shadowDescription: 'Destrucción innecesaria.',
-        shadowAntidote: 'Propósito constructivo.',
-        domains: {
-          liderazgo: 'Disrupción e innovación.',
-          relaciones: 'Transparencia total.',
-          crisis: 'Salida de esquemas rígidos.',
-          creatividad: 'Vanguardismo.',
-          paternidad: 'Fomento de la libertad.',
-        },
-        balancedBehavior: ['Cambio consciente'],
-        unbalancedBehavior: ['Conflicto innecesario'],
-        reflectionQuestions: ['¿Qué cambio urgente necesita mi vida?'],
-        developmentExercises: [
-          {
-            title: 'Gesto de Cambio',
-            description: 'Cambia un hábito negativo por una práctica saludable.',
-            actionStep: 'Empieza hoy.'
-          }
-        ]
-      }
-    }
+      masculine: { name: 'El Rebelde' },
+      feminine: { name: 'La Rebelde' },
+      universal: { name: 'Rebelde' },
+    },
   },
 
   sanador: {
@@ -159,146 +88,75 @@ export const TRANSFORMATIONAL_ARCHETYPES: Record<'rebelde' | 'sanador' | 'constr
     feminineName: 'La Sanadora',
     emoji: '🌿',
     dimension: 'corazon',
-    concepts: ['integración', 'reparación', 'transformación del dolor', 'escucha profunda', 'presencia restauradora', 'alivio'],
-    centralQuestion: '¿Cómo transformo el dolor y las heridas en fuentes vivas de sabiduría y salud integral?',
-    shortDescription: 'La capacidad de restaurar el equilibrio, acompañar en el sufrimiento y transmutar la herida en medicina.',
-    fullDescription: 'El Sanador / Sanadora comprende que las heridas no son fallos, sino portales de maduración. Acompaña a quien atraviesa una pérdida, una ruptura o un mal momento, con paciencia, escucha y respeto por los límites de cada cual.',
-    mantra: 'Acepto mis heridas, permito su sanación y ofrezco presencia reparadora.',
+    concepts: ['escucha', 'reparación', 'paciencia', 'amabilidad', 'responsabilidad', 'apoyo'],
+    centralQuestion: '¿Qué necesita reparación y qué apoyo sería útil sin forzar el proceso?',
+    shortDescription: 'La parte de ti que acompaña una reparación con escucha, responsabilidad y un trato amable.',
+    fullDescription: 'Aparece cuando escuchas a alguien después de una decepción, reconoces el daño de tus palabras o intentas reconstruir un acuerdo que se rompió. Su fuerza consiste en acompañar la reparación con paciencia, trato amable y responsabilidad por lo que sí depende de cada quien. Una experiencia dolorosa no tiene que producir crecimiento, y perdonar o retomar un vínculo no es obligatorio. Se diferencia de la figura cuidadora: esa atiende necesidades presentes; la figura sanadora acompaña una reparación que puede requerir tiempo, límites y cambios en la manera de relacionarse.',
+    mantra: 'Escucho sin forzar y doy un paso posible para reparar.',
     symbol: 'Caduceo de la Salud & Manantial de Agua Pura',
     colorHex: '#10B981',
     characterTitle: 'Reparación & Sanación',
-    strength: 'Presencia restauradora, escucha compasiva, atención al propio cuerpo y al descanso, y capacidad de dar sentido al sufrimiento.',
-    shadow: 'Sanador herido no resuelto / Charlatán milagroso / Adicto a las heridas ajenas',
-    shadowDescription: 'Pretender sanar a todos para no mirar la propia herida abierta o alimentar el sufrimiento para sentirse necesitado.',
-    shadowAntidote: 'Trabajar primero en la propia integración personal y respetar los tiempos de maduración de cada ser.',
+    strength: 'Escucha sin apresurar respuestas y ayuda a identificar un apoyo concreto. Reconoce responsabilidades sin reducir a una persona a su error ni prometer arreglarlo todo.',
+    shadow: 'Querer arreglarlo todo o evitar lo que duele',
+    shadowDescription: 'En un extremo, das consejos sin preguntar, presionas para perdonar o prometes solucionar una experiencia ajena. En el otro, cambias de tema, minimizas lo ocurrido o postergas reconocer tu propia responsabilidad. Ambos pueden nacer de la incomodidad de acompañar algo que no se resuelve de inmediato.',
+    shadowAntidote: 'Pregunta qué apoyo hace falta y escucha sin aconsejar de entrada. Si te corresponde reparar, reconoce una acción concreta, ofrece un cambio posible y respeta el tiempo, los límites y la respuesta de la otra persona.',
     domains: {
-      liderazgo: 'Restaura la confianza tras crisis organizativas o despidos dolorosos.',
-      relaciones: 'Sana malentendidos, repara vínculos dañados y promueve el perdón.',
-      crisis: 'Ofrece calma inmediata, primeros auxilios emocionales y serenidad.',
-      creatividad: 'Obras de arte profundamente terapéuticas y catárticas.',
-      paternidad: 'Atención amorosa a los miedos, la salud y la integración emocional de los hijos.',
+      liderazgo: 'Reconoce el efecto de un error y acuerda cambios que reduzcan su repetición. Escucha a quienes fueron afectados sin pedir que den el asunto por cerrado.',
+      relaciones: 'Acompaña una decepción y asume su parte cuando hubo daño. Respeta que reparar no siempre significa perdonar, reconciliarse o volver a la relación anterior.',
+      crisis: 'Ofrece escucha y pregunta qué apoyo concreto serviría ahora. Acepta no tener una solución y evita exigir que alguien encuentre una enseñanza.',
+      creatividad: 'Permite expresar una experiencia mediante palabras, imágenes o sonidos sin exigir un resultado bonito. Respeta que compartir lo creado sea una elección.',
+      paternidad: 'En la crianza o la mentoría, ayuda a nombrar lo ocurrido y a reparar acciones concretas. Ofrece trato amable sin borrar responsabilidades ni imponer disculpas vacías.',
     },
     balancedBehavior: [
-      'Acompaña sin intentar forzar soluciones prematuras.',
-      'Cuida su propia energía y límites energéticos.',
-      'Honra el dolor como parte del crecimiento.',
-      'Inspira esperanza y confianza en la recuperación.'
+      'Pregunta qué apoyo necesita alguien antes de aconsejar.',
+      'Escucha una experiencia difícil sin minimizarla.',
+      'Reconoce su responsabilidad con ejemplos concretos.',
+      'Propone cambios y respeta los límites de la otra persona.',
+      'Se trata con amabilidad mientras corrige un error.',
     ],
     unbalancedBehavior: [
-      'Dar consejos no solicitados continuamente.',
-      'Creerse con poderes mágicos sobre la vida ajena.',
-      'Negar la propia enfermedad o dolor por mantener el rol de sanador.',
-      'Incapacidad de tolerar que otros pasen por su propio proceso doloroso.'
+      'Promete arreglar lo que otra persona está viviendo.',
+      'Da consejos sin preguntar si son bienvenidos.',
+      'Presiona para perdonar o retomar un vínculo.',
+      'Cambia de tema cada vez que se menciona un daño pendiente.',
+      'Usa frases amables para evitar reconocer lo que hizo.',
     ],
     reflectionQuestions: [
-      '¿Qué herida personal sigue esperando mi atención y perdón?',
-      '¿Estoy intentando arreglar la vida de los demás para evitar hacerme cargo de la mía?',
-      '¿Cómo puedo traer mayor calma y descanso a mi cuerpo hoy?'
+      '¿Qué apoyo se está pidiendo y qué solución estoy suponiendo?',
+      '¿Qué responsabilidad concreta me corresponde reconocer?',
+      '¿Qué límite o ritmo necesito respetar en esta reparación?',
+      '¿Cómo puedo corregir mi acción sin hablarme con desprecio?',
     ],
     developmentExercises: [
       {
-        title: 'El Ritual del Perdón Interior',
-        description: 'Escribe una carta de perdón a ti mismo por un error del pasado, reconociendo tu inocencia básica.',
-        actionStep: 'Léela en voz alta y siéntete liberado de esa carga.'
-      }
+        title: 'Preguntar sin arreglar · 10 minutos',
+        description: 'Pregunta a alguien qué apoyo necesita y escucha su respuesta sin añadir consejos ni prometer soluciones. Ofrece solo lo que puedes sostener y acepta que quizá prefiera espacio.',
+        actionStep: 'Pregunta: «¿Qué apoyo te serviría hoy: que escuche, una ayuda concreta o espacio?».',
+      },
+      {
+        title: 'Responsabilidad con amabilidad · 10 minutos',
+        description: 'Describe un error pequeño, su efecto y una acción para corregirlo. Recuerda que equivocarte es una experiencia humana y que tratarte con respeto puede acompañar la responsabilidad.',
+        actionStep: 'Escribe: «Hice esto, tuvo este efecto y puedo cambiar esta acción».',
+      },
+      {
+        title: 'Un paso de reparación · 15 minutos',
+        description: 'Revisa una situación cotidiana pendiente y distingue tu acción de la respuesta que no puedes controlar. Prepara una propuesta que respete si la otra persona no quiere conversar.',
+        actionStep: 'Escribe un cambio concreto que puedas hacer hoy para no repetir un error.',
+      },
     ],
     synergies: [
       {
         partnerId: 'guerrero',
-        title: 'Sanación + Defensa',
-        description: 'El Sanador repara las heridas del alma; el Guerrero defiende el espacio para que la sanación ocurra sin nuevas agresiones.',
-        synergyKeyword: 'Fortaleza Restaurada'
-      }
+        title: 'Reparación + Límites',
+        description: 'Uno acompaña la reparación con escucha y paciencia; el otro protege el espacio y pone límites a nuevas exigencias. Juntos permiten cuidar un proceso sin pedir que continúe cualquier vínculo a cualquier costo.',
+        synergyKeyword: 'Reparar con límites',
+      },
     ],
     variants: {
-      masculine: {
-        name: 'El Sanador',
-        characterTitle: 'El Custodio de la Integración y la Reconstrucción',
-        centralQuestion: '¿Cómo transformo mis cicatrices en fortaleza y acompaño a otros en su reconstrucción?',
-        shortDescription: 'Acompañamiento, integración, comprensión del dolor y reconstrucción.',
-        fullDescription: 'El Sanador masculino ha conocido la caída y el dolor, y desde esa experiencia forja una presencia serena que ayuda a reconstruir vidas y vínculos rotos.',
-        mantra: 'Mis cicatrices son mi sabiduría; ofrezco mi presencia firme para reparar.',
-        strength: 'Presencia serena, escucha profunda sin juicio y temple reparador.',
-        shadow: 'Salvador desgastado / Hombre que oculta sus heridas',
-        shadowDescription: 'Finge estar intacto para sostener a otros hasta colapsar en silencio.',
-        shadowAntidote: 'Mostrar su vulnerabilidad y aceptar ser acompañado.',
-        domains: {
-          liderazgo: 'Cuidado del bienestar emocional del equipo.',
-          relaciones: 'Espacio de confianza absoluta y lealtad.',
-          crisis: 'Estabilidad y acompañamiento en el duelo.',
-          creatividad: 'Obras de reconstrucción moral.',
-          paternidad: 'Escucha atenta y apoyo en momentos de duda o caída.',
-        },
-        balancedBehavior: ['Acompaña con serenidad', 'Reconoce sus límites'],
-        unbalancedBehavior: ['Aislamiento con el dolor propio', 'Complejo de salvador'],
-        reflectionQuestions: ['¿Qué dolor estoy ocultando para que otros no se preocupen?'],
-        developmentExercises: [
-          {
-            title: 'Espacio de Escucha Pura',
-            description: 'Escucha a alguien durante 15 minutos sin interrumpir ni darle consejos.',
-            actionStep: 'Solo brinda tu presencia y empatía sincera.'
-          }
-        ]
-      },
-      feminine: {
-        name: 'La Sanadora',
-        characterTitle: 'La Curandera del Alma y los Vínculos',
-        centralQuestion: '¿Cómo tejo la reconciliación y restauro la vitalidad de mi cuerpo y mis relaciones?',
-        shortDescription: 'Cuidado, integración, reparación, transformación emocional y presencia restauradora.',
-        fullDescription: 'La Sanadora femenina comprende los ritmos del cuerpo, el poder de las palabras tiernas y la medicina de la reconciliación consigo misma y con los demás.',
-        mantra: 'Abrazo el dolor con ternura y lo transformo en medicina viva.',
-        strength: 'Intuición para acompañar, empatía profunda, suavidad reconfortante y perdón.',
-        shadow: 'Esponja emocional / Mártir sanadora',
-        shadowDescription: 'Sostiene a los demás hasta quedarse sin fuerzas, o permanece en vínculos que le hacen daño con la esperanza de «arreglar» a la otra persona.',
-        shadowAntidote: 'Poner límite a la ayuda que da, descansar y pedir apoyo. Nadie tiene que aguantar un daño para que otra persona cambie.',
-        domains: {
-          liderazgo: 'Resolución de conflictos y facilitación de climas armónicos.',
-          relaciones: 'Reconciliación, escucha profunda y calidez sanadora.',
-          crisis: 'Alivio del sufrimiento y paz restauradora.',
-          creatividad: 'Arte medicina y expresión catártica.',
-          paternidad: 'Nutrición del alma infantil y sanación del dolor emocional.',
-        },
-        balancedBehavior: ['Pone límites a la toxicidad', 'Sana desde el amor propio'],
-        unbalancedBehavior: ['Cargar con dolores ajenos', 'Desgaste por sobreempatía'],
-        reflectionQuestions: ['¿Qué dolor ajeno estoy cargando como si fuera mío?'],
-        developmentExercises: [
-          {
-            title: 'Limpieza y Restauración',
-            description: 'Toma un baño consciente o paseo por la naturaleza soltando las cargas de otros.',
-            actionStep: 'Respira profundo y recupera tu centro.'
-          }
-        ]
-      },
-      universal: {
-        name: 'Sanador / Sanadora',
-        characterTitle: 'El Principio de Restauración y Salud',
-        centralQuestion: '¿Cómo cultivo salud y armonía en mi vida?',
-        shortDescription: 'Sanación, equilibrio y transformación del dolor.',
-        fullDescription: 'La fuerza intrínseca de la vida para regenerarse y encontrar el equilibrio.',
-        mantra: 'La vida en mí se restaura y renueva.',
-        strength: 'Regeneración y compasión.',
-        shadow: 'Negar el propio dolor o quedarse sin apoyos para afrontarlo.',
-        shadowDescription: 'Seguir adelante como si nada doliera, hasta que el cansancio obliga a parar.',
-        shadowAntidote: 'Aceptación y cuidado activo.',
-        domains: {
-          liderazgo: 'Clima saludable.',
-          relaciones: 'Perdón y comprensión.',
-          crisis: 'Recuperación.',
-          creatividad: 'Arte sanador.',
-          paternidad: 'Cuidado amoroso.',
-        },
-        balancedBehavior: ['Regeneración y presencia'],
-        unbalancedBehavior: ['Descuido de la salud'],
-        reflectionQuestions: ['¿Cómo cuido mi energía hoy?'],
-        developmentExercises: [
-          {
-            title: 'Descanso Reparador',
-            description: 'Acuéstate 30 minutos antes para permitir que tu cuerpo descanse.',
-            actionStep: 'Hazlo esta noche.'
-          }
-        ]
-      }
-    }
+      masculine: { name: 'El Sanador' },
+      feminine: { name: 'La Sanadora' },
+      universal: { name: 'Sanador / Sanadora' },
+    },
   },
 
   constructor: {
@@ -309,146 +167,75 @@ export const TRANSFORMATIONAL_ARCHETYPES: Record<'rebelde' | 'sanador' | 'constr
     feminineName: 'La Constructora',
     emoji: '🏛️',
     dimension: 'construccion',
-    concepts: ['materialización', 'estabilidad', 'sistemas sostenibles', 'infraestructura', 'organización', 'perseverancia'],
-    centralQuestion: '¿Cómo creo estructuras, sistemas y cimientos sólidos que resistan el paso del tiempo?',
-    shortDescription: 'El maestro de la materialización pragmática, la estabilidad, los procesos eficientes y las obras duraderas.',
-    fullDescription: 'El Constructor / Constructora aterriza las visiones en la tierra. Calcula presupuestos, levanta muros firmes, diseña procesos sostenibles y se asegura de que todo funcione con precisión.',
-    mantra: 'Construyo con paciencia, solidez y visión de futuro.',
+    concepts: ['estructura', 'proceso', 'mantenimiento', 'continuidad', 'recursos', 'ajustes'],
+    centralQuestion: '¿Qué proceso sencillo hará que esto funcione y pueda mantenerse?',
+    shortDescription: 'La parte de ti que organiza pasos y recursos para que algo funcione, dure y pueda ajustarse.',
+    fullDescription: 'Aparece cuando organizas las tareas de la casa, preparas un calendario de estudio o documentas un proceso de trabajo. Su fuerza consiste en convertir una intención en pasos claros, repartir recursos y prever el mantenimiento para que el resultado no dependa de un esfuerzo excepcional. Una estructura útil puede simplificarse y cambiar cuando deja de servir o cuesta más de lo que aporta. Se diferencia de la figura creadora: esa imagina y da forma a posibilidades; la figura constructora hace que lo elegido funcione y dure.',
+    mantra: 'Organizo lo necesario, lo mantengo y ajusto lo que deja de servir.',
     symbol: 'Escuadra & Piedra Angular',
     colorHex: '#D6A84F',
     characterTitle: 'Estructura & Sistemas',
-    strength: 'Pragmatismo, capacidad organizativa, perseverancia metódica y construcción de patrimonio sostenible.',
-    shadow: 'Burocrático rígido / Materialista obsesivo / Esclavo de la rutina',
-    shadowDescription: 'Quedarse atrapado en procesos mecánicos sin alma o resistirse a cualquier cambio por miedo a desestabilizar la estructura.',
-    shadowAntidote: 'Convocar al Mago para innovar y al Amante para recordar que las estructuras están al servicio de las personas.',
+    strength: 'Diseña procesos claros que otras personas pueden usar y sostener. Considera el tiempo, los recursos y el mantenimiento antes de agregar complejidad.',
+    shadow: 'Llenarlo todo de reglas o improvisar sin sostén',
+    shadowDescription: 'En un extremo, agregas controles y pasos aunque ya dificulten la tarea, y rechazas ajustes porque alteran el plan. En el otro, empiezas sin acuerdos mínimos, dejas el mantenimiento para después y todo depende de resolver a última hora. Ambos pueden nacer del miedo a perder el control o a comprometerte con una estructura revisable.',
+    shadowAntidote: 'Define el resultado mínimo, quién se hace cargo y cómo se revisará. Elimina un paso que no aporte, reserva tiempo para mantener lo útil y ajusta el proceso cuando cambien las condiciones.',
     domains: {
-      liderazgo: 'Diseña operaciones impecables, administra recursos con prudencia y garantiza la continuidad.',
-      relaciones: 'Aporta seguridad material, estabilidad doméstica y cumplimiento riguroso de acuerdos.',
-      crisis: 'Evalúa los daños con objetividad y organiza la reconstrucción paso a paso.',
-      creatividad: 'Especialista en arquitectura, ingeniería, desarrollo de software o gestión de proyectos.',
-      paternidad: 'Enseña hábitos de ahorro, orden, perseverancia y responsabilidad práctica.',
+      liderazgo: 'Aclara tareas, responsables y formas de seguimiento que el equipo puede sostener. Revisa los pasos con quienes los usan y elimina trabajo innecesario.',
+      relaciones: 'Crea acuerdos prácticos sobre tareas, tiempos y recursos compartidos. Los revisa cuando cambian las necesidades en vez de tratarlos como reglas definitivas.',
+      crisis: 'Ordena un proceso mínimo para atender lo urgente y repartir tareas. Deja espacio para modificarlo según la información que vaya llegando.',
+      creatividad: 'Organiza materiales, versiones y tiempos para que una idea pueda usarse y mantenerse. Simplifica la estructura cuando empieza a frenar el trabajo.',
+      paternidad: 'En la crianza o la mentoría, ofrece rutinas comprensibles y herramientas sencillas. Explica su utilidad y las adapta al aprendizaje y a la capacidad de cada quien.',
     },
     balancedBehavior: [
-      'Edifica paso a paso sin desesperarse por los resultados inmediatos.',
-      'Optimiza los recursos para evitar el despilfarro.',
-      'Crea sistemas que funcionan de forma autónoma.',
-      'Combina solidez estructural con flexibilidad ante mejoras.'
+      'Define pasos y responsabilidades que se entienden.',
+      'Diseña un proceso que cabe en los recursos disponibles.',
+      'Reserva tiempo para el mantenimiento de lo que ya funciona.',
+      'Elimina pasos que no aportan al resultado.',
+      'Revisa acuerdos y acepta ajustes cuando cambian las necesidades.',
     ],
     unbalancedBehavior: [
-      'Inflexibilidad ante cualquier cambio imprevisto.',
-      'Medir el valor de la vida exclusivamente en logros materiales o dinero.',
-      'Microgestión obsesiva de cada detalle operativo.',
-      'Miedo paralizante a salir de la zona de confort estructurada.'
+      'Agrega controles sin comprobar si ayudan.',
+      'Mantiene un proceso que cuesta más de lo que resuelve.',
+      'Rechaza cambios solo porque no estaban en el plan original.',
+      'Empieza tareas compartidas sin aclarar quién se hará cargo.',
+      'Deja el mantenimiento hasta que algo falla o deja de usarse.',
     ],
     reflectionQuestions: [
-      '¿Qué proyecto o sistema en mi vida necesita mejores cimientos y orden?',
-      '¿Estoy construyendo para servir a un propósito vital o por miedo a la incertidumbre?',
-      '¿Dónde necesito flexibilizar mis rutinas para permitir que entre aire fresco?'
+      '¿Cuál es la estructura más sencilla que esta tarea necesita?',
+      '¿Qué paso consume tiempo sin mejorar el resultado?',
+      '¿Quién mantiene esto y con qué recursos cuenta?',
+      '¿Qué cambió desde que acordamos este proceso?',
     ],
     developmentExercises: [
       {
-        title: 'La Auditoría de Cimientos',
-        description: 'Revisa un área desorganizada de tu economía o trabajo y diseña un sistema simple de 3 pasos para mantenerla ordenada.',
-        actionStep: 'Implementa el nuevo proceso hoy mismo.'
-      }
+        title: 'Un proceso mínimo · 15 minutos',
+        description: 'Elige una tarea repetida y diseña un proceso breve con inicio, responsable y cierre. Elimina un paso innecesario para que la estructura ayude sin complicar.',
+        actionStep: 'Escribe los pasos de una tarea de hoy y tacha uno que no aporte al resultado.',
+      },
+      {
+        title: 'Mantener antes de agregar · 10 minutos',
+        description: 'Revisa algo que ya usas, como una lista de pendientes o una carpeta de archivos. Dedica unos minutos a mantenerlo útil antes de crear otra herramienta.',
+        actionStep: 'Elige una lista o carpeta existente y elimina una entrada que ya no sirve.',
+      },
+      {
+        title: 'Revisar un acuerdo · 10 minutos',
+        description: 'Observa un proceso compartido y pregunta qué parte facilita el trabajo y cuál lo dificulta. Propón un ajuste pequeño y un momento para comprobar su efecto.',
+        actionStep: 'Escribe una pregunta a quien usa el proceso: «¿Qué paso te ayudaría cambiar?».',
+      },
     ],
     synergies: [
       {
         partnerId: 'creador',
-        title: 'Diseño + Edificación',
-        description: 'El Creador concibe la idea genial; el Constructor la convierte en un edificio o producto viable y rentable.',
-        synergyKeyword: 'Materialización Exitosa'
-      }
+        title: 'Continuidad + Ideas',
+        description: 'Uno organiza recursos, pasos y mantenimiento; el otro imagina y prueba nuevas formas. Juntos permiten que una idea funcione sin quedar atrapada en una estructura que ya no sirve.',
+        synergyKeyword: 'Ideas que duran',
+      },
     ],
     variants: {
-      masculine: {
-        name: 'El Constructor',
-        characterTitle: 'El Forjador de Infraestructuras y Estabilidad',
-        centralQuestion: '¿Cómo hago que las cosas funcionen de forma impecable, sólida y duradera?',
-        shortDescription: '"Haz que funcione." Estructura, estabilidad, patrimonio y organización.',
-        fullDescription: 'El Constructor masculino asume la ingeniería práctica de la vida. Se asegura de que haya cimientos firmes, techos seguros y recursos suficientes para sostener a los suyos.',
-        mantra: 'Trabajo con método y forjo realidades que perduran en el tiempo.',
-        strength: 'Pragmatismo, fiabilidad, destreza técnica y perseverancia.',
-        shadow: 'Hombre máquina / Esclavo del trabajo',
-        shadowDescription: 'Se olvida de sentir y vivir, atrapado en el deber y la acumulación material.',
-        shadowAntidote: 'Aprender a descansar y disfrutar de los frutos de su labor.',
-        domains: {
-          liderazgo: 'Gestión operativa, logística y administración eficaz.',
-          relaciones: 'Compromiso firme y estabilidad práctica.',
-          crisis: 'Reconstrucción metódica y control de daños.',
-          creatividad: 'Ingeniería, construcción y sistemas.',
-          paternidad: 'Enseñanza del valor del trabajo y el orden.',
-        },
-        balancedBehavior: ['Cumple lo prometido', 'Edifica con visión de futuro'],
-        unbalancedBehavior: ['Rigidez mental', 'Trabajolismo compulsivo'],
-        reflectionQuestions: ['¿Estoy dedicando tiempo a vivir o solo a construir?'],
-        developmentExercises: [
-          {
-            title: 'Cierre del Día Laboral',
-            description: 'Fija una hora exacta para desconectar del trabajo y respétala sin revisar correos.',
-            actionStep: 'Dedica la noche al descanso o la familia.'
-          }
-        ]
-      },
-      feminine: {
-        name: 'La Constructora',
-        characterTitle: 'La Arquitecta de Proyectos Sostenibles y Hogares Fuertes',
-        centralQuestion: '¿Cómo convierto mi visión en una realidad sostenible, rentable y llena de vida?',
-        shortDescription: 'Convierte tu visión en una realidad sostenible. Solidez, proyectos duraderos y bases firmes.',
-        fullDescription: 'La Constructora femenina organiza empresas, comunidades y proyectos con visión estratégica y cuidado del largo plazo, tejiendo solidez económica con calidez humana.',
-        mantra: 'Doy forma concreta y sostenible a mis proyectos más nobles.',
-        strength: 'Visión estratégica, administración impecable y edificación de proyectos duraderos.',
-        shadow: 'Controladora exhausta / Miedo a perder la seguridad',
-        shadowDescription: 'Se sobrecarga intentando controlar todas las variables materiales por desconfianza.',
-        shadowAntidote: 'Confiar en el equipo y delegar con tranquilidad.',
-        domains: {
-          liderazgo: 'Dirección de proyectos sostenibles y organizaciones sólidas.',
-          relaciones: 'Creación de un hogar seguro y relaciones estables.',
-          crisis: 'Pragmatismo y reorganización eficaz.',
-          creatividad: 'Materialización de ideas innovadoras.',
-          paternidad: 'Educación en autonomía, orden y visión práctica.',
-        },
-        balancedBehavior: ['Crea proyectos prósperos', 'Combina firmeza y empatía'],
-        unbalancedBehavior: ['Inseguridad material', 'Inflexibilidad ante los cambios'],
-        reflectionQuestions: ['¿Qué estructura de mi vida necesita ser reforzada para resistir el crecimiento?'],
-        developmentExercises: [
-          {
-            title: 'Plan de Sostenibilidad',
-            description: 'Diseña el plan de acción a 6 meses de tu proyecto prioritario con fechas y recursos.',
-            actionStep: 'Pon la primera piedra hoy.'
-          }
-        ]
-      },
-      universal: {
-        name: 'Constructor / Constructora',
-        characterTitle: 'El Principio de Estabilidad y Manifestación',
-        centralQuestion: '¿Cómo edifico un futuro seguro y sostenible?',
-        shortDescription: 'Organización, pragmatismo y materialización.',
-        fullDescription: 'La capacidad humana para levantar civilización, tecnología e instituciones duraderas.',
-        mantra: 'Pongo bases firmes a mis sueños.',
-        strength: 'Pragmatismo y perseverancia.',
-        shadow: 'Materialismo o rigidez.',
-        shadowDescription: 'Pérdida de flexibilidad o sentido humano.',
-        shadowAntidote: 'Propósito ético en la construcción.',
-        domains: {
-          liderazgo: 'Gestión eficiente.',
-          relaciones: 'Estabilidad y lealtad.',
-          crisis: 'Reconstrucción.',
-          creatividad: 'Realización práctica.',
-          paternidad: 'Educación en la constancia.',
-        },
-        balancedBehavior: ['Organización y solidez'],
-        unbalancedBehavior: ['Inflexibilidad'],
-        reflectionQuestions: ['¿Qué voy a construir con orden hoy?'],
-        developmentExercises: [
-          {
-            title: 'Orden Operativo',
-            description: 'Organiza tu espacio de trabajo.',
-            actionStep: 'Déjalo impecable.'
-          }
-        ]
-      }
-    }
+      masculine: { name: 'El Constructor' },
+      feminine: { name: 'La Constructora' },
+      universal: { name: 'Constructor / Constructora' },
+    },
   },
 
   soberano: {
@@ -459,146 +246,75 @@ export const TRANSFORMATIONAL_ARCHETYPES: Record<'rebelde' | 'sanador' | 'constr
     feminineName: 'La Soberana',
     emoji: '⚜️',
     dimension: 'construccion',
-    concepts: ['autonomía interior', 'dignidad', 'autodeterminación', 'autoridad propia', 'centro inalienable', 'código de honor'],
-    centralQuestion: '¿Cómo habito mi autoridad propia y gobierno mi vida desde mi propio centro?',
-    shortDescription: 'La soberanía interior inalienable, la dignidad incorruptible y la lealtad al propio código ético.',
-    fullDescription: 'El Soberano / Soberana no necesita gobernar sobre otros; su trono es su propia consciencia. Emana una dignidad natural que nadie puede arrebatarle.',
-    mantra: 'Soy dueño de mi destino y habito mi dignidad con firmeza y serenidad.',
+    concepts: ['autonomía', 'criterio', 'límites', 'elección', 'dignidad', 'responsabilidad'],
+    centralQuestion: '¿Qué decisión me corresponde tomar y qué límite necesito comunicar?',
+    shortDescription: 'La parte de ti que elige cómo vivir, cuida sus límites y responde por sus decisiones.',
+    fullDescription: 'Aparece cuando decides cómo usar tu tiempo, revisas una expectativa familiar o comunicas que no puedes aceptar una petición. Su fuerza consiste en elegir con criterio propio, escuchar información útil y asumir las consecuencias sin necesitar aprobación constante. La dignidad no depende de una postura corporal, de un logro ni de que todas tus decisiones resulten bien. Se diferencia de la figura del Rey o la Reina en el alcance: esa ordena lo que se comparte; la figura soberana organiza la propia vida y respeta que otras personas hagan lo mismo.',
+    mantra: 'Elijo con criterio propio y respondo por mis decisiones.',
     symbol: 'Sello Real & Trono Interior',
     colorHex: '#D6A84F',
     characterTitle: 'Autonomía Interior & Dignidad',
-    strength: 'Autodeterminación inquebrantable, dignidad moral, respeto por uno mismo y gobierno del propio destino.',
-    shadow: 'Arrogancia aislada / Soberbia aristocrática / Desprecio hacia los demás',
-    shadowDescription: 'Creerse por encima de las normas comunes o aislarse en una torre de marfil por desdén hacia el mundo terrenal.',
-    shadowAntidote: 'Comprender que la verdadera nobleza se demuestra en la humildad y la cercanía con todos los seres.',
+    strength: 'Toma decisiones personales y comunica límites de manera clara. Escucha consejos sin entregar a otros la responsabilidad de elegir.',
+    shadow: 'Imponer lo propio o pedir permiso para todo',
+    shadowDescription: 'En un extremo, presentas tus preferencias como reglas que todos deben seguir y rechazas cualquier revisión. En el otro, buscas aprobación para cada decisión o abandonas un límite cuando alguien se incomoda. Ambos pueden nacer del miedo a que tu criterio no tenga valor si otras personas no lo aceptan.',
+    shadowAntidote: 'Distingue qué puedes decidir por tu cuenta y qué necesita un acuerdo compartido. Escribe un límite, explica qué harás para sostenerlo y escucha cómo afecta a otras personas sin exigir que lo aprueben.',
     domains: {
-      liderazgo: 'Emana una autoridad natural y serena que inspira respeto sin necesidad de alzar la voz.',
-      relaciones: 'Vínculos basados en el respeto mutuo incondicional; no tolera manipulaciones ni sumisiones.',
-      crisis: 'Mantiene la compostura y la dignidad intactas incluso en la peor derrota material.',
-      creatividad: 'Obras con sello de distinción, elegancia y profundidad ética.',
-      paternidad: 'Enseña a los hijos a no arrodillarse ante tiranías y a cultivar su autoestima profunda.',
+      liderazgo: 'Reconoce el alcance de su responsabilidad y toma decisiones dentro de él. Cuida su disponibilidad sin convertir sus preferencias personales en reglas del equipo.',
+      relaciones: 'Comunica límites como decisiones sobre su propia participación. Respeta la autonomía ajena y negocia lo que pertenece al vínculo.',
+      crisis: 'Distingue lo que puede elegir de lo que no controla y prioriza un paso posible. Pide información o apoyo sin ceder toda su capacidad de decisión.',
+      creatividad: 'Elige qué quiere expresar y qué observaciones le sirven. Puede cambiar una idea sin hacer de cada opinión externa una orden.',
+      paternidad: 'En la crianza o la mentoría, muestra cómo tomar decisiones acordes con la responsabilidad propia. Respeta elecciones ajenas y diferencia un límite de una imposición.',
     },
     balancedBehavior: [
-      'Actúa de acuerdo con su propio código ético sin ceder a presiones.',
-      'Trata a reyes y mendigos con el mismo respeto fundamental.',
-      'Sabe retirarse de lugares donde no se respeta su dignidad.',
-      'No necesita humillar a nadie para reafirmar su valor.'
+      'Toma una decisión personal después de considerar información útil.',
+      'Explica un límite y cómo lo sostendrá con sus propias acciones.',
+      'Distingue una elección propia de un asunto que necesita acuerdo.',
+      'Escucha una objeción sin buscar aprobación constante.',
+      'Reconoce consecuencias y modifica su decisión si encuentra buenas razones.',
     ],
     unbalancedBehavior: [
-      'Tratar a los demás como inferiores o súbditos.',
-      'Incapacidad de pedir disculpas o reconocer errores por orgullo.',
-      'Aislamiento aristocrático que teme mancharse con la realidad.',
-      'Resentimiento desmedido ante cualquier falta de protocolo.'
+      'Exige que otras personas organicen su vida según sus preferencias.',
+      'Usa un límite como amenaza para controlar una respuesta ajena.',
+      'Pide aprobación para cada decisión que le corresponde.',
+      'Abandona un acuerdo consigo por evitar que alguien se incomode.',
+      'Se niega a revisar una decisión solo para demostrar independencia.',
     ],
     reflectionQuestions: [
-      '¿En qué situación estoy permitiendo que otros decidan sobre mi dignidad o mis valores?',
-      '¿Estoy actuando desde la nobleza y el honor o desde el orgullo herido?',
-      '¿Cómo puedo honrar mi propio valor sin caer en la soberbia?'
+      '¿Qué decisión me corresponde y cuál necesita un acuerdo con otras personas?',
+      '¿Qué límite permite cuidar mi tiempo y respetar también el ajeno?',
+      '¿Estoy escuchando un consejo o esperando permiso para elegir?',
+      '¿Qué consecuencia de mi decisión necesito asumir?',
     ],
     developmentExercises: [
       {
-        title: 'El Código de Honor Personal',
-        description: 'Escribe tus 5 principios morales no negociables que guiarán tus decisiones este año.',
-        actionStep: 'Léelos y comprométete a no traicionarlos bajo ninguna circunstancia.'
-      }
+        title: 'Un límite que respeta · 15 minutos',
+        description: 'Escribe un límite sobre tu tiempo o participación y explica cómo permite respetar también a otras personas. Formula lo que harás, sin convertirlo en una orden sobre sus decisiones.',
+        actionStep: 'Completa: «Puedo ofrecer esto; no puedo asumir esto otro; lo comunicaré de esta manera».',
+      },
+      {
+        title: 'Elegir sin consultar todo · 10 minutos',
+        description: 'Toma una decisión pequeña que te corresponda y que no altere acuerdos compartidos. Revisa qué criterio usaste para practicar autonomía con responsabilidad.',
+        actionStep: 'Elige en qué momento harás una tarea personal de hoy y anota por qué.',
+      },
+      {
+        title: 'Separar lo propio y lo compartido · 10 minutos',
+        description: 'Divide una situación en lo que puedes elegir, lo que requiere conversación y lo que no controlas. Así evitas tanto imponer tu preferencia como renunciar a tu parte.',
+        actionStep: 'Escribe esos tres encabezados y coloca una decisión pendiente en el que corresponda.',
+      },
     ],
     synergies: [
       {
         partnerId: 'sanador',
-        title: 'Dignidad + Humildad',
-        description: 'El Soberano aporta la dignidad inalienable; el Sanador aporta la compasión y cercanía humana.',
-        synergyKeyword: 'Nobleza Humana'
-      }
+        title: 'Autonomía + Reparación',
+        description: 'Uno cuida el criterio propio y la responsabilidad de elegir; el otro acompaña los errores con escucha y trato amable. Juntos permiten corregir una decisión sin entregar la autonomía ni negar sus efectos.',
+        synergyKeyword: 'Elegir y reparar',
+      },
     ],
     variants: {
-      masculine: {
-        name: 'El Soberano',
-        characterTitle: 'El Señor del Gobierno Interior y el Honor',
-        centralQuestion: '¿Cómo gobierno mi vida según mi propio código de honor y dignidad inquebrantable?',
-        shortDescription: 'Gobierno interior, dignidad inquebrantable y alineación con el propio código de honor.',
-        fullDescription: 'El Soberano masculino camina erguido por la vida, guiado por su brújula moral interna y asumiendo las consecuencias de cada uno de sus actos.',
-        mantra: 'Camino con dignidad, honro mi palabra y soy dueño de mi destino.',
-        strength: 'Carácter firme, dignidad incorruptible, rectitud y templanza.',
-        shadow: 'Orgullo herido / Monarca despótico',
-        shadowDescription: 'Prefiere perderlo todo antes que ceder por orgullo o trata a los demás con altanería.',
-        shadowAntidote: 'Aprender la virtud de la nobleza generosa y la disculpa sincera.',
-        domains: {
-          liderazgo: 'Liderazgo moral incuestionable.',
-          relaciones: 'Lealtad y respeto mutuo.',
-          crisis: 'Entereza heroica y calma.',
-          creatividad: 'Obras de peso y distinción.',
-          paternidad: 'Transmisión de honor y rectitud.',
-        },
-        balancedBehavior: ['Mantiene su palabra', 'Actúa con templanza'],
-        unbalancedBehavior: ['Soberbia', 'Rigidez de orgullo'],
-        reflectionQuestions: ['¿Dónde estoy confundiendo dignidad con orgullo ciego?'],
-        developmentExercises: [
-          {
-            title: 'Acto de Nobleza',
-            description: 'Pide disculpas a alguien con quien hayas sido injusto o cortante.',
-            actionStep: 'Hazlo con total sinceridad y sencillez.'
-          }
-        ]
-      },
-      feminine: {
-        name: 'La Soberana',
-        characterTitle: 'La Dueña de su Propio Destino y Dignidad',
-        centralQuestion: '¿Cómo me adueño de mi vida y habito mi centro inalienable sin pedir permiso a nadie?',
-        shortDescription: 'Autodeterminación, dueña de su propio destino, dignidad y centro interior inalienable.',
-        fullDescription: 'La Soberana femenina no busca el poder para dominar, sino para ser dueña absoluta de su cuerpo, su mente, sus decisiones y su destino.',
-        mantra: 'Soy la dueña indiscutible de mi propia vida y habito mi trono interior.',
-        strength: 'Autonomía radical, elegancia interior, firmeza serena y dignidad.',
-        shadow: 'Reina del hielo / Aislamiento defensivo',
-        shadowDescription: 'Se vuelve inaccesible o fría por miedo a que invadan su espacio vital.',
-        shadowAntidote: 'Saber que la verdadera soberana puede ser cálida y accesible sin perder un ápice de su dignidad.',
-        domains: {
-          liderazgo: 'Liderazgo visionario e independiente.',
-          relaciones: 'Vínculos de reciprocidad digna.',
-          crisis: 'Solidez inquebrantable ante la tormenta.',
-          creatividad: 'Creaciones con personalidad magnética.',
-          paternidad: 'Enseñanza del respeto propio y la autodeterminación.',
-        },
-        balancedBehavior: ['Se respeta a sí misma', 'No permite abusos ni humillaciones'],
-        unbalancedBehavior: ['Frialdad extrema', 'Aislamiento en su trono'],
-        reflectionQuestions: ['¿Qué área de mi vida aún no he reclamado como territorio propio?'],
-        developmentExercises: [
-          {
-            title: 'Reclamar el Espacio Sagrado',
-            description: 'Delimita un espacio físico o momento en tu agenda que sea 100% tu territorio inviolable.',
-            actionStep: 'Hazlo respetar con serenidad.'
-          }
-        ]
-      },
-      universal: {
-        name: 'Soberano / Soberana',
-        characterTitle: 'La Autonomía y Dignidad del Ser',
-        centralQuestion: '¿Cómo vivo con dignidad y honor?',
-        shortDescription: 'Autodeterminación, dignidad y autoridad interior.',
-        fullDescription: 'El principio de soberanía del ser humano sobre su propia consciencia.',
-        mantra: 'Habito mi dignidad con respeto por todos los seres.',
-        strength: 'Dignidad y autonomía.',
-        shadow: 'Soberbia o servidumbre.',
-        shadowDescription: 'Abuso de orgullo o pérdida de dignidad.',
-        shadowAntidote: 'Humildad y nobleza.',
-        domains: {
-          liderazgo: 'Autoridad moral.',
-          relaciones: 'Respeto recíproco.',
-          crisis: 'Templanza.',
-          creatividad: 'Nobleza formal.',
-          paternidad: 'Autoestima sólida.',
-        },
-        balancedBehavior: ['Dignidad y respeto'],
-        unbalancedBehavior: ['Altivez'],
-        reflectionQuestions: ['¿Cómo honro mi dignidad hoy?'],
-        developmentExercises: [
-          {
-            title: 'Postura de Soberanía',
-            description: 'Camina erguido con consciencia durante tu trayecto.',
-            actionStep: 'Siente tu dignidad corporal.'
-          }
-        ]
-      }
-    }
+      masculine: { name: 'El Soberano' },
+      feminine: { name: 'La Soberana' },
+      universal: { name: 'Soberano / Soberana' },
+    },
   },
 
   mistico: {
@@ -609,146 +325,75 @@ export const TRANSFORMATIONAL_ARCHETYPES: Record<'rebelde' | 'sanador' | 'constr
     feminineName: 'La Mística',
     emoji: '🌌',
     dimension: 'mente',
-    concepts: ['significado profundo', 'trascendencia', 'contemplación', 'unidad cósmica', 'silencio sagrado', 'misterio de la vida'],
-    centralQuestion: '¿Qué verdad y significado trascendente late detrás de la existencia y en el silencio?',
-    shortDescription: 'La búsqueda de la unidad cósmica, el sentido existencial profundo y la comunión con el misterio de la vida.',
-    fullDescription: 'El Místico / Mística experimenta la interconexión de todo lo vivo. Disuelve la ilusión de separación entre el yo y el cosmos, encontrando paz en la contemplación de lo infinito.',
-    mantra: 'Me abro a la inmensidad del cosmos y reconozco la unidad en todo lo vivo.',
+    concepts: ['asombro', 'presencia', 'pertenencia', 'silencio', 'conexión', 'misterio'],
+    centralQuestion: '¿Qué puedo notar a mi alrededor si dejo de buscar una explicación por un momento?',
+    shortDescription: 'La parte de ti que se detiene, siente asombro y reconoce su relación con algo más amplio que sus pendientes.',
+    fullDescription: 'Aparece cuando observas la luz en una ventana, escuchas música con atención o reconoces cuánto dependes de otras personas y de tu entorno. Su fuerza consiste en abrir espacio al asombro y a la pertenencia sin necesitar una respuesta para todo. La unidad puede vivirse como una experiencia o una metáfora, con o sin creencias religiosas; no exige tomarla como una verdad universal. Se diferencia de la figura sacerdotal: esa sostiene el sentido mediante rituales; la figura mística cultiva una atención abierta a lo que aparece, sin requerir una práctica fija.',
+    mantra: 'Me detengo, observo y dejo espacio para el asombro.',
     symbol: 'Espiral Galáctica & Gota en el Océano',
     colorHex: '#3B82F6',
     characterTitle: 'Trascendencia & Misterio',
-    strength: 'Consciencia de unidad, paz interior profunda, visión trascendente y serenidad existencial.',
-    shadow: 'Evasión espiritual / Nihilismo cósmico / Desconexión del cuerpo y la tierra',
-    shadowDescription: 'Usar la meditación o el misticismo para escapar de las responsabilidades materiales o despreciar la vida cotidiana como "mera ilusión".',
-    shadowAntidote: 'Descubrir lo infinito en lo cotidiano: fregar los platos y cuidar el cuerpo con la misma reverencia mística.',
+    strength: 'Amplía la atención más allá de las preocupaciones inmediatas y reconoce vínculos con el entorno. Tolera preguntas abiertas sin imponer una explicación a otras personas.',
+    shadow: 'Escapar de lo cotidiano o cerrarse al asombro',
+    shadowDescription: 'En un extremo, usas ideas de conexión para evitar acuerdos, tareas o diferencias reales entre las personas. En el otro, descartas cualquier momento de asombro y solo prestas atención a lo que tiene utilidad inmediata. Ambos pueden nacer de la dificultad de convivir con lo que no puedes explicar o controlar.',
+    shadowAntidote: 'Observa algo cercano sin intentar interpretarlo y describe lo que percibes. Después vuelve a una tarea o un acuerdo pendiente: deja que la pausa amplíe tu atención sin sustituir tu responsabilidad.',
     domains: {
-      liderazgo: 'Alinea la organización con el respeto ecológico y el bienestar planetario.',
-      relaciones: 'Amor incondicional que ve la chispa divina en cada ser humano.',
-      crisis: 'Ofrece una perspectiva cósmica que disuelve el pánico ante la pérdida o la muerte.',
-      creatividad: 'Obras de arte contemplativo, poesía mística y música trascendental.',
-      paternidad: 'Enseña la reverencia por la naturaleza, el cielo nocturno y el misterio de la vida.',
+      liderazgo: 'Hace una pausa para ver el contexto y recordar las relaciones de las que depende el trabajo. Admite distintas maneras de encontrar significado sin imponer creencias.',
+      relaciones: 'Presta atención a una presencia o un momento compartido sin exigir palabras. Reconoce que sentirse en conexión no borra diferencias ni límites.',
+      crisis: 'Ofrece una pausa breve para notar el entorno y recuperar perspectiva. Vuelve después al paso práctico que necesita atención.',
+      creatividad: 'Observa detalles sin buscar de inmediato cómo usarlos. Deja que el asombro abra preguntas y luego elige qué quiere desarrollar.',
+      paternidad: 'En la crianza o la mentoría, comparte preguntas y momentos de observación. Permite interpretaciones distintas y puede decir «no lo sabemos» sin cerrar la curiosidad.',
     },
     balancedBehavior: [
-      'Vive con paz interior en medio del ajetreo del mundo.',
-      'Respeta todas las formas de vida con reverencia.',
-      'Integra la contemplación con actos prácticos de bondad.',
-      'Acepta el fluir de la vida sin apego obsesivo.'
+      'Observa detalles cotidianos con atención y sin pantalla.',
+      'Describe una experiencia sin presentarla como una verdad para todos.',
+      'Respeta creencias e interpretaciones distintas de la propia.',
+      'Reconoce vínculos con otras personas y con el entorno.',
+      'Vuelve a sus responsabilidades después de una pausa.',
     ],
     unbalancedBehavior: [
-      'Desconectar totalmente de las finanzas o la salud física.',
-      'Superioridad espiritual que juzga a los demás como "no despiertos".',
-      'Pasividad extrema ante injusticias terrenales.',
-      'Fascinación morbosa por disolverse y huir del mundo.'
+      'Usa una idea de unidad para negar un desacuerdo concreto.',
+      'Impone su interpretación de una experiencia a otras personas.',
+      'Posterga tareas esperando una comprensión extraordinaria.',
+      'Descarta cualquier actividad que no tenga utilidad inmediata.',
+      'Llena cada pausa con pantallas y evita observar lo que tiene cerca.',
     ],
     reflectionQuestions: [
-      '¿Qué significado trascendente tiene mi vida en este momento?',
-      '¿Estoy usando la espiritualidad para amar más el mundo o para huir de mis problemas?',
-      '¿Cómo puedo honrar el silencio y la inmensidad en mi rutina de hoy?'
+      '¿Qué detalle de mi entorno no había notado hoy?',
+      '¿Qué vínculos sostienen mi vida aunque no piense en ellos a diario?',
+      '¿Estoy compartiendo una experiencia o afirmando que todos deben vivirla igual?',
+      '¿Qué responsabilidad necesito retomar después de esta pausa?',
     ],
     developmentExercises: [
       {
-        title: 'La Contemplación del Cielo Nocturno',
-        description: 'Pasa 20 minutos observando las estrellas o el cielo sin teléfono, sintiendo tu lugar en el cosmos.',
-        actionStep: 'Respira la inmensidad y siente la paz de la pertenencia cósmica.'
-      }
+        title: 'Observar sin interpretar · 5 minutos',
+        description: 'Aparta las pantallas y observa tu entorno. Describe colores, formas, sonidos o texturas sin buscar mensajes ni explicaciones para practicar una atención abierta.',
+        actionStep: 'Elige algo que tengas cerca y anota tres detalles que puedas observar directamente.',
+      },
+      {
+        title: 'Reconocer lo que te sostiene · 10 minutos',
+        description: 'Elige una actividad cotidiana y observa cuántas personas y recursos la hacen posible. Reconoce esa relación sin exigir sentir algo especial ni adoptar una creencia.',
+        actionStep: 'Mira un objeto de uso diario y escribe dos aportes de otras personas que permitieron que llegara a ti.',
+      },
+      {
+        title: 'Volver con atención · 10 minutos',
+        description: 'Después de una pausa breve, realiza una tarea sencilla prestando atención a sus movimientos y detalles. Une el asombro con la participación en la vida cotidiana.',
+        actionStep: 'Haz una pausa de un minuto y luego ordena tres objetos atendiendo a sus formas y texturas.',
+      },
     ],
     synergies: [
       {
         partnerId: 'constructor',
-        title: 'Cosmos + Tierra',
-        description: 'El Místico contempla lo infinito; el Constructor enraíza esa visión en estructuras útiles y tangibles.',
-        synergyKeyword: 'Mística Encarnada'
-      }
+        title: 'Asombro + Práctica',
+        description: 'Uno amplía la atención y reconoce conexiones; el otro organiza acciones y recursos concretos. Juntos permiten que una pausa de perspectiva acompañe la vida diaria y sus responsabilidades.',
+        synergyKeyword: 'Presencia en lo cotidiano',
+      },
     ],
     variants: {
-      masculine: {
-        name: 'El Místico',
-        characterTitle: 'El Peregrino del Significado y la Trascendencia',
-        centralQuestion: '¿Qué significado existencial profundo tiene para ti estar vivo y cómo te conectas con el todo?',
-        shortDescription: 'Búsqueda existencial, contemplación del cosmos y profundidad filosófica.',
-        fullDescription: 'El Místico masculino busca comprender el enigma del ser humano frente al universo, buscando la armonía entre su mente finita y el orden cósmico.',
-        mantra: 'Busco la verdad más allá de las apariencias y vivo en sintonía con el cosmos.',
-        strength: 'Profundidad existencial, visión panorámica y serenidad filosófica.',
-        shadow: 'Ermitaño desconectado / Soñador inútil',
-        shadowDescription: 'Se pierde en meditaciones abstractas descuidando a su familia y sus deberes terrenales.',
-        shadowAntidote: 'Hacer de la vida cotidiana su monasterio.',
-        domains: {
-          liderazgo: 'Visión ética trascendente e impacto a largo plazo.',
-          relaciones: 'Vínculos de comunión de alma a alma.',
-          crisis: 'Serenidad absoluta frente a lo inevitable.',
-          creatividad: 'Filosofía, poesía profunda y astronomía.',
-          paternidad: 'Transmisión de reverencia y amor por el saber.',
-        },
-        balancedBehavior: ['Vive con serenidad', 'Actúa con ética universal'],
-        unbalancedBehavior: ['Desconexión práctica', 'Evasión espiritual'],
-        reflectionQuestions: ['¿Cómo traduzco mi búsqueda interior en actos de bondad concreta?'],
-        developmentExercises: [
-          {
-            title: 'Meditación Caminando',
-            description: 'Camina 20 minutos prestando atención a cada paso y al entorno con asombro.',
-            actionStep: 'Siente la conexión con la tierra.'
-          }
-        ]
-      },
-      feminine: {
-        name: 'La Mística',
-        characterTitle: 'La Sabia del Silencio Sagrado y los Ciclos de la Vida',
-        centralQuestion: '¿Qué verdad sagrada late en tu silencio y cómo te sintonizas con los ritmos de la naturaleza?',
-        shortDescription: 'Conexión con los ciclos de la vida, sabiduría intuitiva, trascendencia y silencio.',
-        fullDescription: 'La Mística femenina siente la vida como una danza sagrada de nacimientos, muertes y renacimientos. Escucha el palpitar de la tierra y comulga con el misterio del amor universal.',
-        mantra: 'En mi silencio habita lo sagrado y danzo con los ciclos de la vida.',
-        strength: 'Comunión con la naturaleza, sabiduría intuitiva profunda y presencia trascendental.',
-        shadow: 'Flotando fuera de la realidad / Vulnerable a manipulaciones espirituales',
-        shadowDescription: 'Pierde el arraigo corporal o se vuelve crédula ante falsos gurús.',
-        shadowAntidote: 'Enraizarse firmemente en el cuerpo, la tierra y el sentido común.',
-        domains: {
-          liderazgo: 'Integración de valores ecológicos y armonía comunitaria.',
-          relaciones: 'Amor incondicional y presencia compasiva.',
-          crisis: 'Paz inmutable en la tormenta.',
-          creatividad: 'Música sagrada, poesía y arte ritual.',
-          paternidad: 'Educación en el asombro y la gratitud por la vida.',
-        },
-        balancedBehavior: ['Honra los ciclos naturales', 'Irradia paz profunda'],
-        unbalancedBehavior: ['Falta de límites prácticos', 'Desarraigo material'],
-        reflectionQuestions: ['¿En qué momento de mi día me permito entrar en el silencio fértil?'],
-        developmentExercises: [
-          {
-            title: 'Comunión con la Naturaleza',
-            description: 'Toca la tierra, un árbol o una planta con plena consciencia de su vida.',
-            actionStep: 'Agradece la vida compartida en este planeta.'
-          }
-        ]
-      },
-      universal: {
-        name: 'Místico / Mística',
-        characterTitle: 'La Consciencia de Unidad',
-        centralQuestion: '¿Cómo experimento la interconexión de la vida?',
-        shortDescription: 'Trascendencia, silencio y sentido de unidad.',
-        fullDescription: 'La experiencia humana de asombro y pertenencia ante el misterio del universo.',
-        mantra: 'Soy uno con la vida y la vida es una conmigo.',
-        strength: 'Paz interior y trascendencia.',
-        shadow: 'Evasión terrenal.',
-        shadowDescription: 'Descuido de la vida práctica.',
-        shadowAntidote: 'Mística encarnada.',
-        domains: {
-          liderazgo: 'Visión ecológica.',
-          relaciones: 'Compasión universal.',
-          crisis: 'Serenidad profunda.',
-          creatividad: 'Belleza trascendente.',
-          paternidad: 'Reverencia por la vida.',
-        },
-        balancedBehavior: ['Serenidad y gratitud'],
-        unbalancedBehavior: ['Desconexión'],
-        reflectionQuestions: ['¿Dónde encuentro paz hoy?'],
-        developmentExercises: [
-          {
-            title: 'Momento de Gratitud Cósmica',
-            description: 'Agradece el simple hecho de respirar y existir.',
-            actionStep: 'Hazlo hoy.'
-          }
-        ]
-      }
-    }
+      masculine: { name: 'El Místico' },
+      feminine: { name: 'La Mística' },
+      universal: { name: 'Místico / Mística' },
+    },
   },
 
   integrador: {
@@ -759,145 +404,74 @@ export const TRANSFORMATIONAL_ARCHETYPES: Record<'rebelde' | 'sanador' | 'constr
     feminineName: 'La Integradora',
     emoji: '🌀',
     dimension: 'construccion',
-    concepts: ['totalidad', 'integración de polaridades', 'madurez psicológica', 'alquimia interior', 'síntesis', 'armonía de opuestos'],
-    centralQuestion: '¿Cómo tejo todas mis facetas, luces y sombras en una sola fuerza armónica y plena?',
-    shortDescription: 'La maestría de sintetizar opuestos, madurar la psique y vivir desde la totalidad consciente.',
-    fullDescription: 'El Integrador / Integradora representa la culminación del viaje arquetípico: la capacidad de no vivir fragmentado. Une la espada del Guerrero con la ternura del Amante, la razón del Sabio con la risa del Bufón.',
-    mantra: 'Integro todas mis facetas en una sola presencia armónica y madura.',
+    concepts: ['necesidades', 'matices', 'elección', 'límites', 'coherencia', 'revisión'],
+    centralQuestion: '¿Qué dos necesidades chocan aquí y qué acción puedo elegir aceptando su costo?',
+    shortDescription: 'La parte de ti que reconoce necesidades en conflicto y elige una acción sin negar lo que queda pendiente.',
+    fullDescription: 'Aparece cuando quieres descansar y cumplir un compromiso, cuidar un vínculo y poner un límite, o mantener algo útil y cambiar otra parte. Su fuerza consiste en reconocer necesidades distintas, ver qué puede combinarse y elegir una acción aceptando lo que cuesta. Integrar es una práctica que se revisa: no significa reconciliarlo todo, tener una respuesta exacta ni alcanzar una madurez definitiva. Se diferencia de la figura soberana: esa afirma el criterio propio para organizar la vida; la figura integradora examina las tensiones entre necesidades y capacidades antes de decidir cómo darles lugar.',
+    mantra: 'Reconozco lo que necesito, elijo un paso y acepto lo que cuesta.',
     symbol: 'Uróboros & Mandala de la Totalidad',
     colorHex: '#D6A84F',
     characterTitle: 'Totalidad & Madurez Psicológica',
-    strength: 'Integración de opuestos, flexibilidad psicológica suprema, sabiduría holística y madurez emocional.',
-    shadow: 'Indecisión por sobreanálisis / Parálisis del mediador / Falta de identidad clara',
-    shadowDescription: 'Querer conciliar tanto que pierde su propia postura o volverse difuso por abarcarlo todo.',
-    shadowAntidote: 'Saber que integrar no significa diluirse, sino actuar con la herramienta precisa en cada momento.',
+    strength: 'Considera necesidades que parecen opuestas sin borrar sus diferencias. Elige una acción concreta y revisa sus efectos sin exigir un equilibrio perfecto.',
+    shadow: 'Querer conciliarlo todo o ignorar una parte',
+    shadowDescription: 'En un extremo, buscas una solución que deje conformes a todos y postergas una decisión mientras intentas combinar lo incompatible. En el otro, eliges rápido y descartas una necesidad que luego vuelve como una dificultad pendiente. Ambos pueden nacer del miedo a aceptar que una elección tiene límites y costos.',
+    shadowAntidote: 'Nombra dos necesidades en conflicto y el límite que no puedes ignorar. Elige una acción posible, reconoce qué no resolverá y fija un momento para revisar cómo resultó.',
     domains: {
-      liderazgo: 'Media en conflictos complejos, crea culturas integradoras y lidera desde la madurez.',
-      relaciones: 'Comprende todas las perspectivas y sostiene vínculos maduros y duraderos.',
-      crisis: 'Aporta la respuesta exacta que el momento requiere (fuerza, calma, orden o compasión).',
-      creatividad: 'Obras maestras que combinan múltiples disciplinas y profundidades.',
-      paternidad: 'Cría seres humanos completos, equilibrados y libres de polarizaciones neuróticas.',
+      liderazgo: 'Escucha prioridades distintas y hace explícitas las decisiones y sus costos. No exige consenso total para actuar ni oculta a quién afecta una elección.',
+      relaciones: 'Reconoce necesidades propias y ajenas sin asumir que siempre encajan. Busca acuerdos posibles y admite diferencias que requieren un límite.',
+      crisis: 'Distingue lo urgente de lo que también necesita atención después. Elige un paso y registra qué queda pendiente para no perderlo de vista.',
+      creatividad: 'Combina perspectivas cuando ayudan y elige entre ellas cuando no pueden convivir. Revisa si el resultado conserva una intención comprensible.',
+      paternidad: 'En la crianza o la mentoría, muestra cómo elegir entre deseos y responsabilidades. Explica el costo de una decisión sin pedir que todas las necesidades desaparezcan.',
     },
     balancedBehavior: [
-      'No reprime ninguna parte de su ser, sino que la canaliza maduramente.',
-      'Sabe cuándo actuar con la espada y cuándo con la flor.',
-      'Acepta su propia sombra sin identificarse con ella.',
-      'Irradia una serenidad integradora que tranquiliza a su alrededor.'
+      'Nombra dos necesidades que están en tensión.',
+      'Distingue qué puede combinar y qué requiere elegir.',
+      'Toma una decisión concreta aunque no resuelva todo.',
+      'Reconoce el costo y lo que queda pendiente.',
+      'Revisa su elección cuando aparecen nuevos efectos o condiciones.',
     ],
     unbalancedBehavior: [
-      'Tibieza que no toma partido cuando la justicia exige definición.',
-      'Confusión de identidades por querer complacer a todas sus partes internas.',
-      'Soberbia de creerse "totalmente evolucionado".',
-      'Desgaste por intentar armonizar lo irreconciliable.'
+      'Posterga decisiones buscando que nadie pierda nada.',
+      'Dice que todo encaja para evitar nombrar un conflicto.',
+      'Promete satisfacer necesidades que no puede atender al mismo tiempo.',
+      'Descarta una necesidad porque complica el plan elegido.',
+      'Se exige mantener el mismo equilibrio aunque las condiciones cambien.',
     ],
     reflectionQuestions: [
-      '¿Qué dos partes de mí parecen entrar en conflicto y cómo pueden colaborar?',
-      '¿Dónde estoy rechazando una parte de mi personalidad que necesita ser integrada?',
-      '¿Cómo puedo actuar hoy desde mi centro más pleno y maduro?'
+      '¿Qué dos necesidades están chocando en esta situación?',
+      '¿Qué límite hace imposible atenderlo todo a la vez?',
+      '¿Qué costo puedo aceptar y qué necesito dejar pendiente?',
+      '¿Cuándo revisaré si la acción elegida sigue teniendo sentido?',
     ],
     developmentExercises: [
       {
-        title: 'El Diálogo de las Dos Fuerzas',
-        description: 'Toma dos arquetipos que sientas en pugna en tu interior (ej. Guerrero y Amante) y escribe un diálogo donde acuerden cómo ayudarse.',
-        actionStep: 'Encuentra el punto medio donde ambos arquetipos colaboren.'
-      }
+        title: 'Dos necesidades y una acción · 15 minutos',
+        description: 'Escribe dos necesidades en conflicto y elige una acción pequeña que puedas hacer hoy. Reconoce qué costo aceptas y qué necesidad no quedará resuelta todavía.',
+        actionStep: 'Completa: «Necesito esto y también esto otro; hoy elijo…; el costo será…».',
+      },
+      {
+        title: 'Un acuerdo posible · 10 minutos',
+        description: 'Divide una situación en lo que se puede combinar y lo que requiere un límite o una elección. Prepara un acuerdo realista sin prometer que todos quedarán conformes.',
+        actionStep: 'Anota una petición y una condición concreta que haría posible aceptar una parte.',
+      },
+      {
+        title: 'Revisar lo que quedó pendiente · 10 minutos',
+        description: 'Vuelve a una decisión reciente y observa qué atendió, qué dejó fuera y qué cambió. Elige un ajuste sin exigir que la primera decisión haya sido perfecta.',
+        actionStep: 'Escribe una decisión de esta semana y una necesidad que todavía merece atención.',
+      },
     ],
     synergies: [
       {
         partnerId: 'rey',
-        title: 'Totalidad + Soberanía',
-        description: 'El Integrador armoniza todas las fuerzas internas; el Rey/Reina las gobierna con justicia y propósito.',
-        synergyKeyword: 'Plenitud del Ser'
-      }
+        title: 'Matices + Dirección',
+        description: 'Uno reconoce necesidades en tensión y hace visibles los costos; el otro ordena prioridades y decide sobre lo compartido. Juntos permiten actuar con claridad sin borrar las diferencias del grupo.',
+        synergyKeyword: 'Decidir con matices',
+      },
     ],
     variants: {
-      masculine: {
-        name: 'El Integrador',
-        characterTitle: 'El Alquimista de la Madurez y Síntesis de Opuestos',
-        centralQuestion: '¿Cómo dejo de vivir fragmentado e integro mi fuerza, mi ternura, mi mente y mi acción?',
-        shortDescription: 'Síntesis de opuestos (Guerrero + Amante, Sabio + Bufón), integridad y madurez total.',
-        fullDescription: 'El Integrador masculino no reprime su agresividad ni su sensibilidad; las funde en una presencia masculina madura, firme y compasiva.',
-        mantra: 'Integro mi fuerza y mi ternura en una sola integridad masculina madura.',
-        strength: 'Madurez psicológica, balance de opuestos, liderazgo completo y ecuanimidad.',
-        shadow: 'Hombre ambiguo / Parálisis por conciliación',
-        shadowDescription: 'Pierde contundencia por no querer ofender o se vuelve ambiguo.',
-        shadowAntidote: 'Recordar que la integración incluye saber tomar decisiones tajantes cuando es debido.',
-        domains: {
-          liderazgo: 'Liderazgo multidimensional y adaptabilidad.',
-          relaciones: 'Firmeza y ternura en el vínculo amoroso.',
-          crisis: 'Respuesta exacta y equilibrada.',
-          creatividad: 'Obras integrales y universales.',
-          paternidad: 'Modelo de masculinidad madura, cariñosa y protectora.',
-        },
-        balancedBehavior: ['Actúa con sabiduría integral', 'Es firme y tierno a la vez'],
-        unbalancedBehavior: ['Indecisión', 'Falta de definición clara'],
-        reflectionQuestions: ['¿Qué polaridad mía necesita reconciliación urgente?'],
-        developmentExercises: [
-          {
-            title: 'Matrimonio Interior',
-            description: 'Dedica un momento a agradecer tanto tu capacidad de lucha como tu capacidad de amar.',
-            actionStep: 'Siente ambas fuerzas vivas en tu pecho.'
-          }
-        ]
-      },
-      feminine: {
-        name: 'La Integradora',
-        characterTitle: 'La Tejedora de la Plenitud y Armonía Holística',
-        centralQuestion: '¿Cómo tejo todas mis facetas, luces y sombras en una sola fuerza armónica y plena?',
-        shortDescription: 'Integración de luces y sombras, plenitud holística y soberanía femenina completa.',
-        fullDescription: 'La Integradora femenina abraza a la Guerrera, la Amante, la Madre, la Maga y la Reina dentro de sí, danzando entre ellas con soltura según lo demande cada instante.',
-        mantra: 'Soy la tejedora de mis múltiples dimensiones; habito mi plenitud sin miedo.',
-        strength: 'Totalidad femenina, fluidez entre roles, sabiduría holística y poder integrado.',
-        shadow: 'Dispersión en múltiples máscaras / Agotamiento por querer serlo todo',
-        shadowDescription: 'Intenta ser la guerrera perfecta, la madre perfecta y la amante perfecta a la vez y colapsa.',
-        shadowAntidote: 'Saber que la totalidad no es perfección simultánea, sino fluidez y presencia.',
-        domains: {
-          liderazgo: 'Integración de equipos y visión panorámica.',
-          relaciones: 'Riqueza emocional y libertad en el vínculo.',
-          crisis: 'Sabiduría instintiva y serenidad.',
-          creatividad: 'Arte holístico y conmovedor.',
-          paternidad: 'Modelo de mujer completa, libre y sabia.',
-        },
-        balancedBehavior: ['Transita entre sus facetas con naturalidad', 'Se acepta completa'],
-        unbalancedBehavior: ['Autoexigencia de perfección', 'Fragmentación'],
-        reflectionQuestions: ['¿Qué faceta de mi feminidad he tenido reprimida últimamente?'],
-        developmentExercises: [
-          {
-            title: 'La Rueda de las Diosas Interiores',
-            description: 'Visualiza a tus diferentes facetas sentadas en círculo y pregúntales qué necesita cada una hoy.',
-            actionStep: 'Satisface la necesidad de la faceta más desatendida.'
-          }
-        ]
-      },
-      universal: {
-        name: 'Integrador / Integradora',
-        characterTitle: 'El Arquetipo de la Totalidad',
-        centralQuestion: '¿Cómo vivo desde la plenitud de mi ser?',
-        shortDescription: 'Totalidad, síntesis de opuestos y madurez.',
-        fullDescription: 'El fin del viaje de autorrealización: la integración armónica de todas las fuerzas de la psique.',
-        mantra: 'Soy uno con mi totalidad y habito mi plenitud.',
-        strength: 'Sabiduría integral y ecuanimidad.',
-        shadow: 'Indecisión o ambigüedad.',
-        shadowDescription: 'Pérdida de foco por exceso de abstracción.',
-        shadowAntidote: 'Acción consciente y congruente.',
-        domains: {
-          liderazgo: 'Liderazgo sabio y holístico.',
-          relaciones: 'Amor maduro y pleno.',
-          crisis: 'Respuesta equilibrada.',
-          creatividad: 'Obras maestras de síntesis.',
-          paternidad: 'Educación para la plenitud humana.',
-        },
-        balancedBehavior: ['Plenitud y balance'],
-        unbalancedBehavior: ['Tibieza'],
-        reflectionQuestions: ['¿Cómo vivo desde mi centro unificado hoy?'],
-        developmentExercises: [
-          {
-            title: 'El Abrazo a la Sombra',
-            description: 'Reconoce un defecto propio con amor y decide canalizar su energía constructivamente.',
-            actionStep: 'Haz las paces contigo mismo hoy.'
-          }
-        ]
-      }
-    }
+      masculine: { name: 'El Integrador' },
+      feminine: { name: 'La Integradora' },
+      universal: { name: 'Integrador / Integradora' },
+    },
   }
 };

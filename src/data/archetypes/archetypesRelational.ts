@@ -9,146 +9,75 @@ export const RELATIONAL_ARCHETYPES: Record<'padre' | 'cuidador' | 'bufon' | 'exp
     feminineName: 'La Madre',
     emoji: '🛡️',
     dimension: 'construccion',
-    concepts: ['generación', 'nutrición', 'protección', 'legado', 'mentoría', 'estructura', 'crecimiento'],
-    centralQuestion: '¿Qué estoy nutriendo, cuidando y qué legado dejo a las futuras generaciones?',
-    shortDescription: 'La energía generativa que nutre, protege y guía proyectos, vidas y comunidades hacia su madurez.',
-    fullDescription: 'El arquetipo de Padre / Madre encarna el impulso de engendrar vida, ideas o instituciones y acompañar su desarrollo con paciencia, cuidado y contención.',
-    mantra: 'Protejo, nutro y bendigo lo que está creciendo a mi alrededor.',
+    concepts: ['acompañamiento', 'crecimiento', 'confianza', 'orientación', 'autonomía', 'continuidad'],
+    centralQuestion: '¿Qué apoyo necesita esta persona para aprender a hacerlo por su cuenta?',
+    shortDescription: 'La parte de ti que acompaña el crecimiento con presencia, orientación y espacio para aprender a decidir.',
+    fullDescription: 'Aparece cuando acompañas a alguien que aprende una tarea, orientas a una persona que empieza a trabajar o participas en la crianza. Su fuerza consiste en ofrecer continuidad: estar presente, explicar los límites y dejar que la otra persona pruebe y decida cada vez más por su cuenta. No necesitas tener hijos para expresar esta capacidad en la familia, el trabajo o la comunidad. Se diferencia de la figura cuidadora, que atiende necesidades presentes, y de la figura sanadora, que acompaña una reparación: la figura del padre o la madre acompaña un crecimiento a largo plazo.',
+    mantra: 'Acompaño con presencia y dejo espacio para aprender a decidir.',
     symbol: 'Árbol de la Vida & Nido Protector',
     colorHex: '#D6A84F',
     characterTitle: 'Nutrición & Legado',
-    strength: 'Generatividad, cuidado incondicional, mentoría paciente y construcción de bases seguras.',
-    shadow: 'Sobreprotección asfixiante o Abandono / Control posesivo',
-    shadowDescription: 'En su sombra sobreprotectora impide que los hijos o proyectos maduren por miedo a perderlos. En su sombra ausente, rehúye la responsabilidad y deja en desamparo.',
-    shadowAntidote: 'Nutrir y soltar: confiar en que lo creado tiene su propio destino e independencia.',
+    strength: 'Ofrece orientación y una presencia confiable a lo largo del tiempo. Ajusta la ayuda para que quien aprende gane capacidad y autonomía.',
+    shadow: 'Decidir por alguien o dejar sin orientación',
+    shadowDescription: 'En un extremo, resuelves cada dificultad, vigilas cada paso y conviertes tus expectativas en el camino obligatorio. En el otro, exiges autonomía antes de ofrecer herramientas o dejas de acompañar cuando algo cuesta. Ambos pueden nacer del miedo a que la otra persona falle o a no saber cómo ayudar.',
+    shadowAntidote: 'Pregunta qué ayuda quiere la otra persona y acuerda un siguiente paso que pueda intentar. Mantén un momento de seguimiento, reconoce avances concretos y deja de hacer una tarea que ya puede asumir.',
     domains: {
-      liderazgo: 'Forma a los líderes del mañana y crea una cultura de pertenencia y seguridad.',
-      relaciones: 'Ofrece refugio incondicional y paciencia para sostener los procesos de maduración.',
-      crisis: 'Protege a los más vulnerables y asume la carga organizativa sin quejas.',
-      creatividad: 'Nutre las ideas incipientes hasta que adquieren la fuerza necesaria para ser públicas.',
-      paternidad: 'Equilibrio entre límites protectores y libertad para equivocarse y crecer.',
+      liderazgo: 'Acompaña el aprendizaje con explicaciones, práctica y seguimiento. Da responsabilidades crecientes sin exigir que todos sigan su trayectoria.',
+      relaciones: 'Ofrece apoyo sostenido sin ocupar el lugar de quien decide. En vínculos entre personas adultas, evita convertir el acompañamiento en supervisión.',
+      crisis: 'Da continuidad y ayuda a ordenar un próximo paso cuando alguien pierde referencias. No promete resolverlo todo ni retira su presencia porque el avance sea lento.',
+      creatividad: 'Acompaña el desarrollo de una habilidad con observaciones concretas. Reconoce el proceso y permite que aparezca una manera propia de crear.',
+      paternidad: 'En la crianza o la mentoría, combina límites explicados, práctica y confianza. Pregunta «¿quieres ayuda o prefieres intentarlo?» y respeta la respuesta según las responsabilidades acordadas.',
     },
     balancedBehavior: [
-      'Celebra la autonomía de quienes ha formado.',
-      'Sabe cuándo intervenir y cuándo dar un paso al costado.',
-      'Aporta seguridad emocional y estabilidad material.',
-      'Transmite valores y sabiduría práctica.'
+      'Pregunta qué apoyo necesita quien está aprendiendo.',
+      'Explica un límite y escucha preguntas sobre él.',
+      'Deja intentar una tarea sin intervenir a cada paso.',
+      'Mantiene el seguimiento que acordó ofrecer.',
+      'Reconoce avances sin exigir que la otra persona siga su mismo camino.',
     ],
     unbalancedBehavior: [
-      'Incapacidad de soltar a los hijos o colaboradores.',
-      'Manipulación a través de la culpa ("con todo lo que hice por ti").',
-      'Descuido de la propia vida por vivir a través de otros.',
-      'Abandono emocional o distanciamiento frío.'
+      'Resuelve una tarea que la otra persona quería intentar.',
+      'Supervisa cada detalle aunque ya no haga falta.',
+      'Condiciona su apoyo a que se cumplan sus propias expectativas.',
+      'Exige resultados sin explicar cómo empezar.',
+      'Se retira del acompañamiento cuando aparecen errores o preguntas.',
     ],
     reflectionQuestions: [
-      '¿A qué proyecto o persona estoy sobreprotegiendo sin permitirle madurar?',
-      '¿Qué legado intangible quiero dejar a quienes vienen detrás de mí?',
-      '¿Estoy nutriendo mi propia vida con el mismo esmero con que cuido a los demás?'
+      '¿Qué hago por alguien que ya podría empezar a hacer por su cuenta?',
+      '¿Qué apoyo ofrecí y necesito sostener con más continuidad?',
+      '¿Estoy acompañando una elección propia o esperando que se parezca a la mía?',
+      '¿Qué herramienta falta antes de pedir más autonomía?',
     ],
     developmentExercises: [
       {
-        title: 'El Acto de Confianza y Suelta',
-        description: 'Delega una tarea o responsabilidad importante en alguien que esté aprendiendo, confiando en su capacidad.',
-        actionStep: 'Permite que lo resuelva a su manera sin corregir detalles menores.'
-      }
+        title: 'Preguntar antes de ayudar · 5 minutos',
+        description: 'Antes de intervenir en una tarea cotidiana, pregunta si la persona quiere ayuda o prefiere intentarlo. Respeta su respuesta y acuerda cuándo puede pedir apoyo.',
+        actionStep: 'En una tarea sencilla de hoy, pregunta: «¿Quieres ayuda o prefieres intentarlo?».',
+      },
+      {
+        title: 'Un paso con seguimiento · 15 minutos',
+        description: 'Con alguien a quien acompañas, acuerda una tarea pequeña, qué ayuda estará disponible y cuándo revisarán el avance. Así ofreces continuidad sin vigilar cada paso.',
+        actionStep: 'Escribe una tarea que esa persona pueda intentar y una pregunta para acordar el seguimiento.',
+      },
+      {
+        title: 'Reconocer un aprendizaje · 10 minutos',
+        description: 'Nombra una habilidad que alguien ha desarrollado y la acción concreta que lo muestra. Pregunta qué quiere aprender después para dejar la dirección del crecimiento en sus manos.',
+        actionStep: 'Anota un avance reciente de alguien y envíale un reconocimiento específico.',
+      },
     ],
     synergies: [
       {
         partnerId: 'explorador',
-        title: 'Raíces + Alas',
-        description: 'El Padre/Madre da el suelo seguro; el Explorador vuela hacia nuevas fronteras.',
-        synergyKeyword: 'Seguridad para Volar'
-      }
+        title: 'Apoyo + Descubrimiento',
+        description: 'Uno ofrece una presencia confiable y orientación; el otro invita a probar caminos propios. Juntos dan espacio para descubrir sin perder un lugar al que volver a pedir apoyo.',
+        synergyKeyword: 'Confianza para explorar',
+      },
     ],
     variants: {
-      masculine: {
-        name: 'El Padre',
-        characterTitle: 'El Pilar Protector y Mentor de Raíces',
-        centralQuestion: '¿Qué estoy construyendo y qué legado de valores y protección quiero dejar?',
-        shortDescription: 'Protección, enseñanza, estructura, responsabilidad y legado.',
-        fullDescription: 'El Padre masculino provee contención, enseña destrezas para la vida y ofrece un referente de solidez y dignidad moral a su familia o equipo.',
-        mantra: 'Ofrezco un cimiento sólido para que otros puedan erigir su propio destino.',
-        strength: 'Firmeza protectora, guía práctica, provisión responsable y orgullo generoso.',
-        shadow: 'Patriarca autoritario / Padre ausente',
-        shadowDescription: 'Impositor de su propia voluntad o figura distante que no se involucra emocionalmente.',
-        shadowAntidote: 'Combinar la firmeza con la ternura y la escucha atenta.',
-        domains: {
-          liderazgo: 'Mentoría de jóvenes talentos y visión de largo plazo.',
-          relaciones: 'Compromiso inquebrantable y lealtad protectora.',
-          crisis: 'Estabilidad y resguardo de la familia o empresa.',
-          creatividad: 'Edificación de instituciones duraderas.',
-          paternidad: 'Transmisión de disciplina, coraje y valores éticos.',
-        },
-        balancedBehavior: ['Acompaña sin imponer', 'Da ejemplo de integridad'],
-        unbalancedBehavior: ['Exigencia desmedida', 'Frialdad afectiva'],
-        reflectionQuestions: ['¿Qué ejemplo estoy dando con mis hábitos diarios?'],
-        developmentExercises: [
-          {
-            title: 'Tiempo de Mentoría Dedicado',
-            description: 'Comparte una lección de vida honesta (incluyendo tus errores) con alguien más joven.',
-            actionStep: 'Ten una conversación de mentoría sin emitir juicios.'
-          }
-        ]
-      },
-      feminine: {
-        name: 'La Madre',
-        characterTitle: 'La Matriz de Vida, Nutrición y Cuidado',
-        centralQuestion: '¿Qué estoy nutriendo y ayudando a crecer en mi entorno y en mis proyectos?',
-        shortDescription: 'Cuidado, nutrición, protección, creación, vínculo y crecimiento.',
-        fullDescription: 'La Madre femenina es la fuerza generadora que acoge, nutre y sostiene la vida en todas sus expresiones (hijos, comunidades, creaciones artísticas o empresas).',
-        mantra: 'Nutro con amor y sabiduría todo lo que florece bajo mi cuidado.',
-        strength: 'Nutrición incondicional, intuición protectora, calidez de hogar y fecundidad creativa.',
-        shadow: 'Madre devoradora / Culpa asfixiante',
-        shadowDescription: 'Se vuelve posesiva o hace sentir culpable a quien busca su independencia.',
-        shadowAntidote: 'Reconocer que el mayor éxito de la crianza es ver a lo creado volar con alas propias.',
-        domains: {
-          liderazgo: 'Cuidado del clima laboral y cohesión de equipo.',
-          relaciones: 'Calidez, hospitalidad y refugio afectivo.',
-          crisis: 'Contención emocional y protección activa.',
-          creatividad: 'Gestación paciente de obras con alma.',
-          paternidad: 'Nutrición emocional, ternura y estímulo del crecimiento.',
-        },
-        balancedBehavior: ['Nutre sin asfixiar', 'Sabe bendecir la partida de los hijos'],
-        unbalancedBehavior: ['Martirio y queja', 'Control por culpa'],
-        reflectionQuestions: ['¿Dónde estoy dando de más a costa de mi propia salud?'],
-        developmentExercises: [
-          {
-            title: 'Autonutrición Consciente',
-            description: 'Haz algo que sea puramente nutritivo para ti (descanso, comida saludable, mimo personal).',
-            actionStep: 'Dedica 1 hora a cuidarte como cuidarías a tu hijo más amado.'
-          }
-        ]
-      },
-      universal: {
-        name: 'Padre / Madre',
-        characterTitle: 'La Fuerza Generativa y Protectora',
-        centralQuestion: '¿Cómo cuido y transmito lo valioso a las nuevas generaciones?',
-        shortDescription: 'Generatividad, cuidado, nutrición y legado constructivo.',
-        fullDescription: 'El principio arquetípico de sostener y nutrir el crecimiento de la vida y los proyectos.',
-        mantra: 'Cuido el presente para florecer en el futuro.',
-        strength: 'Cuidado responsable y visión generacional.',
-        shadow: 'Sobreprotección o abandono.',
-        shadowDescription: 'Control asfixiante o falta de presencia.',
-        shadowAntidote: 'Amor libre y presencia atenta.',
-        domains: {
-          liderazgo: 'Desarrollo de personas.',
-          relaciones: 'Confianza y cuidado mutuo.',
-          crisis: 'Protección y serenidad.',
-          creatividad: 'Gestación de ideas.',
-          paternidad: 'Educación con amor y límites.',
-        },
-        balancedBehavior: ['Presencia y nutrición equilibrada'],
-        unbalancedBehavior: ['Invasión o desinterés'],
-        reflectionQuestions: ['¿Qué legado estoy construyendo hoy?'],
-        developmentExercises: [
-          {
-            title: 'Gesto de Apoyo',
-            description: 'Ayuda al crecimiento de alguien sin pedir nada a cambio.',
-            actionStep: 'Hazlo hoy.'
-          }
-        ]
-      }
-    }
+      masculine: { name: 'El Padre' },
+      feminine: { name: 'La Madre' },
+      universal: { name: 'Padre / Madre' },
+    },
   },
 
   cuidador: {
@@ -159,146 +88,75 @@ export const RELATIONAL_ARCHETYPES: Record<'padre' | 'cuidador' | 'bufon' | 'exp
     feminineName: 'La Cuidadora',
     emoji: '🌱',
     dimension: 'corazon',
-    concepts: ['servicio', 'compasión', 'entrega', 'altruismo', 'límites sanos', 'hospitalidad', 'sanación comunitaria'],
-    centralQuestion: '¿Cómo puedo servir a los demás sin olvidarme de cuidar mi propio ser?',
-    shortDescription: 'El impulso generoso de aliviar el sufrimiento ajeno, ofrecer ayuda desinteresada y crear bienestar compartido.',
-    fullDescription: 'El Cuidador / Cuidadora sostiene el tejido social mediante la compasión activa, la escucha atenta y la disposición al servicio generoso.',
-    mantra: 'Sirvo con generosidad y respeto mi propio equilibrio interior.',
+    concepts: ['ayuda', 'atención', 'acuerdos', 'reciprocidad', 'descanso', 'cuidado'],
+    centralQuestion: '¿Qué ayuda hace falta ahora y cómo podemos compartirla sin agotarnos?',
+    shortDescription: 'La parte de ti que atiende necesidades presentes y organiza una ayuda que también puede sostener.',
+    fullDescription: 'Aparece cuando compartes una tarea de la casa, llevas apuntes a quien faltó a clase o preguntas qué necesita una amistad en un día difícil. Su fuerza consiste en notar una necesidad concreta y ofrecer ayuda útil, con acuerdos sobre el tiempo, la carga y la participación de cada quien. Cuidar incluye recibir apoyo y descansar; la reciprocidad no exige devolver todo de inmediato ni de la misma manera. Se diferencia de la figura del padre o la madre, que acompaña el crecimiento a largo plazo, y de la figura sanadora, que acompaña una reparación: la figura cuidadora atiende lo que hace falta ahora.',
+    mantra: 'Ofrezco ayuda, comparto la carga y cuido también mis límites.',
     symbol: 'Manos Abiertas & Brote Verde',
     colorHex: '#10B981',
     characterTitle: 'Servicio & Compasión',
-    strength: 'Compasión profunda, generosidad, capacidad de escucha y vocación de servicio.',
-    shadow: 'Mártir sacrificado / Rescatador dependiente',
-    shadowDescription: 'El mártir que se destruye a sí mismo para sentirse necesario o que rescata a otros para crear dependencia emocional.',
-    shadowAntidote: 'Aprender que el autocuidado es la base de todo servicio sostenible y aprender a recibir.',
+    strength: 'Reconoce necesidades y las convierte en apoyo práctico. Hace acuerdos para que el cuidado no dependa siempre de una sola persona.',
+    shadow: 'Hacerse cargo de todo o retirar la ayuda',
+    shadowDescription: 'En un extremo, te adelantas a cada necesidad, aceptas más de lo que puedes y luego esperas que otros adivinen tu cansancio. En el otro, dejas de responder o retiras la ayuda sin explicar qué ya no puedes sostener. Ambos pueden nacer de creer que solo hay dos opciones: hacerlo todo o no estar disponible.',
+    shadowAntidote: 'Pregunta qué hace falta y ofrece solo lo que puedes cumplir. Identifica una carga, pide que se comparta y acuerda un límite de tiempo o responsabilidad antes de llegar al agotamiento.',
     domains: {
-      liderazgo: 'Crea un ambiente de bienestar donde nadie queda rezagado o desatendido.',
-      relaciones: 'Atención a los detalles y apoyo incondicional en los momentos difíciles.',
-      crisis: 'Primeros auxilios emocionales y contención práctica inmediata.',
-      creatividad: 'Obras orientadas al beneficio social y la sanación comunitaria.',
-      paternidad: 'Paciencia infinita, atención a la salud y escucha amorosa.',
+      liderazgo: 'Detecta cargas desiguales y acuerda cómo repartirlas. Incluye descansos y canales para pedir ayuda sin dar por hecho que alguien siempre estará disponible.',
+      relaciones: 'Ofrece ayuda concreta y pregunta si es bienvenida. Habla de sus necesidades para que el apoyo pueda circular en distintas direcciones.',
+      crisis: 'Atiende necesidades inmediatas como una comida, una llamada o una tarea pendiente. Comparte responsabilidades y aclara cuánto tiempo puede acompañar.',
+      creatividad: 'Cuida condiciones prácticas como materiales, tiempos y pausas. Evita que sostener al grupo le quite todo el espacio para aportar ideas propias.',
+      paternidad: 'En la crianza o la mentoría, atiende necesidades sin hacer todas las tareas por quien aprende. Enseña a pedir, ofrecer y compartir ayuda según la capacidad de cada quien.',
     },
     balancedBehavior: [
-      'Ayuda sin esperar aplausos pero sin dejarse explotar.',
-      'Sabe poner límites a las demandas excesivas de los demás.',
-      'Practica el autocuidado antes de quedar exhausto.',
-      'Fomenta la autonomía de las personas a quienes cuida.'
+      'Pregunta qué ayuda sería útil antes de ofrecerla.',
+      'Aclara cuánto tiempo y esfuerzo puede aportar.',
+      'Comparte tareas y pide apoyo cuando lo necesita.',
+      'Acepta recibir cuidado sin exigir una devolución inmediata.',
+      'Comunica un cambio de disponibilidad antes de incumplir un acuerdo.',
     ],
     unbalancedBehavior: [
-      'Incapacidad de decir "no" a cualquier pedido de auxilio.',
-      'Resentimiento oculto cuando los demás no agradecen su sacrificio.',
-      'Descuido total de la propia salud física o económica.',
-      'Tratar a los demás como incapaces para poder "salvarlos".'
+      'Asume tareas ajenas sin preguntar si hace falta.',
+      'Acepta nuevas cargas aunque ya no pueda cumplirlas.',
+      'Espera que otras personas adivinen su necesidad de descanso.',
+      'Usa la ayuda que dio para cobrar obediencia o gratitud.',
+      'Retira un apoyo acordado sin comunicar qué cambió.',
     ],
     reflectionQuestions: [
-      '¿Estoy cuidando a otros para sentirme valioso o por verdadero amor?',
-      '¿En qué aspecto de mi vida necesito pedir ayuda y permitir que me cuiden?',
-      '¿Dónde se está convirtiendo mi ayuda en sobrecarga o codependencia?'
+      '¿Qué necesidad real estoy atendiendo y cuál estoy suponiendo?',
+      '¿Qué carga puedo compartir en vez de seguir acumulándola?',
+      '¿Qué ayuda me cuesta pedir o recibir?',
+      '¿Qué límite necesito comunicar para sostener mi disponibilidad?',
     ],
     developmentExercises: [
       {
-        title: 'El Día del Autocuidado Sagrado',
-        description: 'Reserva una tarde exclusivamente para ti, donde no resolverás problemas ajenos.',
-        actionStep: 'Notifica a tu entorno que estarás desconectado y descansa.'
-      }
+        title: 'Compartir una carga · 15 minutos',
+        description: 'Identifica una tarea de cuidado que se ha concentrado en ti. Propón repartir una parte y acuerda qué harás, qué hará otra persona y hasta cuándo.',
+        actionStep: 'Escribe una carga concreta y una petición como «¿Puedes encargarte de esta parte hoy?».',
+      },
+      {
+        title: 'Ayuda con acuerdo · 10 minutos',
+        description: 'Antes de ofrecer apoyo, pregunta qué sería útil y aclara tu disponibilidad. Un acuerdo pequeño ayuda más que una promesa que no puedes sostener.',
+        actionStep: 'Elige una petición reciente y escribe qué puedes ofrecer y durante cuánto tiempo.',
+      },
+      {
+        title: 'Recibir también cuenta · 5 minutos',
+        description: 'Pide una ayuda sencilla y observa qué te cuesta al recibirla. Practica la reciprocidad sin convertir cada gesto en una deuda inmediata.',
+        actionStep: 'Pide a alguien que comparta una tarea cotidiana que hoy te pesa.',
+      },
     ],
     synergies: [
       {
         partnerId: 'guerrero',
-        title: 'Compasión + Límites',
-        description: 'El Cuidador aporta el amor; el Guerrero protege los límites para que no haya abuso.',
-        synergyKeyword: 'Compasión Firme'
-      }
+        title: 'Ayuda + Límites',
+        description: 'Uno detecta una necesidad y ofrece apoyo; el otro delimita el esfuerzo que se puede sostener. Juntos permiten cuidar sin que toda la carga recaiga en una sola persona.',
+        synergyKeyword: 'Cuidado sostenible',
+      },
     ],
     variants: {
-      masculine: {
-        name: 'El Cuidador',
-        characterTitle: 'El Servidor Silencioso y Protector de la Comunidad',
-        centralQuestion: '¿Puedo cuidar y servir sin sentir que tengo que cargarlo todo a mis espaldas?',
-        shortDescription: 'Servicio sereno, presencia sin sobrecarga y resolución práctica.',
-        fullDescription: 'El Cuidador masculino ofrece su fuerza práctica al servicio de su comunidad, aliviando cargas sin quejas ni dramatismo.',
-        mantra: 'Pongo mis manos y mi fuerza al servicio del bien común con serenidad.',
-        strength: 'Ayuda práctica, fiabilidad absoluta y apoyo desinteresado.',
-        shadow: 'Mártir silencioso / Resentimiento acumulado',
-        shadowDescription: 'Carga con todo en silencio hasta agotarse o explotar.',
-        shadowAntidote: 'Aprender a delegar y expresar las propias necesidades con franqueza.',
-        domains: {
-          liderazgo: 'Servicio y apoyo incondicional a los miembros del equipo.',
-          relaciones: 'Presencia confiable en emergencias y tareas cotidianas.',
-          crisis: 'Logística, ayuda práctica y auxilio sin aspavientos.',
-          creatividad: 'Proyectos de utilidad directa para la comunidad.',
-          paternidad: 'Cuidado atento y resolución de necesidades materiales y afectivas.',
-        },
-        balancedBehavior: ['Ayuda de forma eficaz', 'Descansa cuando es necesario'],
-        unbalancedBehavior: ['Agotamiento crónico', 'Queja pasiva'],
-        reflectionQuestions: ['¿Qué carga ajena estoy llevando que no me corresponde?'],
-        developmentExercises: [
-          {
-            title: 'Aprender a Recibir',
-            description: 'Acepta un favor o regalo de alguien sin sentir la obligación de devolverlo de inmediato.',
-            actionStep: 'Da las gracias sinceramente y disfruta la ayuda.'
-          }
-        ]
-      },
-      feminine: {
-        name: 'La Cuidadora',
-        characterTitle: 'La Sanadora de Vínculos y Sostén Emocional',
-        centralQuestion: '¿Puedo cuidar a otros con amor sin olvidarme de mis propias necesidades?',
-        shortDescription: 'Límites sanos, autocuidado, nutrición mutua y compasión activa.',
-        fullDescription: 'La Cuidadora femenina brinda contención emocional y calidez humana, aprendiendo a llenar su propia copa primero para que su entrega no se vuelva martirio.',
-        mantra: 'Me cuido para cuidar; mi bienestar es el origen de mi servicio.',
-        strength: 'Empatía tierna, hospitalidad, escucha reparadora y generosidad.',
-        shadow: 'Codependencia / Autoanulación en el rol de salvadora',
-        shadowDescription: 'Se olvida de sí misma, se vuelve codependiente y le cuesta pedir lo que necesita: espera que los demás lo adivinen.',
-        shadowAntidote: 'Ponerse a una misma en primer lugar en la lista de prioridades de cuidado.',
-        domains: {
-          liderazgo: 'Creación de ambientes armónicos y acogedores.',
-          relaciones: 'Escucha atenta y apoyo en momentos de vulnerabilidad.',
-          crisis: 'Contención afectiva y alivio del dolor ajeno.',
-          creatividad: 'Arte terapéutico y transformador.',
-          paternidad: 'Amor incondicional y atención a la salud integral.',
-        },
-        balancedBehavior: ['Se cuida a sí misma primero', 'Da con alegría sin esperar rescates'],
-        unbalancedBehavior: ['Sensación de abandono', 'Reclamo encubierto'],
-        reflectionQuestions: ['¿Cuándo fue la última vez que me pregunté qué necesito yo?'],
-        developmentExercises: [
-          {
-            title: 'El Límite del Amor Propio',
-            description: 'Declina amablemente una petición para poder descansar o dedicarte a tu bienestar.',
-            actionStep: 'Hazlo con tranquilidad y sin justificarte en exceso.'
-          }
-        ]
-      },
-      universal: {
-        name: 'Cuidador / Cuidadora',
-        characterTitle: 'El Espíritu de Servicio y Solidaridad',
-        centralQuestion: '¿Cómo aporto bienestar y alivio a mi entorno?',
-        shortDescription: 'Compasión, generosidad y servicio equilibrado.',
-        fullDescription: 'La capacidad humana de empatía activa y ayuda solidaria hacia los semejantes.',
-        mantra: 'Sirvo con alegría y mantengo mi propia paz.',
-        strength: 'Solidaridad y compasión.',
-        shadow: 'Autodestrucción por sobreentrega.',
-        shadowDescription: 'Pérdida de salud o identidad por exceso de sacrificio.',
-        shadowAntidote: 'Equilibrio entre dar y recibir.',
-        domains: {
-          liderazgo: 'Cuidado mutuo.',
-          relaciones: 'Apoyo incondicional.',
-          crisis: 'Asistencia inmediata.',
-          creatividad: 'Impacto social positivo.',
-          paternidad: 'Presencia atenta y cariñosa.',
-        },
-        balancedBehavior: ['Compasión activa y balance'],
-        unbalancedBehavior: ['Sobreexigencia y queja'],
-        reflectionQuestions: ['¿Cómo cuido de mí hoy?'],
-        developmentExercises: [
-          {
-            title: 'Momento de Autocuidado',
-            description: 'Dedica 20 minutos a tu descanso.',
-            actionStep: 'Hazlo hoy.'
-          }
-        ]
-      }
-    }
+      masculine: { name: 'El Cuidador' },
+      feminine: { name: 'La Cuidadora' },
+      universal: { name: 'Cuidador / Cuidadora' },
+    },
   },
 
   bufon: {
@@ -309,146 +167,75 @@ export const RELATIONAL_ARCHETYPES: Record<'padre' | 'cuidador' | 'bufon' | 'exp
     feminineName: 'La Bufona',
     emoji: '🎭',
     dimension: 'corazon',
-    concepts: ['juego', 'humor', 'espontaneidad', 'libertad', 'desmitificación', 'gozo', 'autenticidad'],
-    centralQuestion: '¿Cómo disfruto del presente y desarmo la excesiva solemnidad con humor?',
-    shortDescription: 'La chispa del juego, el humor desarmante, la libertad del juicio ajeno y la ligereza de espíritu.',
-    fullDescription: 'El Bufón / Bufona recuerda que la vida es también un juego cósmico. Desmitifica egos inflados, dice verdades incómodas a través de la risa y libera de la rigidez.',
-    mantra: 'Vivo con ligereza, juego con el presente y celebro la risa sanadora.',
+    concepts: ['juego', 'humor', 'risa', 'imaginación', 'conexión', 'ligereza'],
+    centralQuestion: '¿Este humor nos acerca o me ayuda a evitar algo que necesito decir?',
+    shortDescription: 'La parte de ti que juega, encuentra humor y abre espacio para conectar y mirar las cosas de otra manera.',
+    fullDescription: 'Aparece cuando juegas con palabras, improvisas una historia o haces más liviana una reunión con una broma compartida. Su fuerza consiste en abrir posibilidades, aliviar la rigidez y crear conexión sin necesitar que alguien quede en ridículo. Percibe cuándo hay ganas de jugar y cuándo hace falta escuchar o hablar en serio. Se diferencia de la figura creadora: esa desarrolla una idea hasta darle forma; la figura del bufón o la bufona abre espacio para el juego y la espontaneidad, aunque no haya un resultado que producir.',
+    mantra: 'Juego para conectar y escucho cuando hace falta hablar en serio.',
     symbol: 'Cascabeles & Espejo de la Risa',
     colorHex: '#F59E0B',
     characterTitle: 'Juego & Espontaneidad',
-    strength: 'Humor inteligente, capacidad de reírse de uno mismo, espontaneidad y desarticulación de tensiones.',
-    shadow: 'Burlón cínico / Evasor inmaduro de la realidad',
-    shadowDescription: 'Usa el sarcasmo para herir o el chiste constante para evitar conectar con el dolor o la responsabilidad madura.',
-    shadowAntidote: 'Saber cuándo reír y cuándo respetar la seriedad del momento con empatía genuina.',
+    strength: 'Encuentra perspectivas inesperadas y crea momentos de disfrute compartido. Usa el humor con atención al contexto y a la respuesta de otras personas.',
+    shadow: 'Bromear con todo o prohibirse jugar',
+    shadowDescription: 'En un extremo, haces chistes cuando alguien intenta hablar en serio o sigues una broma que ya incomoda. En el otro, corriges cualquier juego y te privas de probar algo por miedo a hacer el ridículo. Ambos pueden nacer de la dificultad de mostrar lo que sientes sin esconderlo o controlarlo.',
+    shadowAntidote: 'Observa si la risa es compartida y detén una broma cuando alguien pide que pare. Reserva un momento de juego y otro para decir con claridad lo que venías evitando.',
     domains: {
-      liderazgo: 'Desactiva momentos de alta tensión con un comentario oportuno y humano.',
-      relaciones: 'Aporta complicidad, diversión cotidiana y alegría compartida.',
-      crisis: 'Ayuda a mantener la cordura y la esperanza a través del humor resiliente.',
-      creatividad: 'Libera la mente de bloqueos racionales mediante el pensamiento lateral y el juego.',
-      paternidad: 'Juega en el suelo con los hijos y les enseña a no tomarse los errores como tragedias.',
+      liderazgo: 'Abre espacio para probar ideas con menos miedo al error. Cuida que una broma no silencie una preocupación ni convierta a alguien en blanco del grupo.',
+      relaciones: 'Crea complicidad con humor que ambas partes disfrutan. Escucha cuando la otra persona necesita ser tomada en serio.',
+      crisis: 'Ofrece una pausa de ligereza si es bienvenida. No exige reír ni usa un chiste para negar lo difícil que está pasando.',
+      creatividad: 'Juega con combinaciones, palabras y reglas para descubrir posibilidades. Permite intentos que todavía no tienen una utilidad clara.',
+      paternidad: 'En la crianza o la mentoría, enseña mediante juegos y permite equivocarse sin burla. Muestra que se puede parar un juego y hablar de lo que incomoda.',
     },
     balancedBehavior: [
-      'Sabe reírse de sus propios tropiezos sin crueldad.',
-      'Aporta aire fresco y risa a ambientes sofocantes.',
-      'Dice verdades lúcidas envueltas en amabilidad y humor.',
-      'Disfruta el momento presente con total entrega.'
+      'Propone juegos en los que se puede participar o decir que no.',
+      'Se ríe de una situación sin humillar a una persona.',
+      'Detiene una broma cuando nota incomodidad o recibe una petición.',
+      'Usa el juego para explorar ideas sin exigir resultados.',
+      'Habla con claridad cuando el tema necesita seriedad.',
     ],
     unbalancedBehavior: [
-      'Burlarse de los defectos o dolores de los demás.',
-      'Incapacidad de tener una conversación seria o profunda.',
-      'Consumos compulsivos o fiesta continua para escapar de la tristeza.',
-      'Cinismo amargo disfrazado de ironía.'
+      'Hace chistes para desviar una conversación pendiente.',
+      'Repite una broma después de que alguien pidió que pare.',
+      'Busca la risa del grupo a costa de una persona.',
+      'Corrige cualquier juego porque le parece una pérdida de tiempo.',
+      'Evita probar algo sencillo por miedo a hacer el ridículo.',
     ],
     reflectionQuestions: [
-      '¿En qué asunto de mi vida me estoy tomando con demasiada solemnidad?',
-      '¿Estoy usando el humor para conectar o como una barrera para no mostrar mi dolor?',
-      '¿Cuándo fue la última vez que jugué o me reí hasta las lágrimas?'
+      '¿Quién está disfrutando de esta broma y quién está quedando fuera?',
+      '¿Qué conversación estoy evitando mediante el humor?',
+      '¿Qué me gustaría probar si no tuviera que hacerlo bien?',
+      '¿Qué señal me indica que ahora hace falta escuchar?',
     ],
     developmentExercises: [
       {
-        title: 'La Risa de la Propia Sombra',
-        description: 'Identifica una metedura de pata reciente y cuéntasela a un amigo como una anécdota divertida.',
-        actionStep: 'Aprecia cómo el humor le quita peso al ego perfeccionista.'
-      }
+        title: 'Jugar y observar · 10 minutos',
+        description: 'Inventa una historia con tres objetos cercanos o juega con palabras. Observa si el juego te conecta con otras personas o si lo usas para evitar una conversación pendiente.',
+        actionStep: 'Elige tres objetos de tu entorno y escribe la primera frase de una historia absurda.',
+      },
+      {
+        title: 'Escuchar después de la risa · 10 minutos',
+        description: 'Recuerda una ocasión en que respondiste con humor a un tema importante. Escribe una respuesta directa que reconozca lo que la otra persona quería decir.',
+        actionStep: 'Anota una conversación pendiente y una frase sin chistes con la que puedas retomarla.',
+      },
+      {
+        title: 'Una idea sin examen · 5 minutos',
+        description: 'Haz cinco dibujos sencillos o inventa cinco usos imaginarios para un objeto. Practica jugar sin evaluar cada intento ni necesitar que salga algo útil.',
+        actionStep: 'Toma papel y dibuja una figura sencilla de tres maneras distintas.',
+      },
     ],
     synergies: [
       {
         partnerId: 'sabio',
-        title: 'Verdad + Risa',
-        description: 'El Sabio busca la verdad profunda; el Bufón la hace accesible y ligera.',
-        synergyKeyword: 'Paradoja Lúcida'
-      }
+        title: 'Juego + Criterio',
+        description: 'Uno abre preguntas y perspectivas inesperadas; el otro examina qué razones las sostienen. Juntos permiten cuestionar una certeza sin perder la escucha ni el rigor.',
+        synergyKeyword: 'Preguntar con ligereza',
+      },
     ],
     variants: {
-      masculine: {
-        name: 'El Bufón',
-        characterTitle: 'El Maestro de la Risa, el Desparpajo y la Autenticidad',
-        centralQuestion: '¿Cómo desarmo la solemnidad de mi ego y disfruto de la vida sin máscaras rígidas?',
-        shortDescription: 'Desarmar la solemnidad, romper el ego rígido y celebrar la autenticidad.',
-        fullDescription: 'El Bufón masculino se ríe de las pretensiones de poder, baja los humos del orgullo y disfruta del instante con alegría contagiosa.',
-        mantra: 'Me río de mi propia importancia y disfruto de la aventura humana.',
-        strength: 'Ingenio rápido, ligereza contagiosa y desmitificación del drama.',
-        shadow: 'Payaso triste / Burlón hiriente',
-        shadowDescription: 'Oculta su dolor tras una máscara cómica o humilla a otros con sarcasmo.',
-        shadowAntidote: 'Aceptar la tristeza y conectar con la ternura.',
-        domains: {
-          liderazgo: 'Alivia tensiones en el equipo y rompe jerarquías artificiales.',
-          relaciones: 'Juego, vitalidad y disfrute compartido.',
-          crisis: 'Humor que salva de la desesperanza.',
-          creatividad: 'Pensamiento irreverente y original.',
-          paternidad: 'Juego espontáneo y risas compartidas.',
-        },
-        balancedBehavior: ['Aporta ligereza sin herir', 'Se ríe de sus errores'],
-        unbalancedBehavior: ['Frivolidad destructiva', 'Sarcasmo cruel'],
-        reflectionQuestions: ['¿Dónde estoy siendo demasiado rígido o pretencioso?'],
-        developmentExercises: [
-          {
-            title: 'El Día del Juego',
-            description: 'Participa en un juego de mesa o actividad lúdica sin afán competitivo.',
-            actionStep: 'Juega por el puro placer de divertirte.'
-          }
-        ]
-      },
-      feminine: {
-        name: 'La Bufona',
-        characterTitle: 'La Soberana de la Espontaneidad y la Libertad del Juicio',
-        centralQuestion: '¿Cómo suelto la presión de ser perfecta o complacer y me permito ser espontánea?',
-        shortDescription: 'Soltar la presión de agradar, libertad de expresión y gozo sin culpa.',
-        fullDescription: 'La Bufona femenina desafía el mandato de ser "la niña buena" o la "mujer perfecta". Baila con desparpajo, dice lo que piensa con picardía y disfruta sin pedir permiso.',
-        mantra: 'Suelto la perfección; elijo la autenticidad, la risa y el gozo.',
-        strength: 'Desparpajo liberador, autenticidad radical y alegría contagiosa.',
-        shadow: 'Autosabotaje por ridículo / Incontinencia verbal hiriente',
-        shadowDescription: 'Se ridiculiza a sí misma para agradar o usa la ironía para herir.',
-        shadowAntidote: 'Reconocer que su valor no depende de entretener a los demás.',
-        domains: {
-          liderazgo: 'Desmitificación de protocolos innecesarios y fomento de la creatividad.',
-          relaciones: 'Frescura, autenticidad y alegría sin filtros.',
-          crisis: 'Resiliencia optimista.',
-          creatividad: 'Innovación sin miedo al ridículo.',
-          paternidad: 'Libertad de expresión y juego sin moldes rígidos.',
-        },
-        balancedBehavior: ['Disfruta sin culpa', 'Rompe tabúes con humor elegante'],
-        unbalancedBehavior: ['Hacerse la tonta por miedo a destacar', 'Burlas hirientes'],
-        reflectionQuestions: ['¿Qué parte de mí teme hacer el ridículo si es 100% auténtica?'],
-        developmentExercises: [
-          {
-            title: 'Baño de Desparpajo',
-            description: 'Ponte una canción alegre y baila por toda la habitación sin preocuparte por cómo te ves.',
-            actionStep: 'Ríete y conecta con la pura alegría del movimiento.'
-          }
-        ]
-      },
-      universal: {
-        name: 'Bufón / Bufona',
-        characterTitle: 'La Sabiduría del Juego y la Alegría',
-        centralQuestion: '¿Cómo pongo humor y ligereza en mi día a día?',
-        shortDescription: 'Juego, humor sanador y espontaneidad libre.',
-        fullDescription: 'El principio de ligereza que disuelve la rigidez mental y celebra el gozo de estar vivos.',
-        mantra: 'La risa es mi medicina y el juego mi libertad.',
-        strength: 'Optimismo y frescura.',
-        shadow: 'Frivolidad o cinismo.',
-        shadowDescription: 'Evasión de la realidad o burla destructiva.',
-        shadowAntidote: 'Humor consciente y compasivo.',
-        domains: {
-          liderazgo: 'Flexibilidad y clima positivo.',
-          relaciones: 'Alegría y distensión.',
-          crisis: 'Perspectiva optimista.',
-          creatividad: 'Pensamiento lateral.',
-          paternidad: 'Juego libre.',
-        },
-        balancedBehavior: ['Risa sana y autenticidad'],
-        unbalancedBehavior: ['Superficialidad excesiva'],
-        reflectionQuestions: ['¿Dónde puedo sumar una sonrisa hoy?'],
-        developmentExercises: [
-          {
-            title: 'Momento de Risa',
-            description: 'Mira un video cómico o comparte un chiste con un amigo.',
-            actionStep: 'Disfruta de la risa.'
-          }
-        ]
-      }
-    }
+      masculine: { name: 'El Bufón' },
+      feminine: { name: 'La Bufona' },
+      universal: { name: 'Bufón / Bufona' },
+    },
   },
 
   explorador: {
@@ -459,146 +246,75 @@ export const RELATIONAL_ARCHETYPES: Record<'padre' | 'cuidador' | 'bufon' | 'exp
     feminineName: 'La Exploradora',
     emoji: '🧭',
     dimension: 'accion',
-    concepts: ['autonomía', 'búsqueda', 'libertad', 'nuevos horizontes', 'independencia', 'viaje', 'autenticidad'],
-    centralQuestion: '¿Quién soy cuando nadie me dice qué camino seguir y hacia qué nuevo horizonte me dirijo?',
-    shortDescription: 'La búsqueda de la propia verdad, el coraje de adentrarse en territorio desconocido y la fidelidad al propio camino.',
-    fullDescription: 'El Explorador / Exploradora rehúye el conformismo y la inercia social. Necesita abrir caminos nuevos, experimentar por cuenta propia y descubrir quién es en soledad fecunda.',
-    mantra: 'Exploro nuevos horizontes con valentía y soy fiel a mi brújula interior.',
+    concepts: ['curiosidad', 'búsqueda', 'opciones', 'descubrimiento', 'prueba', 'autonomía'],
+    centralQuestion: '¿Qué opción cercana puedo conocer antes de seguir haciendo lo mismo?',
+    shortDescription: 'La parte de ti que busca opciones, conoce algo nuevo y prueba caminos propios con los recursos que tiene.',
+    fullDescription: 'Aparece cuando investigas un tema desconocido, observas un lugar cercano con más atención o pruebas otra manera de estudiar. Su fuerza consiste en ampliar opciones y descubrir qué te interesa mediante experiencias pequeñas, sin exigir viajes, dinero ni mucho tiempo libre. Puede explorar y también regresar, elegir y comprometerse con lo que encuentra. Se diferencia de la figura heroica: esa afronta una prueba o una transición; la figura exploradora busca posibilidades sin necesitar un gran desafío ni una meta de superación.',
+    mantra: 'Exploro una opción cercana y elijo qué quiero seguir.',
     symbol: 'Brújula de Bronce & Bastón de Peregrino',
     colorHex: '#3B82F6',
     characterTitle: 'Autonomía & Búsqueda',
-    strength: 'Independencia de criterio, curiosidad insaciable, adaptabilidad y coraje para empezar de cero.',
-    shadow: 'Eterno vagabundo desarraigado / Fóbico al compromiso',
-    shadowDescription: 'Huye en cuanto las cosas exigen permanencia, compromiso o rutina, disfrazando su miedo al arraigo de "amor a la libertad".',
-    shadowAntidote: 'Descubrir que el compromiso con lo profundo no limita la libertad, sino que le da un hogar fértil.',
+    strength: 'Hace preguntas, encuentra alternativas y aprende de experiencias nuevas. Ajusta la búsqueda a sus recursos y convierte un hallazgo en una elección posible.',
+    shadow: 'Cambiar sin quedarse o cerrar toda posibilidad',
+    shadowDescription: 'En un extremo, saltas de actividad en actividad y dejas acuerdos sin hablarlo cuando aparece una dificultad. En el otro, descartas cada opción nueva antes de conocerla y mantienes una rutina que ya no te sirve. Ambos pueden nacer del miedo a elegir y perder otras opciones o a salir de lo conocido.',
+    shadowAntidote: 'Elige una exploración pequeña, con un tiempo y un alcance claros. Anota lo que descubriste, decide si quieres continuar y conversa sobre los compromisos que esa elección afectaría.',
     domains: {
-      liderazgo: 'Abre nuevos mercados, desafía el "siempre se hizo así" e impulsa la innovación.',
-      relaciones: 'Valora el espacio propio y respeta la libertad e independencia de su pareja.',
-      crisis: 'Se adapta con rapidez a cambios radicales y no teme reinventarse en la incertidumbre.',
-      creatividad: 'Se nutre de diversas culturas y experiencias para forjar estilos inéditos.',
-      paternidad: 'Fomenta la curiosidad, el amor por los viajes y la capacidad de resolver imprevistos.',
+      liderazgo: 'Busca alternativas y escucha formas distintas de trabajar. Prueba una opción pequeña antes de pedir que todo el equipo cambie.',
+      relaciones: 'Comparte intereses y respeta espacios de autonomía. Habla de sus ganas de cambio sin desaparecer ni tratar todo compromiso como una restricción.',
+      crisis: 'Identifica opciones que no se habían considerado y averigua qué requieren. Evita cambiar de rumbo solo para escapar de una dificultad.',
+      creatividad: 'Explora técnicas, preguntas y referencias con recursos disponibles. Elige un hallazgo para desarrollarlo en vez de acumular posibilidades sin usarlas.',
+      paternidad: 'En la crianza o la mentoría, permite preguntas e intereses propios. Ofrece exploraciones cercanas y apropiadas al contexto sin exigir viajes o compras.',
     },
     balancedBehavior: [
-      'Sigue su vocación aunque sea poco convencional.',
-      'Tolera la soledad y la convierte en espacio de autoconocimiento.',
-      'Sabe arraigarse cuando encuentra algo que vale la pena cultivar.',
-      'Respeta las diferencias culturales y humanas sin juzgarlas.'
+      'Explora una opción nueva con un alcance que puede sostener.',
+      'Hace preguntas antes de descartar algo desconocido.',
+      'Anota hallazgos y elige cuáles quiere seguir.',
+      'Comunica un cambio de planes a quienes afecta.',
+      'Mantiene un compromiso elegido aunque ya no sea una novedad.',
     ],
     unbalancedBehavior: [
-      'Abandonar proyectos en cuanto surge la primera dificultad o aburrimiento.',
-      'Dificultad crónica para comprometerse en relaciones profundas.',
-      'Inconformismo destructivo que nunca encuentra satisfacción.',
-      'Aislamiento excesivo por miedo a sentirse controlado.'
+      'Abandona una actividad en cuanto requiere práctica.',
+      'Cambia acuerdos sin avisar a quienes dependen de ellos.',
+      'Acumula opciones para evitar elegir una.',
+      'Descarta algo nuevo sin averiguar en qué consiste.',
+      'Se exige experiencias costosas para sentir que está explorando.',
     ],
     reflectionQuestions: [
-      '¿Qué nuevo territorio (físico, intelectual o emocional) pide ser explorado en mi vida?',
-      '¿Estoy huyendo de un compromiso necesario o estoy siguiendo una llamada genuina de libertad?',
-      '¿Cómo mantengo mi independencia sin aislarme de las personas que amo?'
+      '¿Qué puedo conocer mejor con los recursos que ya tengo?',
+      '¿Estoy buscando algo que me interesa o evitando una dificultad?',
+      '¿Qué descubrimiento merece más tiempo y cuál puedo dejar pasar?',
+      '¿Qué acuerdo necesito revisar antes de cambiar de rumbo?',
     ],
     developmentExercises: [
       {
-        title: 'La Microaventura en Solitario',
-        description: 'Visita un lugar accesible y seguro que no conozcas —un barrio, un parque, un mercado— sin planear cada paso. Avisa a alguien de adónde vas.',
-        actionStep: 'Toma decisiones sobre la marcha y disfruta de tu propia compañía durante unas horas.'
-      }
+        title: 'Dos hallazgos cercanos · 15 minutos',
+        description: 'Explora un tema en un recurso gratuito que ya puedas consultar o un lugar cercano y seguro de tu rutina. Anota dos hallazgos y una pregunta para continuar.',
+        actionStep: 'Elige un tema que no conoces o un detalle de tu entorno que sueles pasar por alto.',
+      },
+      {
+        title: 'Probar otra manera · 10 minutos',
+        description: 'Haz una tarea cotidiana con una variación pequeña, como resumir un texto mediante un dibujo. Observa qué cambia sin exigir que lo nuevo sea mejor.',
+        actionStep: 'Elige una tarea de hoy y escribe una forma distinta de hacer una parte.',
+      },
+      {
+        title: 'Elegir un siguiente paso · 10 minutos',
+        description: 'Revisa algo que descubriste y decide si lo continuarás, lo dejarás o lo reservarás para después. Elegir permite que la exploración se convierta en experiencia propia.',
+        actionStep: 'Anota un interés reciente y un paso de diez minutos para profundizarlo.',
+      },
     ],
     synergies: [
       {
         partnerId: 'constructor',
-        title: 'Exploración + Asentamiento',
-        description: 'El Explorador descubre nuevas tierras fértiles; el Constructor erige el asentamiento durable.',
-        synergyKeyword: 'Conquista y Construcción'
-      }
+        title: 'Descubrimiento + Continuidad',
+        description: 'Uno encuentra opciones y prueba caminos; el otro organiza lo necesario para sostener el que se elija. Juntos convierten un hallazgo en una práctica que puede durar y cambiar.',
+        synergyKeyword: 'Hallazgos que continúan',
+      },
     ],
     variants: {
-      masculine: {
-        name: 'El Explorador',
-        characterTitle: 'El Navegante de Fronteras y Buscador de Horizontes',
-        centralQuestion: '¿Quién eres cuando nadie te dice qué camino seguir y te atreves a cruzar el umbral?',
-        shortDescription: 'Independencia, aventura, forjar camino propio y valentía ante lo desconocido.',
-        fullDescription: 'El Explorador masculino desafía la comodidad burguesa y los caminos trillados, buscando forjar su propio carácter a través de la prueba y la aventura.',
-        mantra: 'Forjo mi propio camino donde no hay senderos trazados.',
-        strength: 'Audacia, autosuficiencia, resiliencia y afán de descubrimiento.',
-        shadow: 'Fugitivo errante / Desarraigado solitario',
-        shadowDescription: 'Huye de las responsabilidades adultas saltando de proyecto en proyecto.',
-        shadowAntidote: 'Aprender a echar raíces en propósitos significativos.',
-        domains: {
-          liderazgo: 'Pionero en proyectos arriesgados e innovadores.',
-          relaciones: 'Vínculos basados en el respeto a la libertad mutua.',
-          crisis: 'Ingenio y supervivencia en entornos hostiles.',
-          creatividad: 'Originalidad y ruptura de moldes convencionales.',
-          paternidad: 'Iniciación a la aventura y la autonomía.',
-        },
-        balancedBehavior: ['Abre caminos nuevos', 'Asume riesgos calculados'],
-        unbalancedBehavior: ['Fobia al compromiso', 'Evasión continua'],
-        reflectionQuestions: ['¿Hacia qué frontera interior necesito avanzar?'],
-        developmentExercises: [
-          {
-            title: 'Ruta Desconocida',
-            description: 'Toma una ruta diferente a casa o visita un barrio nuevo.',
-            actionStep: 'Observa detalles con ojos de explorador.'
-          }
-        ]
-      },
-      feminine: {
-        name: 'La Exploradora',
-        characterTitle: 'La Soberana de la Libertad Interior y los Nuevos Caminos',
-        centralQuestion: '¿Quién eres cuando dejas de vivir según las expectativas de los demás y sigues tu brújula?',
-        shortDescription: 'Soberanía, libertad interior, romper moldes y fidelidad a la propia llamada.',
-        fullDescription: 'La Exploradora femenina se atreve a salir de los roles tradicionales asignados, viajando al exterior y a su propio interior para descubrir su auténtica vocación.',
-        mantra: 'Sigo mi propia brújula y conquisto mi libertad interior.',
-        strength: 'Autodeterminación indomable, valentía para romper moldes y autenticidad.',
-        shadow: 'Eterna insatisfecha / Huida de los vínculos profundos',
-        shadowDescription: 'Cree que la libertad es estar sola y sabotea la intimidad por miedo a ser atrapada.',
-        shadowAntidote: 'Saber que una mujer libre puede amar profundamente sin perderse a sí misma.',
-        domains: {
-          liderazgo: 'Apertura de nuevos caminos profesionales y liderazgo pionero.',
-          relaciones: 'Amor libre, maduro y sin ataduras asfixiantes.',
-          crisis: 'Reinvención total y fortaleza ante los cambios.',
-          creatividad: 'Expresión transgresora y fresca.',
-          paternidad: 'Educación en la libertad de elección y la valentía.',
-        },
-        balancedBehavior: ['Defiende su espacio propio', 'Se atreve a emprender su viaje'],
-        unbalancedBehavior: ['Rechazo al compromiso', 'Sensación de vacío constante'],
-        reflectionQuestions: ['¿Qué expectativa familiar o social estoy lista para dejar atrás?'],
-        developmentExercises: [
-          {
-            title: 'Viaje a lo Desconocido',
-            description: 'Inscríbete en un curso o actividad sobre un tema que nunca hayas explorado.',
-            actionStep: 'Abre tu mente a una nueva perspectiva.'
-          }
-        ]
-      },
-      universal: {
-        name: 'Explorador / Exploradora',
-        characterTitle: 'El Espíritu de Búsqueda y Autonomía',
-        centralQuestion: '¿Cómo expando mis horizontes vitales?',
-        shortDescription: 'Libertad, curiosidad y búsqueda de nuevos caminos.',
-        fullDescription: 'La pulsión humana de conocer el mundo y descubrir nuevas posibilidades.',
-        mantra: 'El mundo es amplio y mi curiosidad infinita.',
-        strength: 'Adaptabilidad y curiosidad.',
-        shadow: 'Desarraigo o inconstancia.',
-        shadowDescription: 'Falta de perseverancia o miedo a echar raíces.',
-        shadowAntidote: 'Compromiso consciente con lo valioso.',
-        domains: {
-          liderazgo: 'Innovación pionera.',
-          relaciones: 'Respeto a la individualidad.',
-          crisis: 'Reinvención ágil.',
-          creatividad: 'Diversidad de fuentes.',
-          paternidad: 'Estímulo a la curiosidad.',
-        },
-        balancedBehavior: ['Curiosidad viva y solidez'],
-        unbalancedBehavior: ['Inestabilidad crónica'],
-        reflectionQuestions: ['¿Qué nuevo aprendizaje me apasiona hoy?'],
-        developmentExercises: [
-          {
-            title: 'Lectura Exploratoria',
-            description: 'Lee sobre un tema completamente ajeno a tu trabajo.',
-            actionStep: 'Anota 2 ideas interesantes.'
-          }
-        ]
-      }
-    }
+      masculine: { name: 'El Explorador' },
+      feminine: { name: 'La Exploradora' },
+      universal: { name: 'Explorador / Exploradora' },
+    },
   },
 
   creador: {
@@ -609,146 +325,75 @@ export const RELATIONAL_ARCHETYPES: Record<'padre' | 'cuidador' | 'bufon' | 'exp
     feminineName: 'La Creadora',
     emoji: '🎨',
     dimension: 'construccion',
-    concepts: ['arte', 'innovación', 'proyectos', 'expresión', 'originalidad', 'manifestación', 'visión estética'],
-    centralQuestion: '¿Qué parte de mi mundo interno necesita tomar forma visible y tangible?',
-    shortDescription: 'La capacidad de manifestar ideas, forjar obras originales y dejar una huella estética e innovadora.',
-    fullDescription: 'El Creador / Creadora vive para dar vida a lo que antes no existía. Une imaginación y técnica para transformar la materia prima en belleza, tecnología o soluciones.',
-    mantra: 'Canalizo mi visión única en obras tangibles y significativas.',
+    concepts: ['ideas', 'oficio', 'borrador', 'práctica', 'colaboración', 'expresión'],
+    centralQuestion: '¿Qué idea puedo convertir hoy en un borrador pequeño que alguien pueda revisar?',
+    shortDescription: 'La parte de ti que imagina posibilidades y les da forma mediante práctica, revisión y colaboración.',
+    fullDescription: 'Aparece cuando escribes un mensaje con cuidado, inventas una solución para la casa o preparas una presentación de trabajo. Su fuerza consiste en dar forma a una idea mediante borradores, práctica y observaciones de otras personas, sin esperar un talento excepcional. Crear puede ser personal o compartido y no exige producir algo perfecto. Se diferencia de la figura constructora: esa organiza lo necesario para que algo dure; la figura creadora imagina posibilidades y desarrolla una forma de expresarlas.',
+    mantra: 'Doy forma a una idea, termino un borrador y escucho cómo mejorarlo.',
     symbol: 'Paleta del Artista & Martillo del Escultor',
     colorHex: '#D6A84F',
     characterTitle: 'Arte & Innovación',
-    strength: 'Originalidad desbordante, talento estético, capacidad de materialización y visión de diseño.',
-    shadow: 'Perfeccionista paralizado / Creador destructivo o vanidoso',
-    shadowDescription: 'El perfeccionismo neurótico que nunca concluye nada o la obsesión artística que arrasa con las relaciones y la salud.',
-    shadowAntidote: 'Comprender que lo perfecto es enemigo de lo realizado y soltar las obras al mundo con humildad.',
+    strength: 'Convierte ideas en algo que se puede ver, probar o compartir. Aprende el oficio mediante la práctica y aprovecha aportes ajenos sin perder su intención.',
+    shadow: 'Pulir sin terminar o abandonar antes de probar',
+    shadowDescription: 'En un extremo, corriges una y otra vez, escondes los borradores y nunca das por terminada una versión. En el otro, descartas tus ideas al primer obstáculo o esperas inspiración antes de empezar. Ambos pueden nacer del miedo a que un resultado imperfecto se tome como medida de tu valor.',
+    shadowAntidote: 'Define una versión pequeña y qué necesita para estar terminada hoy. Compártela con alguien, pide una observación concreta y elige una sola mejora para la siguiente versión.',
     domains: {
-      liderazgo: 'Diseña la visión de producto, la identidad de marca y la cultura visual innovadora.',
-      relaciones: 'Sorprende con detalles originales y renueva la chispa del vínculo con creatividad.',
-      crisis: 'Encuentra formas inéditas de sortear obstáculos materiales.',
-      creatividad: 'Su hábitat natural: pintura, escritura, arquitectura, software o diseño.',
-      paternidad: 'Fomenta el talento expresivo, la imaginación y la experimentación sin juicios.',
+      liderazgo: 'Invita a proponer ideas y mostrar borradores sin burlas. Reconoce la autoría y el trabajo de quienes colaboran.',
+      relaciones: 'Encuentra formas propias de expresar lo que siente o proponer un plan compartido. Pregunta si la idea sirve a ambas partes en vez de exigir entusiasmo.',
+      crisis: 'Imagina alternativas con los recursos disponibles y prueba una versión sencilla. Acepta que una solución útil puede requerir varios intentos.',
+      creatividad: 'Trabaja mediante borradores, práctica y revisión. Termina versiones pequeñas y pide comentarios que permitan mejorar una decisión concreta.',
+      paternidad: 'En la crianza o la mentoría, ofrece espacio para hacer, probar y revisar. Valora el proceso sin comparar talentos ni corregir cada elección personal.',
     },
     balancedBehavior: [
-      'Termina lo que empieza y lo comparte con el mundo.',
-      'Acepta las críticas constructivas sin destruir su autoestima.',
-      'Combina inspiración con rutina y oficio diario.',
-      'Encuentra belleza y material de creación en la cotidianidad.'
+      'Empieza una versión pequeña con los recursos disponibles.',
+      'Practica una habilidad aunque no haya inspiración.',
+      'Termina un borrador antes de pulir cada detalle.',
+      'Pide una observación concreta y decide qué incorporar.',
+      'Reconoce los aportes y la autoría de quienes colaboran.',
     ],
     unbalancedBehavior: [
-      'Acumular decenas de proyectos a medio terminar.',
-      'Parálisis por miedo a no estar a la altura de su propia expectativa.',
-      'Soberbia y desprecio hacia las ideas de los demás.',
-      'Uso del arte para escapar del mundo real.'
+      'Corrige detalles indefinidamente para no compartir una versión.',
+      'Espera inspiración para iniciar cualquier tarea creativa.',
+      'Descarta una idea antes de probar cómo podría funcionar.',
+      'Toma cada observación como una valoración de toda su persona.',
+      'Presenta aportes del grupo como si fueran solo propios.',
     ],
     reflectionQuestions: [
-      '¿Qué proyecto creativo tengo postergado por miedo a que no quede perfecto?',
-      '¿Estoy creando para expresar mi verdad o para buscar aprobación y estatus?',
-      '¿Cómo puedo incorporar más juego y libertad en mi proceso de creación?'
+      '¿Qué versión pequeña de mi idea puedo terminar hoy?',
+      '¿Qué detalle estoy puliendo para evitar mostrar el conjunto?',
+      '¿Qué observación concreta ayudaría más a la siguiente versión?',
+      '¿Qué aporte ajeno necesito reconocer o pedir?',
     ],
     developmentExercises: [
       {
-        title: 'El Manifiesto de la Obra Imperfecta',
-        description: 'Crea algo completo en 45 minutos (un texto, un dibujo, un prototipo) y dalo por terminado sin corregirlo.',
-        actionStep: 'Siente la liberación de cerrar un ciclo creativo sin la trampa del perfeccionismo.'
-      }
+        title: 'Terminar un borrador pequeño · 20 minutos',
+        description: 'Haz una versión breve de una idea, como un párrafo, un dibujo o una propuesta de tres pasos. Termínala y pide una observación concreta para orientar la revisión.',
+        actionStep: 'Elige una idea y escribe qué tendrá que incluir su versión más pequeña.',
+      },
+      {
+        title: 'Practicar una parte · 10 minutos',
+        description: 'Repite una habilidad sencilla de tu proyecto, como explicar una idea en tres frases. Compara los intentos para reconocer qué mejora con la práctica.',
+        actionStep: 'Escribe dos maneras de explicar la misma idea con palabras simples.',
+      },
+      {
+        title: 'Crear con otra mirada · 15 minutos',
+        description: 'Comparte una pregunta de tu borrador con alguien y escucha su propuesta. Decide qué incorporar y reconoce el aporte para practicar una colaboración clara.',
+        actionStep: 'Elige un borrador y pregunta: «¿Qué parte no se entiende todavía?».',
+      },
     ],
     synergies: [
       {
         partnerId: 'guerrero',
-        title: 'Inspiración + Disciplina',
-        description: 'El Creador aporta la visión y el arte; el Guerrero se sienta cada día a trabajar con rigor.',
-        synergyKeyword: 'Obra Culminada'
-      }
+        title: 'Ideas + Constancia',
+        description: 'Uno imagina y da forma a posibilidades; el otro reserva tiempo y sostiene la práctica. Juntos permiten terminar una versión sin depender de la inspiración ni trabajar sin descanso.',
+        synergyKeyword: 'Crear con continuidad',
+      },
     ],
     variants: {
-      masculine: {
-        name: 'El Creador',
-        characterTitle: 'El Arquitecto de Realidades y Obras Eternas',
-        centralQuestion: '¿Qué puedes construir y materializar que antes no existía en el mundo?',
-        shortDescription: 'Visión innovadora, diseño, técnica y manifestación original.',
-        fullDescription: 'El Creador masculino combina la maestría de las herramientas con una visión audaz para forjar obras, inventos o estructuras que perduren.',
-        mantra: 'Pongo mi talento y disciplina al servicio de la invención.',
-        strength: 'Innovación técnica, persistencia creadora y estética formal.',
-        shadow: 'Genio megalómano / Perfeccionista estéril',
-        shadowDescription: 'Se cree superior por sus creaciones o destruye lo que hace porque nunca es suficiente.',
-        shadowAntidote: 'Humildad creadora y servicio a la comunidad.',
-        domains: {
-          liderazgo: 'Innovación estratégica y diseño de nuevos productos.',
-          relaciones: 'Expresión de afecto a través de detalles y creaciones.',
-          crisis: 'Soluciones inventivas.',
-          creatividad: 'Maestría en el oficio.',
-          paternidad: 'Transmisión de habilidades prácticas y pasión creadora.',
-        },
-        balancedBehavior: ['Materializa proyectos con constancia', 'Comparte su visión'],
-        unbalancedBehavior: ['Obsesión y aislamiento', 'Intolerancia al error'],
-        reflectionQuestions: ['¿Qué obra mía necesita salir a la luz ya?'],
-        developmentExercises: [
-          {
-            title: 'Prototipo Rápido',
-            description: 'Construye un borrador de tu idea en 1 hora.',
-            actionStep: 'Muéstraselo a alguien de confianza para recibir feedback.'
-          }
-        ]
-      },
-      feminine: {
-        name: 'La Creadora',
-        characterTitle: 'La Alquimista de Formas y Alumbramiento Artístico',
-        centralQuestion: '¿Qué parte de tu alma necesita convertirse en algo visible y qué necesitas dar a luz?',
-        shortDescription: 'Alumbramiento creativo, expresión auténtica, arte con alma y belleza viva.',
-        fullDescription: 'La Creadora femenina gesta ideas en su mundo interno y las da a luz con paciencia y amor, fusionando sensibilidad, estética e intuición.',
-        mantra: 'Doy a luz mis visiones con confianza, paciencia y libertad.',
-        strength: 'Sensibilidad estética, fecundidad imaginativa y autenticidad expresiva.',
-        shadow: 'Inseguridad paralizante / Miedo a exponerse',
-        shadowDescription: 'Esconde sus creaciones en cajones por temor al juicio ajeno.',
-        shadowAntidote: 'Reconocer que el arte no necesita ser perfecto para conmover y transformar.',
-        domains: {
-          liderazgo: 'Diseño de experiencias memorables y ambientes inspiradores.',
-          relaciones: 'Nutrición del vínculo a través de la belleza y la creatividad.',
-          crisis: 'Transformación del dolor en obras significativas.',
-          creatividad: 'Creación artística profunda y conmovedora.',
-          paternidad: 'Estímulo a la libre expresión de los hijos.',
-        },
-        balancedBehavior: ['Publica y comparte su arte', 'Confía en su voz creadora'],
-        unbalancedBehavior: ['Ocultar su talento por timidez', 'Autocrítica destructiva'],
-        reflectionQuestions: ['¿Qué temo que piensen si muestro mi trabajo más auténtico?'],
-        developmentExercises: [
-          {
-            title: 'Exposición Valiente',
-            description: 'Comparte un poema, foto, texto o idea creada por ti con tu entorno.',
-            actionStep: 'Acepta los elogios y comentarios con agradecimiento.'
-          }
-        ]
-      },
-      universal: {
-        name: 'Creador / Creadora',
-        characterTitle: 'El Impulso de Creación y Expresión',
-        centralQuestion: '¿Cómo materializo mi imaginación en la realidad?',
-        shortDescription: 'Innovación, arte y manifestación de ideas.',
-        fullDescription: 'La capacidad fundamental del ser humano para transformar la materia a través de la creatividad.',
-        mantra: 'Creo con propósito y entrego mi obra al mundo.',
-        strength: 'Imaginación e innovación.',
-        shadow: 'Perfeccionismo o dispersión.',
-        shadowDescription: 'Incapacidad de cerrar ciclos creativos.',
-        shadowAntidote: 'Disciplina y entrega honesta.',
-        domains: {
-          liderazgo: 'Visión creativa.',
-          relaciones: 'Originalidad.',
-          crisis: 'Pensamiento divergente.',
-          creatividad: 'Expresión artística.',
-          paternidad: 'Fomento del juego creador.',
-        },
-        balancedBehavior: ['Creación constante y entrega'],
-        unbalancedBehavior: ['Procrastinación perfeccionista'],
-        reflectionQuestions: ['¿Qué voy a crear hoy?'],
-        developmentExercises: [
-          {
-            title: 'Momento Creativo',
-            description: '15 minutos de dibujo, escritura o diseño libre.',
-            actionStep: 'Hazlo sin juzgar el resultado.'
-          }
-        ]
-      }
-    }
+      masculine: { name: 'El Creador' },
+      feminine: { name: 'La Creadora' },
+      universal: { name: 'Creador / Creadora' },
+    },
   },
 
   heroe: {
@@ -759,145 +404,74 @@ export const RELATIONAL_ARCHETYPES: Record<'padre' | 'cuidador' | 'bufon' | 'exp
     feminineName: 'La Heroína',
     emoji: '⚡',
     dimension: 'accion',
-    concepts: ['desafío', 'valentía', 'superación', 'resiliencia', 'viaje interior', 'empoderamiento', 'conquista'],
-    centralQuestion: '¿Qué prueba existencial estoy llamado a superar para rescatar mi verdadero poder?',
-    shortDescription: 'El viaje de superación personal, el coraje para enfrentar pruebas difíciles y la transformación a través de la adversidad.',
-    fullDescription: 'El Héroe / Heroína responde al llamado de la aventura. No teme a los gigantes ni a las sombras, sabiendo que las mayores pruebas forjan el carácter más noble.',
-    mantra: 'Encaro la prueba con coraje y transformo la adversidad en fuerza.',
+    concepts: ['reto', 'transición', 'coraje', 'apoyo', 'aprendizaje', 'cooperación'],
+    centralQuestion: '¿Qué paso difícil necesito dar y con qué apoyo puedo hacerlo?',
+    shortDescription: 'La parte de ti que afronta una prueba o un cambio importante, con coraje, apoyo y permiso para parar.',
+    fullDescription: 'Aparece cuando empiezas un trabajo, retomas los estudios o inicias una conversación difícil que marca un antes y un después. Su fuerza consiste en afrontar una prueba que te exige aprender algo y aceptar que no puedes garantizar el resultado. Incluye pedir ayuda, actuar en conjunto y parar a tiempo; demostrar valor no requiere hacerlo todo por tu cuenta. Se diferencia de la figura guerrera: esa sostiene el esfuerzo y los límites cotidianos; la figura heroica afronta una prueba o una transición concreta.',
+    mantra: 'Afronto el reto con apoyo y paro si necesito cambiar el plan.',
     symbol: 'Rayo de Fuerza & Laurel de Victoria',
     colorHex: '#EF4444',
     characterTitle: 'Desafío & Superación',
-    strength: 'Resiliencia extraordinaria, coraje ante lo desconocido, superación de límites y lealtad a los ideales.',
-    shadow: 'Arrogancia temeraria / Complejo de salvador / Victimización heroica',
-    shadowDescription: 'Lanzarse a peligros absurdos por vanagloria o creer que solo mediante el sufrimiento y la épica constante la vida tiene valor.',
-    shadowAntidote: 'Humildad y reconocimiento de que las mayores victorias son las internas, en silencio.',
+    strength: 'Da un paso posible frente a una dificultad significativa. Reúne apoyos, reconoce límites y aprende de la experiencia aunque el resultado no sea el esperado.',
+    shadow: 'Demostrar a cualquier costo o evitar toda prueba',
+    shadowDescription: 'En un extremo, aceptas retos innecesarios, rechazas ayuda y sigues aunque el costo supere lo acordado. En el otro, postergas cada paso hasta tener garantías o dejas que alguien decida siempre por ti. Ambos pueden nacer de confundir tu valor personal con el éxito de una prueba.',
+    shadowAntidote: 'Elige un reto pequeño, define un apoyo y establece cuándo pararás o cambiarás el plan. Evalúa lo que aprendiste además del resultado y comparte la responsabilidad cuando corresponda.',
     domains: {
-      liderazgo: 'Lidera la remontada en momentos de colapso y devuelve la fe a su equipo.',
-      relaciones: 'Lucha por defender a quienes ama y no abandona en la adversidad.',
-      crisis: 'Su momento de brillo: saca fuerzas de donde no las hay y encuentra el camino de salida.',
-      creatividad: 'Obras de carácter épico, trascendente y conmovedor.',
-      paternidad: 'Inspira valentía, honor y el rechazo a la rendición cobarde.',
+      liderazgo: 'Da el primer paso ante un cambio y organiza la participación del equipo. Reconoce aportes en vez de presentar el avance como una hazaña personal.',
+      relaciones: 'Afronta conversaciones y cambios que necesita el vínculo. Pide apoyo y respeta que la otra persona también elija cómo participar.',
+      crisis: 'Asume una tarea concreta que puede ayudar y coordina con otras personas. Revisa los límites antes de continuar por orgullo o por presión.',
+      creatividad: 'Se anima a mostrar una primera versión o aprender una técnica que le cuesta. Define un intento acotado y no hace del resultado una medida de su valor.',
+      paternidad: 'En la crianza o la mentoría, acompaña primeras experiencias con preparación y apoyo. Enseña que parar, preguntar y colaborar también forman parte del coraje.',
     },
     balancedBehavior: [
-      'Asume la responsabilidad de su propio destino.',
-      'Supera el miedo con acción decidida.',
-      'Sabe cuándo pedir ayuda sin que su ego se derrumbe.',
-      'Pone su victoria al servicio del bienestar colectivo.'
+      'Elige un reto significativo y acorde con sus recursos.',
+      'Pide apoyo antes de que la dificultad aumente.',
+      'Comparte tareas y reconoce el trabajo conjunto.',
+      'Para o cambia el plan cuando se cumple el límite acordado.',
+      'Reconoce aprendizajes aunque el resultado no sea el esperado.',
     ],
     unbalancedBehavior: [
-      'Necesidad continua de drama y épica para sentirse vivo.',
-      'Desprecio hacia quienes eligen una vida tranquila o cautelosa.',
-      'Agotamiento por creerse inmortal o infalible.',
-      'Incapacidad de disfrutar de la paz cotidiana.'
+      'Acepta un reto solo para demostrar que puede con todo.',
+      'Rechaza ayuda para atribuirse todo el mérito.',
+      'Sigue adelante aunque ya haya superado el costo que podía asumir.',
+      'Posterga un paso posible hasta tener garantías de éxito.',
+      'Oculta errores para sostener una imagen de capacidad permanente.',
     ],
     reflectionQuestions: [
-      '¿Qué miedo profundo me está bloqueando y cómo puedo dar el primer paso para enfrentarlo?',
-      '¿Estoy luchando una batalla real o buscando drama para alimentar mi ego?',
-      '¿Qué talento o verdad personal necesito rescatar del fondo de mis dudas?'
+      '¿Qué transición o prueba concreta estoy atravesando?',
+      '¿Qué apoyo haría este reto más posible?',
+      '¿Qué señal me indicará que conviene parar o cambiar el plan?',
+      '¿Qué puedo aprender aunque el resultado sea distinto del que espero?',
     ],
     developmentExercises: [
       {
-        title: 'El Desafío Incómodo',
-        description: 'Elige una situación que te dé un miedo respetable y enfréntala deliberadamente hoy.',
-        actionStep: 'Registra cómo te sientes antes y después de haber cruzado el umbral.'
-      }
+        title: 'Un reto con apoyo y límite · 15 minutos',
+        description: 'Elige un reto cotidiano pequeño, define a quién puedes pedir apoyo y un criterio para detenerte o cambiar el plan. Separa lo que buscas aprender de lo que quieres demostrar.',
+        actionStep: 'Escribe un reto de hoy, un apoyo disponible y la frase «Voy a parar si…».',
+      },
+      {
+        title: 'Pedir ayuda antes de empezar · 5 minutos',
+        description: 'Formula una petición concreta relacionada con una transición que te cuesta. Así haces del apoyo una parte del plan y no un recurso que solo aparece al final.',
+        actionStep: 'Escribe a alguien: «Estoy intentando esto; ¿puedes ayudarme con esta parte?».',
+      },
+      {
+        title: 'Revisar sin juzgarte · 10 minutos',
+        description: 'Después de un intento, anota qué hiciste, qué apoyo sirvió y qué cambiarías. Evalúa acciones y condiciones sin reducir tu valor al resultado.',
+        actionStep: 'Elige un intento reciente y escribe una cosa que aprendiste y un ajuste posible.',
+      },
     ],
     synergies: [
       {
         partnerId: 'sanador',
-        title: 'Batalla + Recuperación',
-        description: 'El Héroe libra la batalla; el Sanador cura las heridas para permitir una nueva victoria.',
-        synergyKeyword: 'Resiliencia Victoriosa'
-      }
+        title: 'Reto + Reparación',
+        description: 'Uno afronta una prueba y moviliza apoyos; el otro acompaña lo que necesita reparación después de una dificultad. Juntos permiten avanzar sin exigir que toda experiencia difícil termine en una victoria.',
+        synergyKeyword: 'Avanzar con cuidado',
+      },
     ],
     variants: {
-      masculine: {
-        name: 'El Héroe',
-        characterTitle: 'El Campeón del Coraje y la Superación Trascendente',
-        centralQuestion: '¿Qué desafío estás dispuesto a enfrentar para demostrar tu valía y proteger a los tuyos?',
-        shortDescription: 'Superación de pruebas, coraje ante lo desconocido y defensa noble.',
-        fullDescription: 'El Héroe masculino cruza el umbral del miedo para conquistar la prueba, rescatar a los suyos y regresar con el elixir de la sabiduría.',
-        mantra: 'No huyo del desafío; avanzo con honor y determinación.',
-        strength: 'Valor indomable, perseverancia, lealtad y liderazgo épico.',
-        shadow: 'Temerario suicida / Arrogante invencible',
-        shadowDescription: 'Se expone a riesgos absurdos por orgullo o trata a los demás con condescendencia.',
-        shadowAntidote: 'Someter el coraje al discernimiento ético.',
-        domains: {
-          liderazgo: 'Liderazgo en situaciones límite y rescate de proyectos en crisis.',
-          relaciones: 'Protección y lealtad a toda prueba.',
-          crisis: 'Resiliencia y coraje de choque.',
-          creatividad: 'Historias épicas y desafíos monumentales.',
-          paternidad: 'Inculcación de coraje y perseverancia.',
-        },
-        balancedBehavior: ['Afronta la prueba con nobleza', 'Reconoce sus límites'],
-        unbalancedBehavior: ['Búsqueda de protagonismo vano', 'Negación del dolor'],
-        reflectionQuestions: ['¿Qué prueba me está pidiendo la vida superar en este momento?'],
-        developmentExercises: [
-          {
-            title: 'Entrenamiento de Resistencia',
-            description: 'Ponte una meta exigente pero alcanzable, física o intelectual, y avanza en ella esta semana. Ajústala si tu cuerpo o tu situación lo piden.',
-            actionStep: 'Concluye el reto con presencia.'
-          }
-        ]
-      },
-      feminine: {
-        name: 'La Heroína',
-        characterTitle: 'La Conquistadora del Viaje Interior y la Propia Voz',
-        centralQuestion: '¿Qué parte de tu poder necesitas reclamar para avanzar y rescatar tu propia voz?',
-        shortDescription: 'Viaje interior de empoderamiento, valentía y rescate de la propia fuerza.',
-        fullDescription: 'La Heroína emprende el descenso al inframundo de sus propios miedos para rescatar su autenticidad, romper cadenas del pasado y renacer fortalecida.',
-        mantra: 'Reclamo mi poder, desciendo a mi verdad y renazco invencible.',
-        strength: 'Empoderamiento radical, resiliencia emocional, coraje para sanar y voz propia.',
-        shadow: 'Víctima resentida / Heroína solitaria desconectada',
-        shadowDescription: 'Cree que tiene que sufrir para ser valiosa o se niega a recibir apoyo.',
-        shadowAntidote: 'Celebrar la victoria y saber que la fuerza no está reñida con la ternura.',
-        domains: {
-          liderazgo: 'Defensa de causas justas y empoderamiento de otras mujeres.',
-          relaciones: 'Relaciones de igual a igual, sin sumisión ni tiranía.',
-          crisis: 'Resurgimiento poderoso tras el colapso emocional.',
-          creatividad: 'Obras de sanación y empoderamiento transformador.',
-          paternidad: 'Enseñanza del valor de la propia voz y la autoestima.',
-        },
-        balancedBehavior: ['Se levanta tras la caída con más fuerza', 'Honra su proceso'],
-        unbalancedBehavior: ['Cargar con el sufrimiento como medalla', 'Aislamiento defensivo'],
-        reflectionQuestions: ['¿Qué dolor del pasado estoy lista para transformar en mi mayor fortaleza?'],
-        developmentExercises: [
-          {
-            title: 'Reclamo de la Voz',
-            description: 'Expresa una opinión impopular pero sincera en una reunión o conversación.',
-            actionStep: 'Sostén tu postura con serenidad y firmeza.'
-          }
-        ]
-      },
-      universal: {
-        name: 'Héroe / Heroína',
-        characterTitle: 'El Espíritu de Superación y Victoria',
-        centralQuestion: '¿Cómo transformo la dificultad en fortaleza?',
-        shortDescription: 'Valentía, resiliencia y superación personal.',
-        fullDescription: 'La capacidad de afrontar los desafíos existenciales con entereza y nobleza.',
-        mantra: 'Supero las pruebas y crezco con cada desafío.',
-        strength: 'Coraje y resiliencia.',
-        shadow: 'Temeridad o complejo de mártir.',
-        shadowDescription: 'Búsqueda innecesaria del sufrimiento.',
-        shadowAntidote: 'Sabiduría y cuidado.',
-        domains: {
-          liderazgo: 'Inspiración ante la dificultad.',
-          relaciones: 'Lealtad.',
-          crisis: 'Superación.',
-          creatividad: 'Fuerza expresiva.',
-          paternidad: 'Educación en el coraje.',
-        },
-        balancedBehavior: ['Nobleza y valor'],
-        unbalancedBehavior: ['Arrogancia o victimismo'],
-        reflectionQuestions: ['¿Qué reto voy a encarar con valentía?'],
-        developmentExercises: [
-          {
-            title: 'Superación Diaria',
-            description: 'Haz algo que requiera coraje.',
-            actionStep: 'Hazlo hoy.'
-          }
-        ]
-      }
-    }
+      masculine: { name: 'El Héroe' },
+      feminine: { name: 'La Heroína' },
+      universal: { name: 'Héroe / Heroína' },
+    },
   }
 };
