@@ -2,6 +2,7 @@ import React from 'react';
 import { ChevronDown } from 'lucide-react';
 import { getArchetype } from '../../data/archetypesData';
 import { ArchetypeId, GenderMode } from '../../types';
+import { ArchetypeGlyph } from '../common/ArchetypeGlyph';
 
 interface BotonElegirArquetipoProps {
   /** Lo que se elige con él, p. ej. «Filtrar por». */
@@ -26,8 +27,9 @@ export const BotonElegirArquetipo: React.FC<BotonElegirArquetipoProps> = ({ etiq
       className="w-full sm:w-auto inline-flex items-center gap-2 min-h-[40px] px-3 py-2 rounded-xl bg-[#121A17] border border-[#1E2A25] hover:border-[#315C45] text-xs text-left transition-colors"
     >
       <span className="text-[#9DA79F] shrink-0">{etiqueta}:</span>
-      <span className="font-semibold text-[#F2EFE6] truncate flex-1">
-        {elegido ? `${elegido.emoji} ${elegido.name}` : 'Todos los arquetipos'}
+      <span className="font-semibold text-[#F2EFE6] flex-1 min-w-0 flex items-center gap-1.5">
+        {elegido && <ArchetypeGlyph id={elegido.id} />}
+        <span className="truncate">{elegido ? elegido.name : 'Todos los arquetipos'}</span>
       </span>
       <ChevronDown className="w-3.5 h-3.5 text-[#D6A84F] shrink-0" />
     </button>

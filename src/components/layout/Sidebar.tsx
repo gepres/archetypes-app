@@ -20,6 +20,7 @@ import { getArchetypeName } from '../../data/archetypesData';
 import { getMapLead } from '../../services/scoringEngine';
 import { BrandLogo } from '../common/BrandLogo';
 import { AiModelStatusBadge } from '../common/AiModelStatusBadge';
+import { ArchetypeGlyph } from '../common/ArchetypeGlyph';
 
 export type NavTab =
   | 'landing'
@@ -145,7 +146,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xl">{currentResult.dominantArchetype.emoji}</span>
+                  <ArchetypeGlyph id={currentResult.dominantArchetype.archetypeId} className="w-6 h-6 text-[#D6A84F]" />
                   <span className="font-serif font-bold text-sm text-[#F2EFE6]">
                     {getArchetypeName(currentResult.dominantArchetype.archetypeId, userProfile.gender || DEFAULT_GENDER)}
                   </span>

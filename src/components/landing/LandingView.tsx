@@ -16,6 +16,7 @@ import { ArchetypeId, AssessmentResult, DimensionId, GenderMode, DEFAULT_GENDER 
 import { NavTab } from '../layout/Sidebar';
 import { ArchetypeIllustratedArtwork } from '../archetypes/ArchetypeIllustratedArtwork';
 import { PerspectiveSwitcher } from '../common/PerspectiveSwitcher';
+import { ArchetypeGlyph } from '../common/ArchetypeGlyph';
 
 interface LandingViewProps {
   onStartTest: (type: 'full' | 'quick') => void;
@@ -185,7 +186,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
               </div>
               <div className="p-2">
                 <p className="text-[11px] font-semibold text-[#F2EFE6] leading-tight line-clamp-2">
-                  <span aria-hidden="true">{arch.emoji}</span> {arch.name}
+                  <ArchetypeGlyph id={arch.id} className="w-[1.1em] h-[1.1em] text-[#D6A84F] align-[-0.2em] mr-0.5" /> {arch.name}
                 </p>
               </div>
             </button>
@@ -212,9 +213,13 @@ export const LandingView: React.FC<LandingViewProps> = ({
                 <h3 className="font-serif text-sm font-bold text-[#F2EFE6] leading-tight">{nombre}</h3>
               </div>
               <p className="text-[11px] text-[#9DA79F] leading-snug">{DIMENSIONS[id].subtitle}</p>
-              {/* Los emojis, a la vista; los nombres, para quien usa un lector de pantalla. */}
+              {/* Los glifos, a la vista; los nombres, para quien usa un lector de pantalla. */}
               <p className="text-base leading-none tracking-wide">
-                <span aria-hidden="true">{DIMENSIONS[id].archetypes.map(a => getArchetype(a, currentGender).emoji).join(' ')}</span>
+                <span aria-hidden="true" className="inline-flex items-center gap-1.5">
+                  {DIMENSIONS[id].archetypes.map(a => (
+                    <ArchetypeGlyph key={a} id={a} className="w-[1.15em] h-[1.15em] text-[#D6A84F]" />
+                  ))}
+                </span>
                 <span className="sr-only">{DIMENSIONS[id].archetypes.map(a => getArchetype(a, currentGender).name).join(', ')}</span>
               </p>
             </div>

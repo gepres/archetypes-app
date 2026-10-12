@@ -33,6 +33,7 @@ function formatCardDate(isoDate: string): string {
 }
 import { ArchetypePortraitCard } from './ArchetypePortraitCard';
 import { ModalBase } from '../common/ModalBase';
+import { ArchetypeGlyph } from '../common/ArchetypeGlyph';
 
 interface DailyOracleModalProps {
   isOpen: boolean;
@@ -74,7 +75,12 @@ export const DailyOracleModal: React.FC<DailyOracleModalProps> = ({
       abierto={isOpen}
       onCerrar={onClose}
       icono={<Sparkles className="w-5 h-5" />}
-      titulo={`${archetype.emoji} ${archetype.name}`}
+      titulo={
+        <span className="inline-flex items-center gap-2">
+          <ArchetypeGlyph id={archetype.id} className="w-6 h-6 text-[#D6A84F]" />
+          {archetype.name}
+        </span>
+      }
       subtitulo={
         <>
           Tu oráculo de hoy · {formatCardDate(card.date)}

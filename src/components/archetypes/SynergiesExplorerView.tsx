@@ -6,6 +6,7 @@ import { initialArchetypes } from '../../services/personalization';
 import { ArchetypeId, AssessmentResult, GenderMode, DEFAULT_GENDER } from '../../types';
 import { ArchetypeIllustratedArtwork } from './ArchetypeIllustratedArtwork';
 import { ArchetypePickerModal } from './ArchetypePickerModal';
+import { ArchetypeGlyph } from '../common/ArchetypeGlyph';
 
 interface SynergiesExplorerViewProps {
   /** El mapa de la persona, si ya hizo el test: de él salen las figuras con las que se arranca. */
@@ -99,7 +100,7 @@ export const SynergiesExplorerView: React.FC<SynergiesExplorerViewProps> = ({
                 </div>
                 <div className="min-w-0 space-y-0.5">
                   <div className="text-sm font-serif font-bold text-[#F2EFE6] truncate flex items-center gap-1.5">
-                    <span>{arch1.emoji}</span>
+                    <ArchetypeGlyph id={arch1.id} />
                     <span>{arch1.name}</span>
                   </div>
                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#1A2521] text-[#D6A84F] font-semibold border border-[#315C45]/50 inline-block">
@@ -141,7 +142,7 @@ export const SynergiesExplorerView: React.FC<SynergiesExplorerViewProps> = ({
                 </div>
                 <div className="min-w-0 space-y-0.5">
                   <div className="text-sm font-serif font-bold text-[#F2EFE6] truncate flex items-center gap-1.5">
-                    <span>{arch2.emoji}</span>
+                    <ArchetypeGlyph id={arch2.id} />
                     <span>{arch2.name}</span>
                   </div>
                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#1A2521] text-[#D6A84F] font-semibold border border-[#315C45]/50 inline-block">
@@ -269,7 +270,7 @@ export const SynergiesExplorerView: React.FC<SynergiesExplorerViewProps> = ({
                   {duo.name}
                 </span>
                 <span className="text-xs text-[#D6A84F]">
-                  {ARCHETYPES[duo.a1 as ArchetypeId].emoji} + {ARCHETYPES[duo.a2 as ArchetypeId].emoji}
+                  <span className="inline-flex items-center gap-1"><ArchetypeGlyph id={duo.a1} /> + <ArchetypeGlyph id={duo.a2} /></span>
                 </span>
               </div>
               <p className="text-xs text-[#9DA79F]">{duo.desc}</p>

@@ -21,6 +21,7 @@ import { RadarChartComponent } from '../common/RadarChartComponent';
 import { NavTab } from '../layout/Sidebar';
 import { AiModelStatusBadge } from '../common/AiModelStatusBadge';
 import { PerspectiveSwitcher } from '../common/PerspectiveSwitcher';
+import { ArchetypeGlyph } from '../common/ArchetypeGlyph';
 
 interface DashboardViewProps {
   currentResult: AssessmentResult | null;
@@ -160,7 +161,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               Arquetipo Dominante
             </span>
             <div className="flex items-center justify-between">
-              <span className="text-3xl">{currentResult.dominantArchetype.emoji}</span>
+              <ArchetypeGlyph id={currentResult.dominantArchetype.archetypeId} className="w-9 h-9 text-[#D6A84F]" />
               <span className="font-mono text-xl font-bold text-[#D6A84F]">
                 {currentResult.dominantArchetype.normalizedScore}
               </span>
@@ -191,7 +192,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             {currentResult.top3.map((a, i) => (
               <div key={a.archetypeId} className="flex items-center justify-between text-xs">
                 <span className="text-[#F2EFE6] font-medium flex items-center gap-1.5">
-                  <span>{a.emoji}</span> {getArchetypeName(a.archetypeId, currentGender)}
+                  <ArchetypeGlyph id={a.archetypeId} /> {getArchetypeName(a.archetypeId, currentGender)}
                 </span>
                 <span className="font-mono text-[#D6A84F]">{a.normalizedScore}%</span>
               </div>
@@ -215,7 +216,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 className="flex items-center justify-between text-xs cursor-pointer hover:text-[#D6A84F]"
               >
                 <span className="text-[#C5CFC7] flex items-center gap-1.5">
-                  <span>{a.emoji}</span> {getArchetypeName(a.archetypeId, currentGender)}
+                  <ArchetypeGlyph id={a.archetypeId} /> {getArchetypeName(a.archetypeId, currentGender)}
                 </span>
                 <span className="text-[10px] text-[#9DA79F] px-1.5 py-0.5 rounded bg-[#1A2521]">
                   Activar
@@ -393,7 +394,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     />
                     <div className="min-w-0 flex-1 text-xs space-y-0.5">
                       <div className="flex items-center gap-1.5">
-                        <span>{arch.emoji}</span>
+                        <ArchetypeGlyph id={arch.id} />
                         <span className="font-semibold">{c.title}</span>
                       </div>
                       <p className={`text-[11px] line-clamp-1 ${c.completed ? 'line-through text-[#6B7A72]' : 'text-[#9DA79F]'}`}>

@@ -29,6 +29,7 @@ import { ARCHETYPE_VISUALS } from '../../data/archetypeImages';
 import { Archetype, ArchetypeId, DimensionId, GenderMode, LifeDomainKey, DEFAULT_GENDER } from '../../types';
 import { NavTab } from '../layout/Sidebar';
 import { ArchetypePortraitCard } from './ArchetypePortraitCard';
+import { ArchetypeGlyph } from '../common/ArchetypeGlyph';
 
 interface ArchetypesListViewProps {
   selectedArchetypeId: ArchetypeId | null;
@@ -157,7 +158,7 @@ export const ArchetypesListView: React.FC<ArchetypesListViewProps> = ({
                   className="w-full h-full rounded-2xl"
                 />
                 <div className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded-lg bg-black/80 text-[10px] text-[#D6A84F] font-bold">
-                  {selectedArchetype.emoji}
+                  <ArchetypeGlyph id={selectedArchetype.id} className="w-4 h-4 text-[#D6A84F]" />
                 </div>
               </div>
 
@@ -452,7 +453,7 @@ export const ArchetypesListView: React.FC<ArchetypesListViewProps> = ({
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className="text-2xl">{partner?.emoji}</span>
+                        {partner && <ArchetypeGlyph id={partner.id} className="w-7 h-7 text-[#D6A84F]" />}
                         <span className="font-serif text-sm font-bold text-[#F2EFE6]">
                           Con {partner?.name}
                         </span>

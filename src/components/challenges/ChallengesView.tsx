@@ -14,6 +14,7 @@ import { ArchetypeId, Challenge, GenderMode, DEFAULT_GENDER } from '../../types'
 import { ArchetypeBadge } from '../common/ArchetypeBadge';
 import { ArchetypePickerModal } from '../archetypes/ArchetypePickerModal';
 import { BotonElegirArquetipo } from '../archetypes/BotonElegirArquetipo';
+import { ArchetypeGlyph } from '../common/ArchetypeGlyph';
 
 interface ChallengesViewProps {
   challenges: Challenge[];
@@ -194,7 +195,7 @@ export const ChallengesView: React.FC<ChallengesViewProps> = ({
                 {/* Header info */}
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-2">
-                    <span className="text-2xl">{arch.emoji}</span>
+                    <ArchetypeGlyph id={arch.id} className="w-7 h-7 text-[#D6A84F]" />
                     <div>
                       <span className="font-serif font-bold text-xs text-[#F2EFE6] block">
                         {arch.name}

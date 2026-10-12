@@ -25,6 +25,7 @@ import {
   Cloud,
   RefreshCw,
   Check,
+  Compass,
 } from 'lucide-react';
 import { withDe } from '../../data/archetypesData';
 import { getMapLead } from '../../services/scoringEngine';
@@ -35,6 +36,7 @@ import { AccountRecord, AssessmentResult, GenderMode, UserProfile, DEFAULT_GENDE
 import { NavTab } from '../layout/Sidebar';
 import { AiSettingsModal } from '../ai/AiSettingsModal';
 import { InstallAppCard } from '../pwa/InstallAppCard';
+import { ArchetypeGlyph } from '../common/ArchetypeGlyph';
 interface ProfileViewProps {
   userProfile: UserProfile;
   history: AssessmentResult[];
@@ -518,9 +520,11 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                 className="p-4 bg-[#0E1513] hover:bg-[#16221E] border border-[#23332D] hover:border-[#315C45] rounded-2xl transition-all cursor-pointer flex items-center justify-between group shadow-sm"
               >
                 <div className="flex items-center gap-3.5">
-                  <span className="text-3xl">
-                    {item.compositeProfile?.isFlat ? '🧭' : item.dominantArchetype?.emoji || '👑'}
-                  </span>
+                  {item.compositeProfile?.isFlat || !item.dominantArchetype ? (
+                    <Compass className="w-8 h-8 text-[#D6A84F] shrink-0" />
+                  ) : (
+                    <ArchetypeGlyph id={item.dominantArchetype.archetypeId} className="w-8 h-8 text-[#D6A84F]" />
+                  )}
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="font-serif font-bold text-sm text-[#F2EFE6]">

@@ -54,3 +54,6 @@ export type {
   GenderMode,
   Question,
 } from '@v1/types';
+
+// Los glifos de los arquetipos (el símbolo en línea de cada uno), compartidos con la versión completa.
+export { GLIFOS, glifoDe } from '@v1/data/glifos';

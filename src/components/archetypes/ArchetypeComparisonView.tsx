@@ -23,6 +23,7 @@ import { ArchetypeId, AssessmentResult, GenderMode, LifeDomainKey, DEFAULT_GENDE
 import { ArchetypePortraitCard } from './ArchetypePortraitCard';
 import { ArchetypeIllustratedArtwork } from './ArchetypeIllustratedArtwork';
 import { ArchetypePickerModal } from './ArchetypePickerModal';
+import { ArchetypeGlyph } from '../common/ArchetypeGlyph';
 
 interface ArchetypeComparisonViewProps {
   /** El mapa de la persona, si ya hizo el test: de él salen las figuras con las que se arranca. */
@@ -133,7 +134,7 @@ export const ArchetypeComparisonView: React.FC<ArchetypeComparisonViewProps> = (
                 </div>
                 <div className="min-w-0 space-y-0.5">
                   <div className="text-sm font-serif font-bold text-[#F2EFE6] truncate flex items-center gap-1.5">
-                    <span>{arch1.emoji}</span>
+                    <ArchetypeGlyph id={arch1.id} />
                     <span>{arch1.name}</span>
                   </div>
                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#1A2521] text-[#D6A84F] font-semibold border border-[#315C45]/50 inline-block">
@@ -170,7 +171,7 @@ export const ArchetypeComparisonView: React.FC<ArchetypeComparisonViewProps> = (
                 </div>
                 <div className="min-w-0 space-y-0.5">
                   <div className="text-sm font-serif font-bold text-[#F2EFE6] truncate flex items-center gap-1.5">
-                    <span>{arch2.emoji}</span>
+                    <ArchetypeGlyph id={arch2.id} />
                     <span>{arch2.name}</span>
                   </div>
                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#1A2521] text-[#D6A84F] font-semibold border border-[#315C45]/50 inline-block">
@@ -220,7 +221,7 @@ export const ArchetypeComparisonView: React.FC<ArchetypeComparisonViewProps> = (
                   </div>
                   <div className="min-w-0 space-y-0.5">
                     <div className="text-sm font-serif font-bold text-[#F2EFE6] truncate flex items-center gap-1.5">
-                      <span>{arch3.emoji}</span>
+                      <ArchetypeGlyph id={arch3.id} />
                       <span>{arch3.name}</span>
                     </div>
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#1A2521] text-[#D6A84F] font-semibold border border-[#315C45]/50 inline-block">

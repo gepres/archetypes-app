@@ -22,6 +22,7 @@ import { NavTab } from '../layout/Sidebar';
 import { ShareResultImageModal } from './ShareResultImageModal';
 import { LecturaPersonal } from './LecturaPersonal';
 import { admiteLectura } from '../../services/lecturaPersonal';
+import { ArchetypeGlyph } from '../common/ArchetypeGlyph';
 
 interface ResultViewProps {
   result: AssessmentResult;
@@ -163,7 +164,7 @@ export const ResultView: React.FC<ResultViewProps> = ({
                     {DIMENSIONS[dominant.dimension].name}
                   </p>
                   <h1 className="font-serif text-2xl font-bold leading-tight text-[#F2EFE6]">
-                    {dominant.emoji} {dominant.name}
+                    <span className="inline-flex items-center gap-2"><ArchetypeGlyph id={dominant.id} className="w-7 h-7 text-[#D6A84F]" />{dominant.name}</span>
                   </h1>
                 </div>
               </button>
@@ -192,7 +193,7 @@ export const ResultView: React.FC<ResultViewProps> = ({
                         onClick={() => onSelectArchetype(arch.id)}
                         className="text-[#C5CFC7] font-semibold hover:text-[#F2EFE6] underline-offset-2 hover:underline"
                       >
-                        {arch.emoji} {arch.name}
+                        <span className="inline-flex items-center gap-1.5"><ArchetypeGlyph id={arch.id} />{arch.name}</span>
                       </button>
                     </React.Fragment>
                   ))}
@@ -311,7 +312,7 @@ export const ResultView: React.FC<ResultViewProps> = ({
                     <div className="p-3.5 space-y-1.5 min-w-0">
                       <div className="flex items-baseline justify-between gap-2">
                         <p className="font-serif font-bold text-base text-[#F2EFE6] truncate">
-                          {arch.emoji} {arch.name}
+                          <span className="inline-flex items-center gap-1.5"><ArchetypeGlyph id={arch.id} />{arch.name}</span>
                         </p>
                         <span className="font-mono text-sm font-bold text-[#D6A84F] shrink-0">
                           {item.normalizedScore}
@@ -371,7 +372,7 @@ export const ResultView: React.FC<ResultViewProps> = ({
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-[#121A17] transition-colors"
                   >
                     <span className="font-mono text-[11px] text-[#6B7A72] w-5 shrink-0">{item.rank}</span>
-                    <span className="text-lg shrink-0">{arch.emoji}</span>
+                    <ArchetypeGlyph id={arch.id} className="w-5 h-5 text-[#D6A84F]" />
                     <span className="flex-1 min-w-0">
                       <span className="block font-serif text-sm font-bold text-[#F2EFE6] truncate">{arch.name}</span>
                       <span className="block text-[10px] text-[#7B8880]">{getDimensionShortName(arch.dimension)}</span>
@@ -402,7 +403,7 @@ export const ResultView: React.FC<ResultViewProps> = ({
               return (
                 <div key={dev.archetypeId} className="p-5 rounded-xl bg-[#16201D] border border-[#1E2A25] space-y-3">
                   <div className="flex items-center gap-2.5">
-                    <span className="text-2xl">{arch.emoji}</span>
+                    <ArchetypeGlyph id={arch.id} className="w-7 h-7 text-[#D6A84F]" />
                     <span className="font-serif font-bold text-base text-[#F2EFE6]">{arch.name}</span>
                   </div>
                   <p className="text-xs text-[#C5CFC7] leading-relaxed">{dev.reason}</p>

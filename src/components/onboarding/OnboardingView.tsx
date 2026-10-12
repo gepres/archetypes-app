@@ -20,6 +20,7 @@ import { DimensionId, GenderMode } from '../../types';
 import { DIMENSIONS, getArchetype, getArchetypeList } from '../../data/archetypesData';
 import { ArchetypeIllustratedArtwork } from '../archetypes/ArchetypeIllustratedArtwork';
 import { BrandLogo } from '../common/BrandLogo';
+import { ArchetypeGlyph } from '../common/ArchetypeGlyph';
 
 interface OnboardingViewProps {
   initialGender?: GenderMode;
@@ -398,7 +399,7 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({
                                   key={id}
                                   className="text-[11px] px-2 py-0.5 rounded bg-[#1A2521] text-[#C5CFC7]"
                                 >
-                                  {arch.emoji} {arch.name}
+                                  <span className="inline-flex items-center gap-1"><ArchetypeGlyph id={arch.id} />{arch.name}</span>
                                 </span>
                               );
                             })}
@@ -455,7 +456,7 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({
                         {/* Símbolo flotante */}
                         <div className="absolute top-3 right-3 w-11 h-11 rounded-xl bg-[#0B1110]/80 backdrop-blur border flex items-center justify-center text-xl animate-floatSoft"
                              style={{ borderColor: `${active.colorHex}66` }}>
-                          {active.emoji}
+                          <ArchetypeGlyph id={active.id} className="w-6 h-6 text-[#D6A84F]" />
                         </div>
 
                         {/* Nombre sobre la ilustración */}
@@ -473,7 +474,7 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({
                                 {DIMENSIONS[active.dimension].name}
                               </p>
                               <h2 className="font-serif text-2xl font-bold leading-tight">
-                                {active.emoji} {active.name}
+                                <span className="inline-flex items-center gap-2"><ArchetypeGlyph id={active.id} className="w-6 h-6 text-[#D6A84F]" />{active.name}</span>
                               </h2>
                             </motion.div>
                           </AnimatePresence>
@@ -576,7 +577,7 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({
                             }`}
                             style={isOn ? { borderColor: a.colorHex } : undefined}
                           >
-                            {a.emoji}
+                            <ArchetypeGlyph id={a.id} className="w-5 h-5 text-[#D6A84F]" titulo={a.name} />
                           </button>
                         );
                       })}

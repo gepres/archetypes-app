@@ -20,6 +20,7 @@ import { ArchetypeId, JournalEntry, GenderMode, DEFAULT_GENDER } from '../../typ
 import { ArchetypeBadge } from '../common/ArchetypeBadge';
 import { ArchetypePickerModal } from '../archetypes/ArchetypePickerModal';
 import { BotonElegirArquetipo } from '../archetypes/BotonElegirArquetipo';
+import { ArchetypeGlyph } from '../common/ArchetypeGlyph';
 
 interface JournalViewProps {
   entries: JournalEntry[];
@@ -243,7 +244,7 @@ export const JournalView: React.FC<JournalViewProps> = ({
                     aria-label={`Quitar ${a.name}`}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs bg-[#315C45] text-[#F2EFE6] border border-[#D6A84F] font-semibold"
                   >
-                    <span>{a.emoji}</span>
+                    <ArchetypeGlyph id={id} />
                     <span>{a.name}</span>
                     <span className="text-[#D6A84F]" aria-hidden="true">
                       ×

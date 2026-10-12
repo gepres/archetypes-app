@@ -6,6 +6,7 @@ import { ARCHETYPE_VISUALS } from '../../data/archetypeImages';
 import { ArchetypeId, DimensionId, GenderMode, DEFAULT_GENDER } from '../../types';
 import { ArchetypeIllustratedArtwork } from './ArchetypeIllustratedArtwork';
 import { useFocoModal } from '../common/useFocoModal';
+import { ArchetypeGlyph } from '../common/ArchetypeGlyph';
 
 interface ArchetypePickerModalProps {
   isOpen: boolean;
@@ -291,7 +292,7 @@ export const ArchetypePickerModal: React.FC<ArchetypePickerModalProps> = ({
                     <div className="flex-1 min-w-0 space-y-1">
                       <div className="flex items-center justify-between gap-1">
                         <span className="text-sm font-serif font-bold text-[#F2EFE6] truncate flex items-center gap-1.5">
-                          <span>{arch.emoji}</span>
+                          <ArchetypeGlyph id={arch.id} />
                           <span className="truncate">{arch.name}</span>
                         </span>
                         {isSelected && (

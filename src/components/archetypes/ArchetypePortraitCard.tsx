@@ -4,6 +4,7 @@ import { Archetype, ArchetypeId } from '../../types';
 import { DIMENSIONS } from '../../data/archetypesData';
 import { Sparkles } from 'lucide-react';
 import { ArchetypeIllustratedArtwork } from './ArchetypeIllustratedArtwork';
+import { ArchetypeGlyph } from '../common/ArchetypeGlyph';
 
 interface ArchetypePortraitCardProps {
   archetype: Archetype;
@@ -98,7 +99,7 @@ export const ArchetypePortraitCard: React.FC<ArchetypePortraitCardProps> = ({
               borderColor: `${auraColor}50`,
             }}
           >
-            {archetype.emoji}
+            <ArchetypeGlyph id={archetype.id} className="w-5 h-5 text-[#D6A84F]" />
           </div>
         </div>
       )}

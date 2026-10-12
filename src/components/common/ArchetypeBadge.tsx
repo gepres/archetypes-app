@@ -1,6 +1,7 @@
 import React from 'react';
 import { ARCHETYPES, DIMENSIONS, getArchetypeName } from '../../data/archetypesData';
 import { ArchetypeId, DimensionId, GenderMode, DEFAULT_GENDER } from '../../types';
+import { ArchetypeGlyph } from './ArchetypeGlyph';
 
 interface ArchetypeBadgeProps {
   id: ArchetypeId;
@@ -44,7 +45,7 @@ export const ArchetypeBadge: React.FC<ArchetypeBadgeProps> = ({
           : ''
       } ${className}`}
     >
-      <span className="select-none">{archetype.emoji}</span>
+      <ArchetypeGlyph id={id} />
       <span className="tracking-tight">{getArchetypeName(id, gender)}</span>
       {showDimension && (
         <span

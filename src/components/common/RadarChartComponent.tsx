@@ -9,7 +9,9 @@ import {
   Tooltip,
 } from 'recharts';
 import { ARCHETYPES, DIMENSIONS, getArchetypeName } from '../../data/archetypesData';
+import { glifoDe } from '../../data/glifos';
 import { ArchetypeId, ArchetypeScore, DimensionId, GenderMode, DEFAULT_GENDER } from '../../types';
+import { ArchetypeGlyph } from './ArchetypeGlyph';
 
 interface RadarChartComponentProps {
   ranking: ArchetypeScore[];
@@ -40,16 +42,22 @@ const EjeEmblema = (props: any) => {
   const arch = ARCHETYPES[payload?.value as ArchetypeId];
   if (!arch) return null;
   return (
-    <text
-      x={x}
-      y={y}
-      textAnchor={textAnchor}
-      dominantBaseline="central"
-      fontSize={15}
-      fill="#C5CFC7"
+    // El glifo del arquetipo, de 16 px, dibujado dentro del propio gráfico y apartado del eje
+    // hacia el lado en que se leería el texto.
+    <g
+      transform={`translate(${x + (textAnchor === 'start' ? 2 : textAnchor === 'end' ? -18 : -8)} ${y - 8}) scale(0.32) translate(-25 -25)`}
     >
-      {arch.emoji}
-    </text>
+      <title>{arch.name}</title>
+      <path
+        d={glifoDe(arch.id)}
+        fill="none"
+        stroke="#D6A84F"
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        vectorEffect="non-scaling-stroke"
+      />
+    </g>
   );
 };
 
@@ -98,7 +106,10 @@ export const RadarChartComponent: React.FC<RadarChartComponentProps> = ({
       return (
         <div className="bg-[#121A17] border border-[#23332D] p-3 rounded-lg shadow-xl text-xs space-y-1 z-50">
           <p className="font-semibold text-[#F2EFE6] text-sm">
-            {data.emoji} {data.nombre}
+            <span className="inline-flex items-center gap-1.5">
+              <ArchetypeGlyph id={data.archetypeId} />
+              {data.nombre}
+            </span>
           </p>
           <p className="text-[10px] uppercase tracking-wider text-[#718277]">{data.dimension}</p>
           <p className="text-[#D6A84F]">
