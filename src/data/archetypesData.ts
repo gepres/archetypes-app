@@ -150,23 +150,24 @@ export function getArchetype(id: ArchetypeId, gender: GenderMode = 'male'): Arch
  * Returns the specific narrative variant layer for deep reading and prompts.
  */
 export function getArchetypeNarrative(id: ArchetypeId, gender: GenderMode = 'male'): ArchetypeNarrativeVariant {
-  const base = ARCHETYPES[id] || ARCHETYPES.rey;
-  const variantKey = gender === 'female' ? 'feminine' : gender === 'male' ? 'masculine' : 'universal';
-  return base.variants?.[variantKey] || base.variants?.universal || {
-    name: base.name,
-    centralQuestion: base.centralQuestion,
-    shortDescription: base.shortDescription,
-    fullDescription: base.fullDescription,
-    mantra: base.mantra,
-    strength: base.strength,
-    shadow: base.shadow,
-    shadowDescription: base.shadowDescription,
-    shadowAntidote: base.shadowAntidote,
-    domains: base.domains,
-    balancedBehavior: base.balancedBehavior,
-    unbalancedBehavior: base.unbalancedBehavior,
-    reflectionQuestions: base.reflectionQuestions,
-    developmentExercises: base.developmentExercises,
+  // La perspectiva ya combinada con el contenido común (una variante puede traer solo su nombre).
+  const a = getArchetype(id, gender);
+  return {
+    name: a.name,
+    characterTitle: a.characterTitle,
+    centralQuestion: a.centralQuestion,
+    shortDescription: a.shortDescription,
+    fullDescription: a.fullDescription,
+    mantra: a.mantra,
+    strength: a.strength,
+    shadow: a.shadow,
+    shadowDescription: a.shadowDescription,
+    shadowAntidote: a.shadowAntidote,
+    domains: a.domains,
+    balancedBehavior: a.balancedBehavior,
+    unbalancedBehavior: a.unbalancedBehavior,
+    reflectionQuestions: a.reflectionQuestions,
+    developmentExercises: a.developmentExercises,
   };
 }
 

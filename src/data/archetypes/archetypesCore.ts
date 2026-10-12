@@ -1,6 +1,8 @@
 import { Archetype, GenderMode } from '../../types';
 
 export const CORE_ARCHETYPES: Record<'rey' | 'guerrero' | 'mago' | 'sabio' | 'sacerdote' | 'amante', Archetype> = {
+  // Muestra de la reescritura (fase 3): un contenido común, desde situaciones cotidianas y en
+  // lenguaje neutro, igual para las tres perspectivas; cada una solo cambia el nombre.
   rey: {
     id: 'rey',
     name: 'Rey / Reina',
@@ -9,165 +11,97 @@ export const CORE_ARCHETYPES: Record<'rey' | 'guerrero' | 'mago' | 'sabio' | 'sa
     feminineName: 'La Reina',
     emoji: '👑',
     dimension: 'construccion',
-    concepts: ['soberanía', 'liderazgo', 'orden', 'responsabilidad', 'autoridad interior', 'legado'],
-    centralQuestion: '¿Cómo gobierno mi reino interior y qué espacio genero para los demás?',
-    shortDescription: 'La soberanía interior que organiza el reino, establece orden benevolente y asume la responsabilidad ética.',
-    fullDescription: 'El arquetipo del Rey / Reina representa el centro organizador y la autoridad serena de la psique. Genera un espacio donde los talentos pueden florecer sin tiranía ni debilidad.',
-    mantra: 'Gobierno mi espacio vital con justicia, serenidad y responsabilidad.',
+    concepts: ['decidir', 'poner orden', 'delegar', 'responsabilidad', 'cuidar lo común', 'legado'],
+    centralQuestion: '¿Qué orden necesita lo que está a mi cargo, y cómo lo sostengo sin aplastar a nadie?',
+    shortDescription: 'La parte de ti que decide, pone orden y se hace cargo de lo común, para que los demás puedan dar lo mejor de sí.',
+    fullDescription:
+      'Aparece cuando te toca decidir por algo que compartes con otras personas: tu equipo, tu familia, un proyecto, una casa. Hay que poner prioridades, repartir tareas y responder por el resultado. Su fuerza no está en mandar, sino en crear un orden en el que los demás puedan crecer: escucha, decide, explica y se hace cargo, también cuando sale mal. Se diferencia de la figura soberana en el alcance: esa gobierna la propia vida; esta, algo que se comparte con otros.',
+    mantra: 'Escucho antes de decidir, decido a tiempo y respondo por lo que decido.',
     symbol: 'Corona Solar & Cetro de Orden',
     colorHex: '#D6A84F',
     characterTitle: 'Soberanía & Liderazgo',
-    strength: 'Liderazgo generoso, orden ético, serenidad en crisis y claridad de propósito.',
-    shadow: 'Tirano o Débil / Control o Dependencia de validación',
-    shadowDescription: 'En sombra masculina oscila entre la tiranía controladora y el rey débil que abdica. En sombra femenina oscila entre el microcontrol hipervigilante y la búsqueda de validación externa para legitimar su poder.',
-    shadowAntidote: 'Gobernar desde la autonomía y la bendición del entorno, soltando la necesidad de complacer o imponer.',
+    strength:
+      'Decide con criterio y sostiene lo que decide; ve el conjunto, reparte responsabilidades según los talentos de cada quien y reconoce el aporte de los demás.',
+    shadow: 'Controlarlo todo o no decidir nada',
+    shadowDescription:
+      'En un extremo, todo tiene que pasar por ti: revisas, corriges y decides por los demás, y el grupo deja de crecer. En el otro, esquivas las decisiones difíciles, delegas sin acompañar o esperas que otros resuelvan lo que te toca. Los dos nacen del mismo miedo: perder el control o quedar mal.',
+    shadowAntidote:
+      'Antes de decidir, pregunta; después de decidir, explica. Suelta una tarea que estás controlando de más y toma una decisión que vienes postergando.',
     domains: {
-      liderazgo: 'Provee claridad de rumbo, define metas éticas y empodera a sus colaboradores bendiciendo sus talentos.',
-      relaciones: 'Establece un entorno de confianza y lealtad donde los límites protegen la intimidad y la estabilidad.',
-      crisis: 'Mantiene el pulso firme, evita el pánico colectivo y toma decisiones estratégicas con visión a largo plazo.',
-      creatividad: 'Estructura los recursos y el tiempo necesarios para que las obras maestras maduren sin dispersión.',
-      paternidad: 'Ofrece un marco de referencia seguro, estabilidad emocional y validación incondicional a las nuevas generaciones.',
+      liderazgo: 'Pone prioridades claras, reparte tareas según los talentos de cada quien y da la cara por el resultado, también cuando sale mal.',
+      relaciones: 'Da estabilidad y acuerdos claros: se puede confiar en lo que promete. El reto es no decidir por la otra persona.',
+      crisis: 'Mantiene la calma, separa lo urgente de lo importante y decide aunque no tenga toda la información.',
+      creatividad: 'Organiza tiempos y recursos para que un proyecto llegue a terminarse, sin apagar las ideas de los demás.',
+      paternidad: 'Ofrece un marco seguro: reglas claras y explicadas, y espacio para que cada quien aprenda a decidir por sí.',
     },
     balancedBehavior: [
-      'Establece límites claros con serenidad y sin agresividad.',
-      'Sabe delegar y celebrar el éxito de quienes le rodean.',
-      'Mantiene una perspectiva panorámica ante las crisis.',
-      'Actúa con congruencia ética y sentido de propósito colectivo.'
+      'Decide a tiempo, aunque la decisión sea incómoda.',
+      'Escucha antes de decidir y explica después qué tuvo en cuenta.',
+      'Delega de verdad: da la tarea y la confianza, no solo la carga.',
+      'Reconoce en voz alta el aporte de los demás.',
+      'Se hace cargo de sus errores sin buscar culpables.',
     ],
     unbalancedBehavior: [
-      'Sentimiento de que todo debe pasar por su aprobación.',
-      'Rigidez defensiva cuando se cuestiona su criterio.',
-      'Parálisis decisional por miedo a equivocarse o perder estatus.',
-      'Frialdad emocional disfrazada de pragmatismo.'
+      'Todo tiene que pasar por su aprobación.',
+      'Se pone a la defensiva cuando alguien cuestiona su criterio.',
+      'Posterga decisiones importantes por miedo a equivocarse.',
+      'Confunde orden con control: revisa y corrige de más.',
+      'Necesita que le den la razón para sentirse en su lugar.',
     ],
     reflectionQuestions: [
-      '¿En qué áreas de mi vida estoy dejando que el desorden o la pasividad tomen el control?',
-      '¿Estoy liderando desde la generosidad y la visión o desde la necesidad de control?',
-      '¿A quién o qué proyectos necesito bendecir y respaldar hoy con mi presencia?'
+      '¿Qué decisión estoy postergando, y qué me está costando no tomarla?',
+      '¿Dónde estoy controlando algo que otra persona podría hacer?',
+      '¿A quién de mi entorno no le he reconocido su aporte últimamente?',
+      '¿Qué orden necesita hoy lo que está a mi cargo: mi casa, mi trabajo, mi tiempo?',
     ],
     developmentExercises: [
       {
-        title: 'Delimitar el Reino Semanal',
-        description: 'Define con absoluta claridad las 3 prioridades no negociables de esta semana.',
-        actionStep: 'Escribe tus tres prioridades estratégicas y una decisión difícil que has postergado.'
+        title: 'Escuchar antes de decidir · 15 minutos',
+        description:
+          'Antes de una decisión que afecta a otras personas, pide su opinión y escúchala sin interrumpir ni defenderte. Después decide, y cuenta qué cambió gracias a lo que escuchaste.',
+        actionStep: 'Elige una decisión de esta semana y pregúntale a una persona: «¿Qué harías tú en mi lugar?».',
       },
       {
-        title: 'El Acto de Bendición',
-        description: 'Reconoce genuinamente el esfuerzo o valor de una persona en tu entorno sin buscar nada a cambio.',
-        actionStep: 'Envía un mensaje validando el talento o perseverancia de un colega o ser querido.'
-      }
+        title: 'Soltar una tarea · durante una semana',
+        description:
+          'Elige algo que haces o revisas por costumbre y que otra persona podría hacer. Explícale qué es lo importante y deja que lo haga a su manera, sin corregirla en el camino.',
+        actionStep: 'Escribe una tarea que estás controlando de más y a quién se la podrías confiar.',
+      },
+      {
+        title: 'Reconocer en voz alta · 5 minutos',
+        description: 'Reconocer el aporte de alguien fortalece al grupo y te saca del centro.',
+        actionStep: 'Envía hoy un mensaje concreto a alguien: qué hizo bien y por qué importó.',
+      },
     ],
     synergies: [
       {
         partnerId: 'guerrero',
         title: 'Dirección + Disciplina',
-        description: 'El Rey provee la visión y el propósito ético; el Guerrero ejecuta la estrategia con impecabilidad y rigor.',
-        synergyKeyword: 'Soberanía en Acción'
+        description:
+          'Uno pone el rumbo y las prioridades; el otro sostiene el esfuerzo y los límites para llegar. Sin rumbo, la disciplina se vuelve terquedad; sin disciplina, el rumbo se queda en intención.',
+        synergyKeyword: 'Rumbo con esfuerzo',
       },
       {
         partnerId: 'amante',
-        title: 'Estructura + Sensibilidad',
-        description: 'El Rey aporta el orden y la contención; el Amante nutre el corazón del reino con empatía, arte y calidez.',
-        synergyKeyword: 'Reino Humanizado'
-      }
+        title: 'Orden + Calidez',
+        description:
+          'El orden da seguridad; la calidez hace que las personas quieran estar ahí. Un grupo con orden y sin calidez se vuelve frío; con calidez y sin orden, se desordena.',
+        synergyKeyword: 'Orden humano',
+      },
+      {
+        partnerId: 'soberano',
+        title: 'Lo compartido + Lo propio',
+        description:
+          'Uno ordena lo que se comparte con otros; el otro cuida el propio criterio. Juntos evitan dos excesos: decidir por todos o encerrarse en uno mismo.',
+        synergyKeyword: 'Autoridad sin control',
+      },
     ],
+    // Cada perspectiva solo pone su nombre: el contenido es el mismo para todas.
     variants: {
-      masculine: {
-        name: 'El Rey',
-        characterTitle: 'El Soberano del Orden y la Protección',
-        centralQuestion: '¿Cómo guío con firmeza, justicia y responsabilidad ética?',
-        shortDescription: 'Liderazgo masculino, autoridad interior, protección y legado.',
-        fullDescription: 'El Rey encarna el liderazgo masculino maduro: la capacidad de asumir la responsabilidad de su mundo, proteger su territorio y ofrecer dirección clara sin recurrir a la imposición.',
-        mantra: 'Asumo la responsabilidad de mi reino y proveo orden con serenidad.',
-        strength: 'Autoridad interior, dirección clara, protección firme y templanza.',
-        shadow: 'Tirano autoritario / Rey débil e indeciso',
-        shadowDescription: 'El tirano aplasta para sentirse seguro; el rey débil huye de las decisiones difíciles.',
-        shadowAntidote: 'Cultivar la humildad y gobernar desde el servicio y la escucha.',
-        domains: {
-          liderazgo: 'Dirección firme, protección del equipo y visión a largo plazo.',
-          relaciones: 'Presencia segura y compromisos inquebrantables.',
-          crisis: 'Calma protectora y toma de decisiones sin titubear.',
-          creatividad: 'Estructura sólida para materializar grandes proyectos.',
-          paternidad: 'Firmeza amorosa, respaldo y mentoría generosa.',
-        },
-        balancedBehavior: ['Toma decisiones justas', 'Genera estabilidad', 'Protege a los suyos con calma'],
-        unbalancedBehavior: ['Autoritarismo', 'Frialdad emocional', 'Miedo a ser cuestionado'],
-        reflectionQuestions: [
-          '¿Dónde estoy actuando como tirano por miedo a perder control?',
-          '¿Qué decisión de liderazgo he venido postergando?',
-          '¿Cómo puedo brindar protección sin ahogar el crecimiento ajeno?'
-        ],
-        developmentExercises: [
-          {
-            title: 'Consejo del Reino',
-            description: 'Escucha sin interrumpir a las personas clave antes de tomar una decisión importante.',
-            actionStep: 'Pide la opinión honesta de alguien cercano sobre un proyecto o dilema.'
-          }
-        ]
-      },
-      feminine: {
-        name: 'La Reina',
-        characterTitle: 'La Soberana de la Dignidad y la Autonomía',
-        centralQuestion: '¿Cómo habito mi soberanía personal y ejerzo mi influencia con dignidad?',
-        shortDescription: 'Soberanía personal, liderazgo, autonomía, dignidad e influencia.',
-        fullDescription: 'La Reina encarna la soberanía personal indiscutible: el poder de la dignidad, la autodeterminación y la influencia lúcida sin depender de la aprobación ajena.',
-        mantra: 'Habito mi soberanía con gracia, límites firmes y dignidad inalienable.',
-        strength: 'Dignidad personal, influencia magnética, límites claros y autonomía.',
-        shadow: 'Hipercontrol rígido / Dependencia de reconocimiento',
-        shadowDescription: 'Puede volverse controladora por desconfianza o perder su centro buscando validación externa.',
-        shadowAntidote: 'Reconocer que el verdadero trono está dentro de una misma y no en el juicio ajeno.',
-        domains: {
-          liderazgo: 'Liderazgo inspirador, coordinación armónica e influencia transformadora.',
-          relaciones: 'Dignidad, reciprocidad y límites respetuosos.',
-          crisis: 'Resiliencia majestuosa y claridad estratégica.',
-          creatividad: 'Proyectos con propósito noble y estética impecable.',
-          paternidad: 'Fomento de la autoestima y el respeto mutuo.',
-        },
-        balancedBehavior: ['Establece límites con elegancia', 'Guía desde la propia solidez', 'Valora su propia voz'],
-        unbalancedBehavior: ['Necesidad excesiva de validación', 'Resentimiento por falta de reconocimiento', 'Control asfixiante'],
-        reflectionQuestions: [
-          '¿En qué situaciones cedo mi poder por agradar o evitar incomodidad?',
-          '¿Cómo puedo expresar mi autoridad sin pedir disculpas por brillar?',
-          '¿Dónde necesito poner un límite digno hoy?'
-        ],
-        developmentExercises: [
-          {
-            title: 'Decreto de Soberanía',
-            description: 'Define un área donde dejarás de pedir permiso y actuarás desde tu propio criterio.',
-            actionStep: 'Escribe tu declaración de soberanía personal para este mes.'
-          }
-        ]
-      },
-      universal: {
-        name: 'Rey / Reina',
-        characterTitle: 'El Soberano Consciente',
-        centralQuestion: '¿Cómo pongo orden y propósito en mi entorno?',
-        shortDescription: 'Soberanía, liderazgo consciente, orden y responsabilidad compartida.',
-        fullDescription: 'La soberanía arquetípica como centro unificador de la conciencia que crea orden y sostiene el bienestar.',
-        mantra: 'Gobierno mi vida con equilibrio, dignidad y justicia.',
-        strength: 'Soberanía integral, liderazgo consciente y responsabilidad.',
-        shadow: 'Tiranía o abdicación del poder personal',
-        shadowDescription: 'Uso destructivo del poder o renuncia al liderazgo personal.',
-        shadowAntidote: 'Alinear las decisiones con valores éticos universales.',
-        domains: {
-          liderazgo: 'Propósito ético y visión integradora.',
-          relaciones: 'Confianza y límites constructivos.',
-          crisis: 'Serenidad y visión global.',
-          creatividad: 'Estructuración y orden.',
-          paternidad: 'Guía y nutrición generacional.',
-        },
-        balancedBehavior: ['Equilibrio ético', 'Liderazgo sereno', 'Responsabilidad clara'],
-        unbalancedBehavior: ['Abuso de poder', 'Pasividad', 'Falta de rumbo'],
-        reflectionQuestions: ['¿Qué orden necesita mi vida hoy?', '¿Cómo sirvo a mi comunidad desde mi centro?'],
-        developmentExercises: [
-          {
-            title: 'Alineación de Metas',
-            description: 'Alinea tus prioridades semanales con tu visión de vida.',
-            actionStep: 'Revisa tu calendario y elimina lo superfluo.'
-          }
-        ]
-      }
-    }
+      masculine: { name: 'El Rey' },
+      feminine: { name: 'La Reina' },
+      universal: { name: 'Rey / Reina' },
+    },
   },
 
   guerrero: {

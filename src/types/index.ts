@@ -101,11 +101,17 @@ export interface Archetype {
   }[];
   synergies: ArchetypeSynergy[];
   variants?: {
-    masculine: ArchetypeNarrativeVariant;
-    feminine: ArchetypeNarrativeVariant;
-    universal: ArchetypeNarrativeVariant;
+    masculine: VarianteDeArquetipo;
+    feminine: VarianteDeArquetipo;
+    universal: VarianteDeArquetipo;
   };
 }
+
+/**
+ * Lo que cambia una perspectiva (masculina, femenina, universal) respecto del contenido común:
+ * siempre el nombre, y solo lo que de verdad dependa de ella. Lo que no trae, sale del común.
+ */
+export type VarianteDeArquetipo = Pick<ArchetypeNarrativeVariant, 'name'> & Partial<Omit<ArchetypeNarrativeVariant, 'name'>>;
 
 export interface QuestionWeight {
   archetypeId: ArchetypeId;
