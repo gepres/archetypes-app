@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useId } from 'react';
 import { ArchetypeId } from '../../types';
+import { escenaDe } from './escenas';
 
 interface ArchetypeIllustratedArtworkProps {
   archetypeId: ArchetypeId;
@@ -10,6 +11,17 @@ export const ArchetypeIllustratedArtwork: React.FC<ArchetypeIllustratedArtworkPr
   archetypeId,
   className = 'w-full h-full',
 }) => {
+  // Las escenas simbólicas nuevas (escenas.tsx), con ids únicos por copia; mientras falte alguna,
+  // ese arquetipo sigue con su dibujo anterior.
+  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '');
+  const escena = escenaDe(archetypeId);
+  if (escena) {
+    return (
+      <svg viewBox="0 0 320 380" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden="true">
+        {escena(nombre => `esc-${uid}-${nombre}`)}
+      </svg>
+    );
+  }
   switch (archetypeId) {
     case 'rey':
       return (
