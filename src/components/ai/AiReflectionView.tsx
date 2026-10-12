@@ -26,6 +26,7 @@ import { suggestedPrompts } from '../../services/personalization';
 import { ArchetypeId, AssessmentResult, ChatMessage, GenderMode, UserProfile, DEFAULT_GENDER } from '../../types';
 import { ArchetypeIllustratedArtwork } from '../archetypes/ArchetypeIllustratedArtwork';
 import { MarkdownRenderer } from '../common/MarkdownRenderer';
+import { BrandEmblem } from '../common/BrandLogo';
 import { AiSettingsModal } from './AiSettingsModal';
 import { PerspectiveSwitcher } from '../common/PerspectiveSwitcher';
 import { ArchetypePickerModal } from '../archetypes/ArchetypePickerModal';
@@ -110,7 +111,6 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
     const generalOption = {
       id: 'general',
       name: 'Asistente Integral',
-      emoji: '🔮',
       tone: 'Síntesis filosófica y equilibrada de tus 18 arquetipos',
       dimension: 'universal',
     };
@@ -118,7 +118,6 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
     const archOptions = archetypes.map(a => ({
       id: a.id,
       name: a.name,
-      emoji: a.emoji,
       tone: a.shortDescription,
       dimension: a.dimension,
     }));
@@ -366,10 +365,12 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
   const estadoIA = describirEstadoIA(aiUsageState);
   const esGeneral = activePersona === 'general';
 
-  /** El rostro de la voz activa: ilustración si es un arquetipo, emblema si no. */
+  /** El rostro de la voz activa: ilustración si es un arquetipo; si no, el emblema de la app. */
   const Rostro = ({ className = 'w-full h-full' }: { className?: string }) =>
     esGeneral ? (
-      <span className="w-full h-full flex items-center justify-center text-[1.5em]">🔮</span>
+      <span className="w-full h-full flex items-center justify-center bg-[#0E1513]">
+        <BrandEmblem className="w-3/4 h-3/4 text-[#D6A84F]" />
+      </span>
     ) : (
       <ArchetypeIllustratedArtwork
         archetypeId={activePersona as ArchetypeId}
@@ -698,7 +699,9 @@ export const AiReflectionView: React.FC<AiReflectionViewProps> = ({
         title="¿Con quién quieres hablar?"
         subtitle="Cada arquetipo responde desde su propia mirada. El asistente integral los sintetiza a los 18."
         allowNone
-        noneLabel="🔮 Asistente Integral"
+        noneLabel="Asistente Integral"
+        noneVariant="todos"
+        noneIcon={<BrandEmblem className="w-4 h-4 text-[#D6A84F]" />}
         gender={currentGender}
       />
 

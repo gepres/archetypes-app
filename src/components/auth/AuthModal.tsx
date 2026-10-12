@@ -18,6 +18,8 @@ import { StorageService, hasOwnData } from '../../services/storageService';
 import { FirebaseService } from '../../services/firebaseService';
 import { AccountRecord, UserProfile } from '../../types';
 import { ModalBase } from '../common/ModalBase';
+import { AvatarArquetipo, SelectorAvatar } from '../common/AvatarArquetipo';
+import { AVATAR_POR_DEFECTO, avatarDe } from '../../data/avatar';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -25,8 +27,6 @@ interface AuthModalProps {
   currentUser: UserProfile;
   onUserChange: (user: UserProfile) => void;
 }
-
-const AVATAR_OPTIONS = ['👑', '⚔️', '🔮', '🔥', '🏛️', '🛡️', '🃏', '🧭', '🎨', '📜', '⚡', '🦅', '🦁', '🐺', '🌿'];
 
 export const AuthModal: React.FC<AuthModalProps> = ({
   isOpen,
@@ -37,7 +37,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [tab, setTab] = useState<'login' | 'register' | 'switch'>('login');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [avatarEmoji, setAvatarEmoji] = useState('👑');
+  const [avatarEmoji, setAvatarEmoji] = useState(avatarDe(AVATAR_POR_DEFECTO));
   const [pinCode, setPinCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -252,7 +252,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           // Iniciar sesión y crear cuenta solo se ofrecen sin sesión.
           <div className="space-y-4">
             <div className="flex items-center gap-3 p-4 rounded-xl bg-[#121A17] border border-[#315C45]">
-              <span className="text-3xl shrink-0">{currentUser.avatarEmoji || '👑'}</span>
+              <AvatarArquetipo valor={currentUser.avatarEmoji} className="w-8 h-8 shrink-0 text-[#D6A84F]" />
               <div className="min-w-0">
                 <p className="font-semibold text-sm text-[#F2EFE6] truncate">{currentUser.name}</p>
                 <p className="text-xs text-[#9DA79F] truncate">{currentUser.email}</p>
@@ -273,7 +273,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       onClick={() => handleSelectExistingAccount(acc)}
                       className="w-full p-3 rounded-xl border bg-[#121A17]/60 border-[#23332D] hover:border-[#315C45] hover:bg-[#121A17] transition-all flex items-center gap-3 text-left"
                     >
-                      <span className="text-2xl shrink-0">{acc.avatarEmoji || '👑'}</span>
+                      <AvatarArquetipo valor={acc.avatarEmoji} className="w-7 h-7 shrink-0 text-[#D6A84F]" />
                       <span className="min-w-0">
                         <span className="block font-semibold text-sm text-[#F2EFE6] truncate">{acc.name}</span>
                         <span className="block text-xs text-[#9DA79F] truncate">{acc.email}</span>
@@ -305,7 +305,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <span className="text-2xl">{acc.avatarEmoji || '👑'}</span>
+                      <AvatarArquetipo valor={acc.avatarEmoji} className="w-7 h-7 shrink-0 text-[#D6A84F]" />
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="font-semibold text-sm text-[#F2EFE6]">
@@ -364,31 +364,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
             {tab === 'register' && (
               <div>
-                <label className="block text-xs font-semibold text-[#C5CFC7] mb-2">
-                  Elige tu Símbolo / Avatar Arquetípico
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {AVATAR_OPTIONS.map(emoji => (
-                    <button
-                      type="button"
-                      key={emoji}
-                      onClick={() => setAvatarEmoji(emoji)}
-                      className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg transition-all ${
-                        avatarEmoji === emoji
-                          ? 'bg-[#315C45] border-2 border-[#D6A84F] scale-110 shadow-md'
-                          : 'bg-[#121A17] border border-[#23332D] hover:border-[#315C45]'
-                      }`}
-                    >
-                      {emoji}
-                    </button>
-                  ))}
-                </div>
+                <SelectorAvatar
+                  valor={avatarEmoji}
+                  onChange={setAvatarEmoji}
+                  gender={currentUser.gender}
+                  etiqueta="Tu símbolo"
+                />
               </div>
             )}
 
             <div>
               <label className="block text-xs font-semibold text-[#C5CFC7] mb-1.5 flex justify-between">
-                <span>Contraseña o PIN (Mínimo 6 carácteres)</span>
+                <span>Contraseña o PIN (mínimo 6 caracteres)</span>
                 <span className="text-[#6B7A72] font-normal">Para resguardar tu nube</span>
               </label>
               <div className="relative">

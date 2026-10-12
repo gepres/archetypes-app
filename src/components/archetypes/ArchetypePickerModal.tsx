@@ -21,6 +21,8 @@ interface ArchetypePickerModalProps {
   noneLabel?: string;
   /** Cómo se ve esa opción: quitar algo (rojo) o ver todos (neutra, como en un filtro). */
   noneVariant?: 'quitar' | 'todos';
+  /** El icono de esa opción, si no es el de su variante. */
+  noneIcon?: React.ReactNode;
   disabledIds?: ArchetypeId[];
   gender?: GenderMode;
   /** Para elegir varios (p. ej. los arquetipos de una entrada del diario). */
@@ -51,6 +53,7 @@ export const ArchetypePickerModal: React.FC<ArchetypePickerModalProps> = ({
   allowNone = false,
   noneLabel = 'Desactivar 3er Arquetipo',
   noneVariant = 'quitar',
+  noneIcon,
   disabledIds = [],
   gender = DEFAULT_GENDER,
   multiple = false,
@@ -202,11 +205,11 @@ export const ArchetypePickerModal: React.FC<ArchetypePickerModalProps> = ({
                     : 'bg-[#181112] hover:bg-[#251518] text-[#E5B8BF] border-[#4E2B2B]'
                 }`}
               >
-                {noneVariant === 'todos' ? (
+                {noneIcon ?? (noneVariant === 'todos' ? (
                   <Layers className="w-3.5 h-3.5 text-[#D6A84F]" />
                 ) : (
                   <Ban className="w-3.5 h-3.5 text-[#F87171]" />
-                )}
+                ))}
                 <span>{noneLabel}</span>
                 {noneVariant === 'todos' && currentSelectedId === 'none' && <Check className="w-3.5 h-3.5 text-[#D6A84F]" />}
               </button>

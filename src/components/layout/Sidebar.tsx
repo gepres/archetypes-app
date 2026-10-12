@@ -21,6 +21,7 @@ import { getMapLead } from '../../services/scoringEngine';
 import { BrandLogo } from '../common/BrandLogo';
 import { AiModelStatusBadge } from '../common/AiModelStatusBadge';
 import { ArchetypeGlyph } from '../common/ArchetypeGlyph';
+import { AvatarArquetipo } from '../common/AvatarArquetipo';
 
 export type NavTab =
   | 'landing'
@@ -198,7 +199,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           className="p-2.5 rounded-xl bg-[#121A17] border border-[#23332D] hover:border-[#315C45] cursor-pointer flex items-center justify-between transition-colors"
         >
           <div className="flex items-center gap-2.5 overflow-hidden">
-            <span className="text-lg shrink-0">{userProfile.avatarEmoji || '👑'}</span>
+            <AvatarArquetipo valor={userProfile.avatarEmoji} className="w-5 h-5 shrink-0 text-[#D6A84F]" />
             <div className="truncate">
               <span className="text-xs font-semibold text-[#F2EFE6] block truncate">
                 {userProfile.name}

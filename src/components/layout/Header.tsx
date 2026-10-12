@@ -3,6 +3,7 @@ import { Compass, Sparkles, Sun, User, Settings, Cpu } from 'lucide-react';
 import { UserProfile } from '../../types';
 import { NavTab } from './Sidebar';
 import { BrandLogo } from '../common/BrandLogo';
+import { AvatarArquetipo } from '../common/AvatarArquetipo';
 
 interface HeaderProps {
   currentTab: NavTab;
@@ -57,7 +58,7 @@ export const Header: React.FC<HeaderProps> = ({
           className="flex items-center gap-1.5 px-2.5 py-1.5 bg-[#121A17] border border-[#23332D] rounded-lg text-xs text-[#F2EFE6]"
           title="Perfil / Cuenta"
         >
-          <span>{userProfile.avatarEmoji || '👑'}</span>
+          <AvatarArquetipo valor={userProfile.avatarEmoji} className="w-4 h-4 text-[#D6A84F]" />
           <span className="text-[11px] font-medium hidden sm:inline">{userProfile.name}</span>
         </button>
 

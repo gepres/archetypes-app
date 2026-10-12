@@ -49,7 +49,6 @@ export interface ProviderOption {
   id: AIProviderId;
   name: string;
   tagline: string;
-  icon: string;
   defaultModel: string;
   availableModels: Array<{ id: string; name: string; description: string; recommended?: boolean }>;
   keyPlaceholder: string;
@@ -61,7 +60,6 @@ export const PROVIDER_OPTIONS: Record<AIProviderId, ProviderOption> = {
     id: 'openrouter',
     name: 'OpenRouter',
     tagline: 'Varios modelos actuales en un solo lugar: Claude, Gemini, GPT, DeepSeek y Llama.',
-    icon: '🌐',
     // Modelos comprobados en octubre de 2026 (lista pública de OpenRouter y una llamada de
     // prueba con la clave de cortesía). Si uno se retira, los ajustes guardados pasan al
     // recomendado (ver normalizeSettings).
@@ -101,7 +99,6 @@ export const PROVIDER_OPTIONS: Record<AIProviderId, ProviderOption> = {
     id: 'gemini',
     name: 'Google Gemini',
     tagline: 'Los modelos Gemini de Google, directamente desde Google AI Studio.',
-    icon: '🔮',
     // Comprobados en octubre de 2026 con la clave de cortesía (los Pro no entran en su cupo).
     defaultModel: 'gemini-3.8-flash',
     availableModels: [
@@ -129,7 +126,6 @@ export const PROVIDER_OPTIONS: Record<AIProviderId, ProviderOption> = {
     id: 'openai',
     name: 'OpenAI / ChatGPT',
     tagline: 'Los modelos GPT de OpenAI, con tu propia clave.',
-    icon: '🤖',
     defaultModel: 'gpt-6-luna',
     availableModels: [
       {
@@ -151,7 +147,6 @@ export const PROVIDER_OPTIONS: Record<AIProviderId, ProviderOption> = {
     id: 'local',
     name: 'Modo Local Simbólico',
     tagline: 'Respuestas contextuales arquetípicas sin conexión ni consumo de tokens',
-    icon: '🏛️',
     defaultModel: 'sintesis-local',
     availableModels: [
       {

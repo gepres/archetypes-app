@@ -10,6 +10,7 @@ import type { Archetype } from '../lib/domain';
 import { CAPITULOS } from '../lib/capitulos';
 import { callar, decir, vibrar } from '../lib/voice';
 import { SigiloVivo } from './SigiloVivo';
+import { Glifo } from './Glifo';
 
 interface HistoriaScreenProps {
   silencio: boolean;
@@ -335,7 +336,7 @@ export const HistoriaScreen: React.FC<HistoriaScreenProps> = ({
                     }`}
                     style={i === galeria ? { borderColor: a.colorHex } : undefined}
                   >
-                    {a.emoji}
+                    <Glifo id={a.id} className="w-6 h-6 text-[#D6A84F]" />
                   </button>
                 ))}
               </div>

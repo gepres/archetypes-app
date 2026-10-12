@@ -37,6 +37,8 @@ import { NavTab } from '../layout/Sidebar';
 import { AiSettingsModal } from '../ai/AiSettingsModal';
 import { InstallAppCard } from '../pwa/InstallAppCard';
 import { ArchetypeGlyph } from '../common/ArchetypeGlyph';
+import { AvatarArquetipo, SelectorAvatar } from '../common/AvatarArquetipo';
+import { AVATAR_POR_DEFECTO, avatarDe } from '../../data/avatar';
 interface ProfileViewProps {
   userProfile: UserProfile;
   history: AssessmentResult[];
@@ -46,7 +48,6 @@ interface ProfileViewProps {
   onResetAllData: () => void;
   onOpenAuthModal: () => void;
 }
-const AVATARS = ['👑', '⚔️', '🔮', '🔥', '🏛️', '🛡️', '🃏', '🧭', '🎨', '📜', '⚡', '🦅', '🦁', '🐺', '🌿'];
 /**
  * Una seccion plegable.
  *
@@ -101,7 +102,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   const [name, setName] = useState(userProfile.name);
   const [email, setEmail] = useState(userProfile.email || '');
   const [gender, setGender] = useState<GenderMode>(userProfile.gender || DEFAULT_GENDER);
-  const [avatarEmoji, setAvatarEmoji] = useState(userProfile.avatarEmoji || '👑');
+  const [avatarEmoji, setAvatarEmoji] = useState(userProfile.avatarEmoji || avatarDe(AVATAR_POR_DEFECTO));
   const [bio, setBio] = useState(userProfile.bio || '');
   const [savedSuccess, setSavedSuccess] = useState(false);
   // Una sola seccion abierta a la vez, y ninguna al entrar: lo primero que se ve
@@ -241,7 +242,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
       <div className="p-4 sm:p-6 rounded-2xl bg-gradient-to-r from-[#121A17] to-[#16221E] border border-[#23332D] shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 rounded-2xl bg-[#0E1513] border-2 border-[#315C45] flex items-center justify-center text-3xl shadow-md">
-            {userProfile.avatarEmoji || '👑'}
+            <AvatarArquetipo valor={userProfile.avatarEmoji} className="w-9 h-9 text-[#D6A84F]" />
           </div>
           <div>
             <div className="flex items-center gap-2">
@@ -445,25 +446,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             </div>
           </div>
           <div className="space-y-2">
-            <label className="text-xs uppercase font-bold tracking-wider text-[#9DA79F] block">
-              Símbolo / Avatar
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {AVATARS.map(av => (
-                <button
-                  type="button"
-                  key={av}
-                  onClick={() => setAvatarEmoji(av)}
-                  className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl transition-all ${
-                    avatarEmoji === av
-                      ? 'bg-[#315C45] border-2 border-[#D6A84F] scale-110 shadow-md'
-                      : 'bg-[#0E1513] border border-[#23332D] hover:border-[#315C45]'
-                  }`}
-                >
-                  {av}
-                </button>
-              ))}
-            </div>
+            <SelectorAvatar valor={avatarEmoji} onChange={setAvatarEmoji} gender={gender} etiqueta="Tu símbolo" />
           </div>
           <div className="space-y-1.5">
             <label className="text-xs uppercase font-bold tracking-wider text-[#9DA79F] block">

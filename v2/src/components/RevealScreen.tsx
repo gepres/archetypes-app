@@ -15,6 +15,7 @@ import {
 import type { AssessmentResult } from '../lib/domain';
 import { callar, decir, vibrar } from '../lib/voice';
 import { LecturaVoz } from './LecturaVoz';
+import { Glifo } from './Glifo';
 import { admiteLectura } from '../lib/domain';
 
 interface RevealScreenProps {
@@ -264,7 +265,8 @@ Descubre el tuyo escuchando:`;
                 {dimension.name}
               </p>
               <h1 className="font-serif text-2xl font-bold leading-tight">
-                {dominante.emoji} {dominante.name}
+                <Glifo id={dominante.id} className="w-[0.95em] h-[0.95em] -mt-1 mr-2 text-[#D6A84F]" />
+                {dominante.name}
               </h1>
             </div>
           </div>
@@ -293,7 +295,14 @@ Descubre el tuyo escuchando:`;
               <>
                 {empate ? 'A la par con' : companeros.length > 1 ? 'Te acompañan, a la par,' : 'Te acompaña'}{' '}
                 <span className="text-[#C5CFC7] font-semibold">
-                  {companeros.length === 1 ? `${companeros[0].emoji} ${companeros[0].name}` : nombresCompaneros}
+                  {companeros.length === 1 ? (
+                    <>
+                      <Glifo id={companeros[0].id} className="w-[1.05em] h-[1.05em] -mt-0.5 mr-1 text-[#D6A84F]" />
+                      {companeros[0].name}
+                    </>
+                  ) : (
+                    nombresCompaneros
+                  )}
                 </span>
               </>
             )}

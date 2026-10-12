@@ -14,6 +14,11 @@ import {
   RotateCcw,
   Check,
   Gift,
+  Route,
+  Gem,
+  BrainCircuit,
+  HardDrive,
+  type LucideIcon,
 } from 'lucide-react';
 import {
   AIProviderId,
@@ -26,6 +31,14 @@ import {
   PROVIDER_OPTIONS,
 } from '../../services/aiProviderService';
 import { ModalBase } from '../common/ModalBase';
+
+/** El icono de cada proveedor, en línea dorada como el resto de la app. */
+const ICONO_PROVEEDOR: Record<AIProviderId, LucideIcon> = {
+  openrouter: Route,
+  gemini: Gem,
+  openai: BrainCircuit,
+  local: HardDrive,
+};
 
 interface AiSettingsModalProps {
   isOpen: boolean;
@@ -58,6 +71,7 @@ export const AiSettingsModal: React.FC<AiSettingsModalProps> = ({
 
   const usageStatus = AIProviderService.getUsageStatus();
   const currentProviderOpt = PROVIDER_OPTIONS[activeTab];
+  const IconoActual = ICONO_PROVEEDOR[activeTab];
   // La clave de cortesía del proveedor que se está mirando, y su cupo (común a todos).
   const conCortesia = activeTab !== 'local' && Boolean(AIProviderService.getAppKeyFor(activeTab));
   const cortesiaMax = settings.courtesyQuota?.maxDaily || DEFAULT_COURTESY_DAILY_LIMIT;
@@ -266,6 +280,7 @@ export const AiSettingsModal: React.FC<AiSettingsModalProps> = ({
             {(Object.keys(PROVIDER_OPTIONS) as AIProviderId[]).map(provId => {
               const opt = PROVIDER_OPTIONS[provId];
               const isSelected = activeTab === provId;
+              const Icono = ICONO_PROVEEDOR[provId];
               return (
                 <button
                   key={provId}
@@ -277,7 +292,7 @@ export const AiSettingsModal: React.FC<AiSettingsModalProps> = ({
                       : 'bg-neutral-900/80 border-neutral-800 text-neutral-400 hover:border-neutral-700 hover:text-neutral-200'
                   }`}
                 >
-                  <span className="text-2xl mb-1">{opt.icon}</span>
+                  <Icono className="w-6 h-6 mb-1.5 text-[#D6A84F]" aria-hidden="true" />
                   <span className="text-xs font-medium line-clamp-1">{opt.name}</span>
                   {/* OpenRouter y Gemini traen una clave de cortesía: no «requieren» la tuya. */}
                   {provId === 'local' ? (
@@ -300,7 +315,7 @@ export const AiSettingsModal: React.FC<AiSettingsModalProps> = ({
           <div className="flex items-start justify-between gap-2">
             <div>
               <h3 className="text-sm font-semibold text-neutral-200 flex items-center gap-2">
-                <span>{currentProviderOpt.icon}</span> {currentProviderOpt.name}
+                <IconoActual className="w-4 h-4 text-[#D6A84F]" aria-hidden="true" /> {currentProviderOpt.name}
               </h3>
               <p className="text-xs text-neutral-400 mt-0.5">
                 {currentProviderOpt.tagline}
