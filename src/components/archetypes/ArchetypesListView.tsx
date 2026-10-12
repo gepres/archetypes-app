@@ -205,6 +205,12 @@ export const ArchetypesListView: React.FC<ArchetypesListViewProps> = ({
             <span className="text-[10px] uppercase tracking-wider font-bold text-[#D6A84F]">La pregunta que te hace</span>
             <p className="font-serif text-base text-[#F2EFE6] font-semibold leading-snug">{a.centralQuestion}</p>
           </div>
+          {a.symbol && (
+            <p className="text-sm text-[#C5CFC7]">
+              <span className="font-semibold text-[#D6A84F]">Sus símbolos: </span>
+              {a.symbol}
+            </p>
+          )}
           {a.concepts.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {a.concepts.map(c => (
